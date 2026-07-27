@@ -629,9 +629,25 @@
   }
 
   .limit-note {
-    margin-top: var(--space-5);
-    padding-left: var(--space-5);
-    border-left: 4px solid var(--amber);
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    column-gap: var(--space-6);
+    align-items: baseline;
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+  }
+
+  .limit-note .label {
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-kicker);
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .limit-note p {
+    margin: 0;
     font-size: var(--text-small);
     line-height: var(--leading-relaxed);
     color: var(--text-default);
@@ -1128,7 +1144,10 @@
           </div>
         </article>
       </div>
-      <div class="limit-note">한계 — 태풍 한 개와 한국 남해안이라는 특정 조건만을 대상으로 했습니다. PTM은 입력자료 정확도에 크게 의존하고 비대칭성과 급격한 강도변화를 표현하지 못하며, 경험식은 이상화된 해저지형 조건에서 개발되어 다양한 경로·강도·지형에 대한 추가 검증이 필요합니다.</div>
+      <div class="limit-note">
+        <div class="label">Limitations</div>
+        <p>태풍 한 개와 한국 남해안이라는 특정 조건만을 대상으로 했습니다. PTM은 입력자료 정확도에 크게 의존하고 비대칭성과 급격한 강도변화를 표현하지 못하며, 경험식은 이상화된 해저지형 조건에서 개발되어 다양한 경로·강도·지형에 대한 추가 검증이 필요합니다.</p>
+      </div>
     </div>
     <div class="slide-foot"><span>Weekly Report · 결론</span><span class="page">11 / 13</span></div>
   </section>
