@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "input_length": 306,
+    "detected_count": 5,
+    "ai_tell_density": 0.118,
+    "severity_weighted_score": 14.0,
+    "genre": "교수 주간 발표용 슬라이드 카피"
+  },
+  "findings": [
+    {
+      "id": "f001",
+      "category": "A-13",
+      "severity": "S2",
+      "text_span": "토목기사 실기시험 준비, 논문 리뷰",
+      "reason": "조사 없이 명사를 나열해 보고 문장으로는 다소 거칠다",
+      "suggested_fix": "시험 준비와 논문 리뷰를 병행했습니다"
+    },
+    {
+      "id": "f002",
+      "category": "A-2",
+      "severity": "S1",
+      "text_span": "논문 리뷰를 통해",
+      "reason": "수단 표현보다 실제 행위를 주어로 두는 편이 자연스럽다",
+      "suggested_fix": "논문을 읽으며"
+    },
+    {
+      "id": "f003",
+      "category": "C-10",
+      "severity": "S2",
+      "text_span": "7월 4주차:",
+      "reason": "콜론 부제 형식이 발표 표지에서 기계적으로 보인다",
+      "suggested_fix": "7월 4주차 주간 진행 보고"
+    },
+    {
+      "id": "f004",
+      "category": "C-10",
+      "severity": "S2",
+      "text_span": "핵심 질문:",
+      "reason": "설명형 강의 자료처럼 보여 주간 진행 보고의 성격이 약하다",
+      "suggested_fix": "이번 발표에서는"
+    },
+    {
+      "id": "f005",
+      "category": "I-3",
+      "severity": "S2",
+      "text_span": "과정이다",
+      "reason": "연구 연결을 확정된 결론처럼 단정한다",
+      "suggested_fix": "단계로 검토할 필요가 있습니다"
+    }
+  ],
+  "category_summary": {"A": 2, "C": 2, "I": 1}
+}

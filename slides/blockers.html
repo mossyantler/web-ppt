@@ -1,0 +1,51 @@
+<!-- @dsCard group="Slides" viewport="1280x720" name="이슈 & 논의사항 · Blockers" subtitle="블로커 + 교수님께 논의드릴 질문" -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="slides.css">
+<style> body { margin: 0; } a { color: var(--accent); } a:hover { color: var(--accent-hover); } </style>
+</head>
+<body>
+<section class="slide" data-screen-label="이슈/논의">
+  <div class="slide-head">
+    <div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div>
+    <div class="meta">W28 · 2026.07.13</div>
+  </div>
+  <div class="title-block">
+    <p class="kicker">Issues &amp; Discussion</p>
+    <h2 class="slide-title">이슈 &amp; 논의사항<span class="en">Blockers and questions for discussion</span></h2>
+  </div>
+  <div class="slide-body cols-2">
+    <div class="stack gap-4">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px"><span class="pill block">블로커</span><span class="muted" style="font-size:var(--text-small)">진행을 막고 있는 항목</span></div>
+      <div class="callout risk">
+        <div class="q">현장 계측 데이터 수급 지연</div>
+        <div class="a">시공사 측 계측기 교체로 6월 3주차 데이터 누락. 대체 구간 데이터로 검증 가능한지 검토 필요.</div>
+      </div>
+      <div class="callout warn">
+        <div class="q">해석 수렴 시간 과다</div>
+        <div class="a">전체 3D 모델 1회 해석에 ~8시간 소요. 대칭 조건 활용한 half-model 전환 검토 중.</div>
+      </div>
+    </div>
+    <div class="stack gap-4">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px"><span class="pill note">논의</span><span class="muted" style="font-size:var(--text-small)">교수님께 여쭤볼 내용</span></div>
+      <div class="callout">
+        <div class="q">Q1. 구성모델 선택</div>
+        <div class="a">Modified Cam-Clay vs. Soft Soil 모델 중 본 지반조건에 더 적합한 것은?</div>
+      </div>
+      <div class="callout">
+        <div class="q">Q2. 검증 기준</div>
+        <div class="a">계측–해석 오차 허용 범위를 어느 수준(±5%? ±10%?)으로 설정할지?</div>
+      </div>
+      <div class="callout">
+        <div class="q">Q3. 다음 목표 우선순위</div>
+        <div class="a">논문 초안 vs. 추가 파라메트릭 해석 중 어느 쪽을 먼저 진행할지?</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-foot"><span>Weekly Research Report</span><span class="page">06 / 09</span></div>
+</section>
+</body>
+</html>

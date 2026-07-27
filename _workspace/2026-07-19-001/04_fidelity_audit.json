@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "total_edits": 5,
+    "edits_passed": 5,
+    "edits_flagged": 0,
+    "rollback_required": 0,
+    "warnings": 0,
+    "audit_verdict": "full_pass"
+  },
+  "checks": {
+    "proper_nouns": "pass",
+    "numbers_and_dates": "pass",
+    "paper_title": "pass",
+    "claim_direction": "pass",
+    "causality": "pass",
+    "scope": "pass"
+  },
+  "flagged_edits": []
+}

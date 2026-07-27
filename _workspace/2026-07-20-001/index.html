@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="2026년 7월 4주차 주간 활동 보고">
+<title>Weekly Report · 2026 W30</title>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../../slides/slides.css">
+<link rel="stylesheet" href="../../assets/katex/katex.min.css">
+<style>
+  html,
+  body {
+    margin: 0;
+    background: var(--navy-900);
+  }
+
+  deck-stage .slide {
+    width: 100%;
+    height: 100%;
+  }
+
+  .slide {
+    --text-caption: 16px;
+    --text-kicker: 14px;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  .slide .slide-head,
+  .slide .title-block {
+    margin-bottom: var(--space-6);
+  }
+
+  .slide-title {
+    font-size: 40px;
+    line-height: var(--leading-tight);
+  }
+
+  .slide-title .en {
+    font-size: var(--text-small);
+    margin-top: var(--space-2);
+  }
+
+  .slide-foot {
+    bottom: var(--space-5);
+  }
+
+  .eyebrow {
+    font-size: var(--text-small);
+    color: var(--navy-200);
+    letter-spacing: var(--tracking-kicker);
+    text-transform: uppercase;
+    font-weight: var(--weight-bold);
+  }
+
+  .report-topic {
+    max-width: 820px;
+    margin-top: var(--space-3);
+    font-size: 30px;
+    line-height: var(--leading-snug);
+    font-weight: var(--weight-semibold);
+    color: var(--navy-100);
+  }
+
+  .title-meta {
+    gap: var(--space-12);
+    font-size: var(--text-lead);
+  }
+
+  .title-meta .k {
+    font-size: var(--text-small);
+  }
+
+  .lead {
+    max-width: 1040px;
+    font-size: var(--text-lead);
+    line-height: var(--leading-normal);
+    font-weight: var(--weight-semibold);
+    color: var(--text-strong);
+  }
+
+  .activity-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    margin-top: var(--space-5);
+  }
+
+  .activity-card {
+    min-height: 270px;
+    padding: var(--space-6);
+    border: var(--border-hairline);
+    border-top: 5px solid var(--accent);
+    border-radius: var(--radius-lg);
+    background: var(--surface-subtle);
+  }
+
+  .activity-card.paper {
+    border-top-color: var(--teal);
+  }
+
+  .status-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--navy-100);
+    color: var(--navy-800);
+    font-size: var(--text-caption);
+    font-weight: var(--weight-bold);
+  }
+
+  .activity-card.paper .status-label {
+    background: var(--teal-soft);
+    color: var(--teal);
+  }
+
+  .activity-card h3 {
+    margin: var(--space-4) 0 var(--space-3);
+    font-size: 28px;
+    line-height: var(--leading-snug);
+    color: var(--text-strong);
+  }
+
+  .activity-card p {
+    margin: 0;
+    font-size: 18px;
+    line-height: var(--leading-relaxed);
+    color: var(--text-default);
+  }
+
+  .activity-note {
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: var(--border-hairline);
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--text-muted);
+  }
+
+  .paper-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: var(--space-6);
+  }
+
+  .paper-card,
+  .purpose-card {
+    min-height: 220px;
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+  }
+
+  .paper-card {
+    border-left: 5px solid var(--teal);
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    background: var(--teal-soft);
+  }
+
+  .paper-title {
+    font-size: 27px;
+    line-height: var(--leading-snug);
+    font-weight: var(--weight-bold);
+    color: var(--text-strong);
+  }
+
+  .paper-author {
+    margin-top: var(--space-3);
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--text-default);
+  }
+
+  .paper-journal {
+    margin-top: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    color: var(--teal);
+    font-weight: var(--weight-semibold);
+  }
+
+  .purpose-card {
+    background: var(--surface-accent);
+    color: var(--white);
+  }
+
+  .purpose-card .label {
+    font-size: var(--text-caption);
+    color: var(--navy-200);
+    font-weight: var(--weight-bold);
+  }
+
+  .purpose-card strong {
+    display: block;
+    margin-top: var(--space-3);
+    font-size: 25px;
+    line-height: var(--leading-snug);
+  }
+
+  .purpose-card p {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--navy-100);
+  }
+
+  .review-scope {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+  }
+
+  .scope-item {
+    padding: var(--space-5);
+    border: var(--border-hairline);
+    border-radius: var(--radius-lg);
+    background: var(--surface-subtle);
+  }
+
+  .scope-item .number {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    color: var(--accent);
+    font-weight: var(--weight-bold);
+  }
+
+  .scope-item h3 {
+    margin: var(--space-2) 0;
+    font-size: var(--text-lead);
+    color: var(--text-strong);
+  }
+
+  .scope-item p {
+    margin: 0;
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--text-default);
+  }
+
+  .check-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+  }
+
+  .check-card {
+    min-height: 270px;
+    padding: var(--space-6);
+    border: var(--border-hairline);
+    border-radius: var(--radius-lg);
+    background: var(--surface-subtle);
+  }
+
+  .check-card.constituents {
+    border-top: 5px solid var(--teal);
+  }
+
+  .check-card.range {
+    border-top: 5px solid var(--amber);
+  }
+
+  .check-card .check-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    color: var(--text-muted);
+  }
+
+  .check-card h3 {
+    margin: var(--space-3) 0 var(--space-4);
+    font-size: 27px;
+    line-height: var(--leading-snug);
+    color: var(--text-strong);
+  }
+
+  .check-card p {
+    margin: 0;
+    font-size: 18px;
+    line-height: var(--leading-relaxed);
+    color: var(--text-default);
+  }
+
+  .constituent-line {
+    margin-top: var(--space-5);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--teal-soft);
+    font-family: var(--font-mono);
+    font-size: var(--text-small);
+    color: var(--teal);
+  }
+
+  .scope-note {
+    margin-top: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: var(--navy-50);
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--text-default);
+  }
+
+  .equation-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: var(--space-5);
+    margin-top: var(--space-4);
+  }
+
+  .equation-card {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    padding: var(--space-5);
+    border: var(--border-hairline);
+    border-top: 5px solid var(--teal);
+    border-radius: var(--radius-lg);
+    background: var(--surface-subtle);
+  }
+
+  .equation-card.speed {
+    border-top-color: var(--accent);
+  }
+
+  .equation-card h3 {
+    margin: 0;
+    font-size: 23px;
+    color: var(--text-strong);
+  }
+
+  .equation-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 78px;
+    margin: var(--space-3) 0;
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--navy-800);
+  }
+
+  .equation-box .katex-display {
+    margin: 0;
+    font-size: 1.1em;
+  }
+
+  .equation-card p {
+    margin: 0;
+    font-size: 16px;
+    line-height: var(--leading-normal);
+    color: var(--text-default);
+  }
+
+  .symbol-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .symbol-row > span {
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    background: var(--teal-soft);
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-default);
+  }
+
+  .symbol-row > span > strong {
+    display: block;
+    color: var(--teal);
+  }
+
+  .constituent-table-wrap {
+    margin-top: var(--space-4);
+    overflow: hidden;
+    border: var(--border-hairline);
+    border-radius: var(--radius-lg);
+    background: var(--white);
+  }
+
+  .constituent-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 15px;
+    color: var(--text-default);
+  }
+
+  .constituent-table th {
+    padding: 11px 14px;
+    background: var(--navy-800);
+    color: var(--white);
+    text-align: left;
+    font-size: var(--text-caption);
+  }
+
+  .constituent-table td {
+    padding: 9px 14px;
+    border-bottom: var(--border-hairline);
+    line-height: 1.35;
+    vertical-align: middle;
+  }
+
+  .constituent-table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .constituent-table tbody tr:nth-child(even) {
+    background: var(--surface-subtle);
+  }
+
+  .constituent-table .symbol {
+    font-weight: var(--weight-bold);
+    color: var(--teal);
+  }
+
+  .yellow-grid {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: var(--space-6);
+    margin-top: var(--space-5);
+  }
+
+  .range-stat {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 320px;
+    padding: var(--space-7);
+    border-radius: var(--radius-lg);
+    background: var(--surface-accent);
+    color: var(--white);
+  }
+
+  .range-stat .label {
+    font-size: var(--text-caption);
+    color: var(--navy-200);
+    font-weight: var(--weight-bold);
+  }
+
+  .range-stat .value {
+    margin: var(--space-4) 0 var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 66px;
+    line-height: 1;
+    font-weight: var(--weight-bold);
+  }
+
+  .range-stat p {
+    margin: 0;
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--navy-100);
+  }
+
+  .range-notes {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .range-note {
+    padding: var(--space-5);
+    border: var(--border-hairline);
+    border-left: 5px solid var(--teal);
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    background: var(--surface-subtle);
+  }
+
+  .range-note:last-child {
+    border-left-color: var(--amber);
+  }
+
+  .range-note h3 {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-lead);
+    color: var(--text-strong);
+  }
+
+  .range-note p {
+    margin: 0;
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--text-default);
+  }
+
+  .closing {
+    justify-content: center;
+  }
+
+  .closing .report-hero {
+    margin: var(--space-6) 0 var(--space-4);
+  }
+
+  /* ═══ Layout-only editorial pass · content and markup intentionally unchanged ═══ */
+
+  /* 02 · Weekly activities — two open columns with a single shared rule */
+  .activity-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    margin-top: var(--space-6);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .activity-card,
+  .activity-card.paper {
+    min-height: 254px;
+    padding: var(--space-6);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .activity-card:first-child {
+    padding-left: 0;
+  }
+
+  .activity-card + .activity-card {
+    border-left: var(--border-hairline);
+  }
+
+  .activity-card:last-child {
+    padding-right: 0;
+  }
+
+  .status-label,
+  .activity-card.paper .status-label {
+    min-height: 0;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    letter-spacing: var(--tracking-kicker);
+    text-transform: uppercase;
+  }
+
+  .activity-card.paper .status-label {
+    color: var(--teal);
+  }
+
+  .activity-card.setup .status-label {
+    color: var(--green);
+  }
+
+  .activity-card h3 {
+    margin-top: var(--space-5);
+    font-size: 26px;
+  }
+
+  .activity-note {
+    margin-top: var(--space-4);
+  }
+
+  /* 03 · Paper review — reading note split and numbered editorial scope */
+  .paper-layout {
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
+    gap: 0;
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .paper-card,
+  .purpose-card {
+    min-height: 188px;
+    padding: var(--space-6) var(--space-8) var(--space-5) 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-strong);
+  }
+
+  .purpose-card {
+    padding-right: 0;
+    padding-left: var(--space-8);
+    border-left: var(--border-hairline);
+  }
+
+  .purpose-card .label {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    letter-spacing: var(--tracking-kicker);
+  }
+
+  .purpose-card p {
+    color: var(--text-default);
+  }
+
+  .review-scope {
+    gap: 0;
+    margin-top: var(--space-6);
+    border-top: var(--border-hairline);
+    border-bottom: var(--border-hairline);
+  }
+
+  .scope-item {
+    min-height: 128px;
+    padding: var(--space-4) var(--space-6);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .scope-item:first-child {
+    padding-left: 0;
+  }
+
+  .scope-item + .scope-item {
+    border-left: var(--border-hairline);
+  }
+
+  .scope-item:last-child {
+    padding-right: 0;
+  }
+
+  /* 04 · Equations — paired formula columns without card containers */
+  .equation-grid {
+    gap: 0;
+    margin-top: var(--space-5);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .equation-card,
+  .equation-card.speed {
+    padding: var(--space-5) var(--space-8) var(--space-5) 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .equation-card.speed {
+    padding-right: 0;
+    padding-left: var(--space-8);
+    border-left: var(--border-hairline);
+  }
+
+  .equation-box {
+    justify-content: flex-start;
+    min-height: 82px;
+    margin: var(--space-3) 0 var(--space-4);
+    padding: var(--space-3) 0;
+    border-top: var(--border-hairline);
+    border-bottom: var(--border-hairline);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .symbol-row {
+    gap: 0;
+    margin-top: var(--space-4);
+    border-top: var(--border-hairline);
+  }
+
+  .symbol-row > span {
+    padding: var(--space-2) var(--space-1);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .symbol-row > span + span {
+    border-left: var(--border-hairline);
+  }
+
+  /* 05 · Constituents — academic table with restrained horizontal rules */
+  .constituent-table-wrap {
+    margin-top: var(--space-5);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .constituent-table th {
+    padding: var(--space-3) var(--space-4);
+    border-top: var(--rule-accent);
+    border-bottom: 2px solid var(--navy-800);
+    background: transparent;
+    color: var(--text-strong);
+  }
+
+  .constituent-table td {
+    padding: 10px var(--space-4);
+  }
+
+  .constituent-table tbody tr:nth-child(even) {
+    background: transparent;
+  }
+
+  /* 06 · Yellow Sea — one metric and two reading notes on a shared baseline */
+  .yellow-grid {
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    gap: 0;
+    margin-top: var(--space-6);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .range-stat {
+    min-height: 294px;
+    padding: var(--space-6) var(--space-8) var(--space-6) 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-strong);
+  }
+
+  .range-stat .label {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    letter-spacing: var(--tracking-kicker);
+  }
+
+  .range-stat .value {
+    color: var(--navy-800);
+    font-size: 72px;
+  }
+
+  .range-stat p {
+    color: var(--text-default);
+  }
+
+  .range-notes {
+    gap: 0;
+    border-left: var(--border-hairline);
+  }
+
+  .range-note,
+  .range-note:last-child {
+    padding: var(--space-6) 0 var(--space-6) var(--space-8);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .range-note + .range-note {
+    border-top: var(--border-hairline);
+  }
+
+  /* 07 · Further study — two methodology papers and two data locations */
+  .study-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
+    margin-top: var(--space-6);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .study-question {
+    min-height: 292px;
+    padding: var(--space-8) var(--space-8) var(--space-8) 0;
+  }
+
+  .study-question .label,
+  .study-topics-intro .label,
+  .study-topic .number,
+  .study-paper .number {
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    color: var(--accent);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-kicker);
+  }
+
+  .study-question h3 {
+    margin: var(--space-5) 0 var(--space-4);
+    font-size: 29px;
+    line-height: 1.15;
+    color: var(--text-strong);
+  }
+
+  .study-question p,
+  .study-topics-intro {
+    margin: 0;
+    font-size: 18px;
+    line-height: var(--leading-relaxed);
+    color: var(--text-default);
+  }
+
+  .study-paper-list {
+    margin-top: var(--space-5);
+    border-top: var(--border-hairline);
+  }
+
+  .study-paper {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+    min-height: 102px;
+    box-sizing: border-box;
+  }
+
+  .study-paper + .study-paper {
+    border-top: var(--border-hairline);
+  }
+
+  .study-paper h4 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.42;
+    color: var(--text-strong);
+  }
+
+  .study-paper p {
+    margin-top: var(--space-1);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  .study-topics {
+    padding-left: var(--space-8);
+    border-left: var(--border-hairline);
+  }
+
+  .study-topics-intro {
+    padding: var(--space-8) 0 var(--space-4);
+  }
+
+  .study-topics h3 {
+    margin: 18px 0 0;
+    font-size: 29px;
+    line-height: 1.15;
+    color: var(--text-strong);
+  }
+
+  .study-topics > .study-paper-list {
+    margin-top: var(--space-1);
+  }
+
+  .study-topic-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    border-top: var(--border-hairline);
+  }
+
+  .study-topic {
+    min-height: 92px;
+    padding: var(--space-4) var(--space-5) var(--space-4) 0;
+  }
+
+  .study-topic + .study-topic {
+    border-top: var(--border-hairline);
+  }
+
+  .study-topic h3 {
+    margin: var(--space-2) 0 0;
+    font-size: 24px;
+    color: var(--text-strong);
+  }
+</style>
+</head>
+<body>
+<deck-stage width="1280" height="720">
+
+  <section class="slide slide--title dark" data-label="표지" data-screen-label="표지">
+    <div class="title-lab">Flow Physics and Informatics Laboratory <span>· 서울대학교 건설환경도시공학부</span></div>
+    <h1 class="report-hero">Weekly Report</h1>
+    <div class="eyebrow">7월 4주차 주간 활동 보고</div>
+    <div class="report-topic">토목기사 실기시험 대비 및 조석 관련 논문 검토</div>
+    <div class="title-rule"></div>
+    <div class="title-meta">
+      <div><span class="k">Week</span><span class="v">2026 · W30</span></div>
+      <div><span class="k">Date</span><span class="v">2026.07.20</span></div>
+      <div><span class="k">발표자</span><span class="v">장민엽</span></div>
+    </div>
+  </section>
+
+  <section class="slide" data-label="저번 주 활동" data-screen-label="이번 주 활동">
+    <div class="slide-head"><div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div><div class="meta">W30 · 2026.07.20</div></div>
+    <div class="title-block"><p class="kicker">Weekly Activities</p><h2 class="slide-title">저번 주 활동<span class="en">Civil Engineer practical exam preparation, workstation setup, and paper review</span></h2></div>
+    <div class="slide-body">
+      <div class="lead">7월 19일 토목기사 실기시험을 대비했고, 연구실 컴퓨터 세팅을 완료했으며, 지난주 말씀해주신 조석 내용을 알아보기 위해 교수님 논문을 읽었습니다.</div>
+      <div class="activity-grid">
+        <article class="activity-card">
+          <span class="status-label">시험 대비</span>
+          <h3>토목기사 실기시험</h3>
+          <p>7월 19일 일요일 시험에 대비해 토목기사 실기 과목을 학습했습니다.</p>
+          <div class="activity-note">토목기사 실기시험 대비를 3차 시험에도 준비해야 할 것 같습니다.</div>
+        </article>
+        <article class="activity-card paper">
+          <span class="status-label">논문 검토</span>
+          <h3>조석 관련 내용 확인</h3>
+          <p>조석력에 따른 해수위의 변화를 확인하기 위해 교수님께서 공저하신 황해 물리과정 리뷰 논문을 읽었습니다.</p>
+          <div class="activity-note">조석 성분의 종류와 황해의 조차 특성을 중심으로 확인했습니다.</div>
+        </article>
+        <article class="activity-card setup">
+          <span class="status-label">환경 구축</span>
+          <h3>컴퓨터 세팅 완료</h3>
+          <p>연구실에서 사용할 컴퓨터의 기본 환경 설정을 마쳤습니다.</p>
+          <div class="activity-note">연구 작업을 시작할 수 있도록 사용 환경을 준비했습니다.</div>
+        </article>
+      </div>
+    </div>
+    <div class="slide-foot"><span>Weekly Report · 7월 4주차</span><span class="page">02 / 07</span></div>
+  </section>
+
+  <section class="slide" data-label="교수님 논문 검토" data-screen-label="교수님 논문 검토">
+    <div class="slide-head"><div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div><div class="meta">W30 · 2026.07.20</div></div>
+    <div class="title-block"><p class="kicker">Paper Review</p><h2 class="slide-title">논문 검토<span class="en">Hwang et al. (2014), The physical processes in the Yellow Sea</span></h2></div>
+    <div class="slide-body">
+      <div class="paper-layout">
+        <article class="paper-card">
+          <div class="paper-title">The physical processes in the Yellow Sea</div>
+          <div class="paper-author">Jin Hwan Hwang, Sy Pham Van, Byoung-Ju Choi, Yeon Sik Chang, Yong Hoon Kim</div>
+          <div class="paper-journal">Ocean &amp; Coastal Management 102 (2014) 449–457</div>
+        </article>
+        <aside class="purpose-card">
+          <div class="label">읽은 이유</div>
+          <strong>조석의 발생 원인 및 종류를 확인하기 위해.</strong>
+          <p>논문에서 조석을 다룬 부분을 중심으로 보았습니다.</p>
+        </aside>
+      </div>
+      <div class="review-scope">
+        <article class="scope-item"><div class="number">01</div><h3>조석의 수학적 계산</h3><p>조석력의 수학적 표현에 대해 알아보았습니다.</p></article>
+        <article class="scope-item"><div class="number">02</div><h3>조석에 영향을 주는 요소 및 분류</h3><p>조석 운동에 영향을 주는 요소 및 분류를 알아보았습니다.</p></article>
+      </div>
+    </div>
+    <div class="slide-foot"><span>Weekly Report · 논문 검토</span><span class="page">03 / 07</span></div>
+  </section>
+
+  <section class="slide" data-label="조석 관련 식 확인" data-screen-label="조석 관련 식 확인">
+    <div class="slide-head"><div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div><div class="meta">W30 · 2026.07.20</div></div>
+    <div class="title-block"><p class="kicker">Tidal Equations</p><h2 class="slide-title">조석 관련 식 확인<span class="en">Equations reviewed while reading about tides</span></h2></div>
+    <div class="slide-body">
+      <div class="lead">관측 조위는 여러 조석 성분의 합으로 표현되며, 조석파의 전파속도는 얕은물에서 수심의 영향을 받는다는 점을 알게되었습니다.</div>
+      <div class="equation-grid">
+        <article class="equation-card">
+          <h3>관측 조위의 조화합성</h3>
+          <div class="equation-box" data-tex="\eta(t)=Z_0+\sum_i A_i\cos(\omega_i t-\phi_i)" data-display="true"></div>
+          <p>각 분조의 진폭과 위상이 합쳐져 한 지점의 실제 조위가 만들어집니다.</p>
+          <div class="symbol-row">
+            <span><strong data-tex="Z_0"></strong>평균해수면</span>
+            <span><strong data-tex="A_i"></strong>진폭</span>
+            <span><strong data-tex="\omega_i"></strong>각주파수</span>
+            <span><strong data-tex="\phi_i"></strong>위상</span>
+          </div>
+        </article>
+        <article class="equation-card speed">
+          <h3>얕은물 조석파의 전파속도</h3>
+          <div class="equation-box" data-tex="c=\sqrt{gh}" data-display="true"></div>
+          <p>수심 <span data-tex="h"></span>가 얕아지면 전파속도 <span data-tex="c"></span>가 느려집니다. 황해는 평균 수심 44 m 로, 얕은 수심과 해안 형상에 따른 반사·공명이 조석의 진폭과 위상에 영향을 줄 수 있음을 알게되었습니다.</p>
+        </article>
+      </div>
+    </div>
+    <div class="slide-foot"><span>Weekly Report · 조석 관련 식</span><span class="page">04 / 07</span></div>
+  </section>
+
+  <section class="slide" data-label="주요 조석 성분 확인" data-screen-label="주요 조석 성분 확인">
+    <div class="slide-head"><div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div><div class="meta">W30 · 2026.07.20</div></div>
+    <div class="title-block"><p class="kicker">Tidal Constituents</p><h2 class="slide-title">주요 조석 성분 확인<span class="en">Main constituents and their astronomical origins</span></h2></div>
+    <div class="slide-body">
+      <div class="lead">교수님 논문에 제시된 황해의 주요 조석 성분을 기준으로, 각 성분의 주기와 발생 원인을 함께 확인했습니다.</div>
+      <div class="constituent-table-wrap">
+        <table class="constituent-table">
+          <colgroup><col style="width:12%"><col style="width:25%"><col style="width:16%"><col style="width:47%"></colgroup>
+          <thead><tr><th>분조</th><th>명칭</th><th>주기</th><th>발생 원인</th></tr></thead>
+          <tbody>
+            <tr><td class="symbol" data-tex="M_2"></td><td>주태음 반일주조</td><td>약 12.42 h</td><td>달의 직접적인 조석력</td></tr>
+            <tr><td class="symbol" data-tex="S_2"></td><td>주태양 반일주조</td><td>12.00 h</td><td>태양의 직접적인 조석력</td></tr>
+            <tr><td class="symbol" data-tex="N_2"></td><td>타원율성 태음 반일주조</td><td>약 12.66 h</td><td>달 궤도의 타원성과 지구–달 거리 변화</td></tr>
+            <tr><td class="symbol" data-tex="K_2"></td><td>일월합성 반일주조</td><td>약 11.97 h</td><td>달·태양의 적위 변화가 만드는 반일주 효과</td></tr>
+            <tr><td class="symbol" data-tex="K_1"></td><td>일월합성 일주조</td><td>약 23.93 h</td><td>달·태양의 적위 변화가 만드는 일주 효과</td></tr>
+            <tr><td class="symbol" data-tex="O_1"></td><td>주태음 일주조</td><td>약 25.82 h</td><td>달의 적위 변화가 만드는 일주 효과</td></tr>
+            <tr><td class="symbol" data-tex="Sa"></td><td>태양 연주조</td><td>약 365.24 day</td><td>지구–태양계의 연주기 변화와 계절적 해수면 변화</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="slide-foot"><span>Weekly Report · 조석 성분</span><span class="page">05 / 07</span></div>
+  </section>
+
+  <section class="slide" data-label="추가로 진행할 내용" data-screen-label="추가로 진행할 내용">
+    <div class="slide-head"><div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div><div class="meta">W30 · 2026.07.20</div></div>
+    <div class="title-block"><p class="kicker">Further Study</p><h2 class="slide-title">추가로 진행할 내용<span class="en">방법론 논문 검토 및 데이터 준비</span></h2></div>
+    <div class="slide-body">
+      <div class="lead">방법론 논문 검토 및 데이터 준비</div>
+      <div class="study-layout">
+        <article class="study-question">
+          <div class="kicker">Methodology</div>
+          <h3>추천 논문 2편 읽기</h3>
+          <div class="study-paper-list">
+            <article class="study-paper">
+              <div class="number">01</div>
+              <div><h4>Effectiveness of the Ike Dike in mitigating coastal flood risk under multiple climate and sea level rise projections</h4><p>Son et al. · Risk Analysis (2025)</p></div>
+            </article>
+            <article class="study-paper">
+              <div class="number">02</div>
+              <div><h4>Impact of atmospheric forcing on storm surge prediction between numerical weather model and parametric typhoon model</h4><p>Jo et al. · Ocean Engineering (2025)</p></div>
+            </article>
+          </div>
+        </article>
+        <div class="study-topics">
+          <div class="study-topics-intro"><div class="kicker">Data</div><h3>여수·마산 자료 확보</h3></div>
+          <div class="study-paper-list">
+            <article class="study-paper">
+              <div class="number">01</div>
+              <div><h4>여수</h4></div>
+            </article>
+            <article class="study-paper">
+              <div class="number">02</div>
+              <div><h4>마산</h4></div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-foot"><span>Weekly Report · 추가 학습</span><span class="page">06 / 07</span></div>
+  </section>
+
+  <section class="slide slide--title dark closing" data-label="이상입니다" data-screen-label="이상입니다">
+    <div class="title-lab">Flow Physics and Informatics Laboratory <span>· 서울대학교 건설환경도시공학부</span></div>
+    <h1 class="report-hero">감사합니다</h1>
+    <div class="report-sub">질문과 조언 부탁드립니다.</div>
+  </section>
+
+</deck-stage>
+<script src="../../templates/weekly-report/deck-stage.js"></script>
+<script src="../../assets/katex/katex.min.js"></script>
+<script>
+  document.querySelectorAll('[data-tex]').forEach((element) => {
+    katex.render(element.dataset.tex, element, {
+      displayMode: element.dataset.display === 'true',
+      throwOnError: false
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!-- @dsCard group="Colors" viewport="700x170" name="Semantic · 상태색" subtitle="보고 상태 표기용 4색 + soft 배경" -->
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin:0; font-family:var(--font-sans); background:var(--surface-page); padding:20px 24px; }
+  .row { display:flex; gap:14px; }
+  .sw { flex:1; }
+  .chip { height:52px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#fff; }
+  .soft { height:22px; border-radius:0 0 var(--radius-md) var(--radius-md); margin-top:2px; }
+  .lbl { font-size:11px; color:var(--text-muted); margin-top:8px; font-family:var(--font-mono); }
+  .name { font-size:12px; color:var(--text-strong); font-weight:600; margin-top:2px; }
+</style></head>
+<body>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:var(--green)">완료</div><div class="soft" style="background:var(--green-soft)"></div><div class="name">Green</div><div class="lbl">on track</div></div>
+    <div class="sw"><div class="chip" style="background:var(--amber)">진행 중</div><div class="soft" style="background:var(--amber-soft)"></div><div class="name">Amber</div><div class="lbl">at risk</div></div>
+    <div class="sw"><div class="chip" style="background:var(--red)">블로커</div><div class="soft" style="background:var(--red-soft)"></div><div class="name">Red</div><div class="lbl">delayed</div></div>
+    <div class="sw"><div class="chip" style="background:var(--teal)">정보</div><div class="soft" style="background:var(--teal-soft)"></div><div class="name">Teal</div><div class="lbl">note</div></div>
+  </div>
+</body></html>

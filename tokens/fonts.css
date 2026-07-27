@@ -1,0 +1,9 @@
+/* Webfonts. Substitution note: Pretendard is a widely-used, open Korean sans
+   that reads cleanly in academic mixed Korean+English settings. It is served
+   from CDN (jsdelivr) rather than self-hosted binaries — swap the src URLs for
+   local files if the lab mandates a specific font. IBM Plex Mono carries
+   numbers, units and code (engineering context). */
+
+/* IBM Plex Mono — monospace for numbers, units, dates, code */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');

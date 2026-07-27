@@ -1,0 +1,60 @@
+:root {
+  /* ── Primary · SNU Navy ─────────────────────────────── */
+  --navy-900: #001b3a;
+  --navy-800: #002a5c;
+  --navy-700: #003876; /* brand anchor */
+  --navy-600: #0a4a8f;
+  --navy-500: #1f63ad;
+  --navy-400: #4d84c4;
+  --navy-300: #8bb0dc;
+  --navy-200: #c2d8ee;
+  --navy-100: #e6eff8;
+  --navy-50:  #f4f8fc;
+
+  /* ── Neutral · Slate ────────────────────────────────── */
+  --slate-900: #14181f;
+  --slate-800: #1f2530;
+  --slate-700: #333b48;
+  --slate-600: #4b5563;
+  --slate-500: #6b7280;
+  --slate-400: #9aa3b0;
+  --slate-300: #c9cfd8;
+  --slate-200: #e2e6ec;
+  --slate-100: #eef1f5;
+  --slate-50:  #f7f8fa;
+  --white:     #ffffff;
+
+  /* ── Semantic status (report states) ────────────────── */
+  --green: #1f8a5b;  /* 완료 / on track */
+  --green-soft: #e4f4ec;
+  --amber: #b5791a;  /* 진행 중 / at risk */
+  --amber-soft: #fbf1dc;
+  --red:   #c0392b;  /* 블로커 / delayed */
+  --red-soft: #fbe7e4;
+  --teal:  #0f7b8a;  /* 정보 / note */
+  --teal-soft: #e2f2f4;
+
+  /* ── Semantic aliases ───────────────────────────────── */
+  --text-strong:   var(--slate-900);
+  /* NOTE: not --text-body — that name is taken by the 19px font-size token
+     in typography.css, which is imported later and would win. */
+  --text-default:  var(--slate-700);
+  --text-muted:    var(--slate-500);
+  --text-faint:    var(--slate-400);
+  --text-inverse:  var(--white);
+  --text-accent:   var(--navy-700);
+
+  --surface-page:   var(--white);
+  --surface-subtle: var(--slate-50);
+  --surface-card:   var(--white);
+  --surface-accent: var(--navy-700);
+  --surface-accent-soft: var(--navy-100);
+
+  --border-subtle:  var(--slate-200);
+  --border-default: var(--slate-300);
+  --border-accent:  var(--navy-700);
+
+  --accent:      var(--navy-700);
+  --accent-soft: var(--navy-100);
+  --accent-hover: var(--navy-800);
+}

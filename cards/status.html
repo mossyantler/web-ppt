@@ -1,0 +1,16 @@
+<!-- @dsCard group="Brand" viewport="700x160" name="상태 Pill & 진척 바" subtitle="보고서에서 상태를 표기하는 방식" -->
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../slides/slides.css">
+<style> body { margin:0; font-family:var(--font-sans); background:var(--surface-page); padding:24px 26px; } .slide{all:unset;} </style></head>
+<body>
+  <div style="display:flex; gap:10px; margin-bottom:20px">
+    <span class="pill done">완료 · Done</span>
+    <span class="pill prog">진행 중 · In progress</span>
+    <span class="pill block">블로커 · Blocked</span>
+    <span class="pill note">논의 · Discuss</span>
+  </div>
+  <div style="display:flex; flex-direction:column; gap:10px; max-width:520px">
+    <div class="prog-row"><span class="task" style="width:auto">모델 구축</span><div class="prog-track"><div class="prog-fill" style="width:72%"></div></div><span class="pct">72%</span></div>
+    <div class="prog-row"><span class="task" style="width:auto">데이터 수집</span><div class="prog-track"><div class="prog-fill block" style="width:30%"></div></div><span class="pct">30%</span></div>
+  </div>
+</body></html>

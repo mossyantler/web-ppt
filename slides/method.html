@@ -1,0 +1,47 @@
+<!-- @dsCard group="Slides" viewport="1280x720" name="방법론 · Method" subtitle="본문 + 다이어그램/이미지 자리 5:7 분할" -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="slides.css">
+<style> body { margin: 0; } a { color: var(--accent); } a:hover { color: var(--accent-hover); } </style>
+</head>
+<body>
+<section class="slide" data-screen-label="방법론">
+  <div class="slide-head">
+    <div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div>
+    <div class="meta">W28 · 2026.07.13</div>
+  </div>
+  <div class="title-block">
+    <p class="kicker">Method &amp; Approach</p>
+    <h2 class="slide-title">해석 방법론<span class="en">Numerical modeling approach</span></h2>
+  </div>
+  <div class="slide-body cols-5-7">
+    <div class="stack gap-6">
+      <div>
+        <div class="card-head">접근 개요 <span class="en">Overview</span></div>
+        <ul class="list">
+          <li><b>유한요소 해석(FEM)</b> 기반 연약지반 압밀 거동 모사</li>
+          <li>실내시험 물성치를 <b>Modified Cam-Clay</b> 모델에 적용</li>
+          <li>현장 계측값과 <b>역해석(back-analysis)</b>으로 보정</li>
+        </ul>
+      </div>
+      <div>
+        <div class="card-head" style="font-size:var(--text-lead)">핵심 파라미터</div>
+        <table class="tbl">
+          <tr><td>압축지수 <span class="mono">Cc</span></td><td class="num"><b>0.42</b></td></tr>
+          <tr><td>투수계수 <span class="mono">k</span></td><td class="num"><b>2.1e-8 m/s</b></td></tr>
+          <tr><td>선행압밀하중 <span class="mono">Pc</span></td><td class="num"><b>85 kPa</b></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="figure">
+      <div class="ic">▦</div>
+      <div class="cap">해석 모델 개념도 / 메쉬 이미지를 여기에 삽입</div>
+    </div>
+  </div>
+  <div class="slide-foot"><span>Weekly Research Report</span><span class="page">04 / 09</span></div>
+</section>
+</body>
+</html>

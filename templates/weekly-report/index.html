@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly Report (7월 3주차) — Flow Physics and Informatics Laboratory</title>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../../slides/slides.css">
+<style>
+  html, body { margin: 0; background: #0b1526; }
+  a { color: var(--accent); } a:hover { color: var(--accent-hover); }
+  deck-stage .slide { width: 100%; height: 100%; }
+
+  /* 가독성 — 발표 대상 연배를 고려해 최소 글자 크기를 올린다.
+     caption 14→16, kicker 13→14. 본문(19)·small(16)은 그대로. */
+  .slide { --text-caption: 16px; --text-kicker: 14px; }
+
+  /* 표지 메타(Week / Date / 발표자) — 가장 작았던 구간 */
+  .title-meta { font-size: 24px; gap: var(--space-12); }
+  .title-meta .k { font-size: 16px; margin-bottom: var(--space-2); }
+  .title-meta .v { font-size: 24px; }
+
+  /* 목차 */
+  .toc { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5) var(--space-10); }
+  .toc-item { display: grid; grid-template-columns: 44px 1fr; gap: var(--space-4); align-items: start; padding-bottom: var(--space-4); border-bottom: var(--border-hairline); }
+  .toc-item .n { font-family: var(--font-mono); font-size: var(--text-lead); font-weight: 600; color: var(--accent); line-height: 1.2; }
+  .toc-item .t { font-size: var(--text-lead); font-weight: 600; color: var(--text-strong); }
+  .toc-item .d { display: block; font-size: var(--text-caption); color: var(--text-muted); font-weight: 400; margin-top: 3px; }
+
+  /* flow diagram (접목 슬라이드) */
+  .flow { display:flex; align-items:stretch; gap:14px; }
+  .flow .node {
+    flex:1; background: var(--surface-subtle); border:1px solid var(--border-subtle);
+    border-radius: var(--radius-lg); padding: 16px 18px; display:flex; flex-direction:column; gap:6px;
+  }
+  .flow .node.op { background: var(--surface-accent); border-color: var(--surface-accent); color:#fff; }
+  .flow .node .nk { font-size: var(--text-caption); font-weight:600; color: var(--text-muted); letter-spacing:.04em; }
+  .flow .node.op .nk { color: var(--navy-200); }
+  .flow .node .nv { font-size: var(--text-small); color: var(--text-strong); font-weight:600; }
+  .flow .node .nd { font-size: var(--text-caption); color: var(--text-muted); }
+  .flow .node.op .nv, .flow .node.op .nd { color:#fff; }
+  .flow .arrow { align-self:center; color: var(--accent); font-size: 26px; font-weight:700; }
+
+  /* 논문 서지 박스 — 요약이 위로 올라오도록 납작하게 */
+  .paper-meta { padding: var(--space-2) var(--space-4); }
+  .paper-meta .tbl td { padding: 7px var(--space-3); font-size: var(--text-caption); line-height: var(--leading-snug); }
+  .paper-meta .tbl td:first-child { width: 44px; padding-left: 0; }
+
+  /* 논문 abstract 블록 */
+  .abstract { background: var(--surface-subtle); border-left: var(--rule-accent); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: var(--space-5) var(--space-6); }
+  .abstract p { margin: 0; font-size: var(--text-small); line-height: var(--leading-normal); color: var(--text-default); }
+
+  /* ── 종방향 리듬 — 블록 사이 여백 ─────────────────────────
+     헤더/제목 여백을 조금 줄여 확보한 만큼을 본문 블록 간격으로 돌린다.
+     슬라이드 높이가 720px 고정이라 총합은 그대로 유지해야 한다. */
+  .slide .slide-head  { margin-bottom: var(--space-6); }
+  .slide .title-block { margin-bottom: var(--space-6); }
+
+  .slide-body.stack, .slide-body.stack.gap-6 { gap: var(--space-8); }
+  .slide-body .stack.gap-5, .slide-body .stack.gap-6 { gap: var(--space-6); }
+  .block + .block { margin-top: var(--space-8); }
+
+  .cols-2, .cols-3, .cols-5-7 { row-gap: var(--space-8); }
+  .slide-body .cols-2.block, .slide-body .cols-3.block { height: auto; }
+
+  .card .list { gap: var(--space-5); }
+
+  /* 내용이 빽빽한 슬라이드는 블록 여백을 유지하되 내부를 조인다 */
+  .slide-body.dense, .slide-body.dense.stack { gap: var(--space-6); }
+  .slide-body.dense .card { padding: var(--space-5); }
+  .slide-body.dense .list, .slide-body.dense .card .list { gap: var(--space-4); }
+  .slide-body.dense .card-head { margin-bottom: var(--space-4); }
+  .slide-body.dense .flow .node { padding: 10px 16px; gap: 3px; }
+
+  /* 마무리 슬라이드 — accent rule 없이 세 요소만 세로 중앙에 */
+  .slide--title.closing { justify-content: center; }
+  .slide--title.closing .report-hero { margin: var(--space-6) 0 var(--space-4); }
+
+  /* 접목 슬라이드 — 본문 글자를 한 단계 더 키운다 (16 → 18) */
+  .slide-body.bump { font-size: 18px; }
+  .slide-body.bump .list { font-size: 18px; }
+  .slide-body.bump .flow .node .nv { font-size: 18px; }
+  .slide-body.bump .flow .node .nk,
+  .slide-body.bump .flow .node .nd { font-size: 16px; }
+</style>
+</head>
+<body>
+<deck-stage width="1280" height="720">
+
+  <!-- 01 · 표지 -->
+  <section class="slide slide--title dark" data-label="표지" data-screen-label="표지">
+    <div class="title-lab">Flow Physics and Informatics Laboratory <span>· 서울대학교 건설환경도시공학부</span></div>
+    <h1 class="report-hero">Weekly Report</h1>
+    <div class="report-sub">7월 3주차 보고</div>
+    <div class="title-rule"></div>
+    <div class="title-meta">
+      <div><span class="k">Week</span><span class="v">2026 · W29 (7월 3주차)</span></div>
+      <div><span class="k">Date</span><span class="v">2026.07.13</span></div>
+      <div><span class="k">발표자</span><span class="v">장민엽</span></div>
+    </div>
+  </section>
+
+  <!-- 02 · 목차 -->
+  <section class="slide" data-label="목차" data-screen-label="목차">
+    <div class="slide-head">
+      <div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div>
+      <div class="meta">W29 · 2026.07.13</div>
+    </div>
+    <div class="title-block">
+      <p class="kicker">Contents</p>
+      <h2 class="slide-title">목차<span class="en">What this report covers</span></h2>
+    </div>
+    <div class="slide-body">
+      <div class="toc">
+        <div class="toc-item">
+          <span class="n">01</span>
+          <span class="t">이번 주 활동<span class="d">자격·어학 준비 · 논문 리뷰 진행 현황</span></span>
+        </div>
+        <div class="toc-item">
+          <span class="n">02</span>
+          <span class="t">논문 리뷰 — 목적과 계기<span class="d">논문 리뷰 목적 · NVIDIA Earth-2</span></span>
+        </div>
+        <div class="toc-item">
+          <span class="n">03</span>
+          <span class="t">논문 리뷰 — 요약<span class="d">Neural Operator (JMLR 2023) 핵심 개념</span></span>
+        </div>
+        <div class="toc-item">
+          <span class="n">04</span>
+          <span class="t">연안 파랑 시뮬레이션에의 접목<span class="d">field를 함수로 다루는 연산자</span></span>
+        </div>
+        <div class="toc-item">
+          <span class="n">05</span>
+          <span class="t">정리 및 이번 주 계획<span class="d">토목기사 실기 · TEPS · 논문 리뷰 · Delft3D</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-foot"><span>Weekly Report · 7월 3주차</span><span class="page">02 / 07</span></div>
+  </section>
+
+  <!-- 03 · 이번 주 활동 -->
+  <section class="slide" data-label="이번 주 활동" data-screen-label="이번 주 활동">
+    <div class="slide-head">
+      <div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div>
+      <div class="meta">W29 · 2026.07.13</div>
+    </div>
+    <div class="title-block">
+      <p class="kicker">This Week</p>
+      <h2 class="slide-title">이번 주 활동<span class="en">Qualification prep &amp; paper review in progress</span></h2>
+    </div>
+    <div class="slide-body stack gap-6">
+      <p class="muted" style="margin:0; font-size:var(--text-small)">이번 주는 자격·어학 준비와 이론 학습용 논문 리뷰를 병행했습니다.</p>
+      <div class="cols-3">
+        <div class="card subtle">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px"><span class="pill prog">진행 중</span></div>
+          <div class="card-head" style="font-size:var(--text-lead); margin-bottom:8px">토목기사 실기</div>
+          <ul class="list" style="gap:8px; font-size:var(--text-small)">
+            <li>과년도 기출 풀이</li>
+          </ul>
+        </div>
+        <div class="card subtle">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px"><span class="pill prog">진행 중</span></div>
+          <div class="card-head" style="font-size:var(--text-lead); margin-bottom:8px">TEPS (대학원)</div>
+          <ul class="list" style="gap:8px; font-size:var(--text-small)">
+            <li>기준 점수(327점) 이상 달성 목표</li>
+          </ul>
+        </div>
+        <div class="card subtle">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px"><span class="pill prog">진행 중</span></div>
+          <div class="card-head" style="font-size:var(--text-lead); margin-bottom:8px">논문 리뷰</div>
+          <ul class="list" style="gap:8px; font-size:var(--text-small)">
+            <li>Neural Operator (JMLR 2023) 정독 중</li>
+            <li>미분연산자 및 신경연산자에 대한 이론 공부 중</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-foot"><span>Weekly Report · 7월 3주차</span><span class="page">03 / 07</span></div>
+  </section>
+
+  <!-- 04 · 논문 리뷰: 목적과 계기 -->
+  <section class="slide" data-label="리뷰 목적" data-screen-label="논문 리뷰 — 목적과 계기">
+    <div class="slide-head">
+      <div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div>
+      <div class="meta">W29 · 2026.07.13</div>
+    </div>
+    <div class="title-block">
+      <p class="kicker">Paper Review · Motivation</p>
+      <h2 class="slide-title">논문 리뷰 — 목적과 계기<span class="en">Why this paper: from NVIDIA Earth-2 to Neural Operators</span></h2>
+    </div>
+    <div class="slide-body stack">
+      <div class="callout note block" style="border-left-color: var(--teal); background: var(--teal-soft)">
+        <div class="q">리뷰 대상</div>
+        <div class="a">Kovachki, Li, Liu, Azizzadenesheli, Bhattacharya, Stuart, Anandkumar (2023). <b>Neural Operator: Learning Maps Between Function Spaces with Applications to PDEs.</b> <span class="mono">JMLR 24(89)</span></div>
+      </div>
+      <div class="cols-2 block">
+        <div>
+          <div class="card-head" style="font-size:var(--text-lead)">리뷰 목적 <span class="en">Purpose</span></div>
+          <ul class="list" style="font-size:var(--text-small)">
+            <li><b>실험 이론 학습</b><span class="note">연구계획서의 대리모델(surrogate) 개념 — 물리 수치모형을 데이터 기반 모델로 대체하는 근거를 이론 수준에서 이해</span></li>
+            <li><b>실험 개선안 탐색</b><span class="note">현 구조의 field 처리를 더 나은 연산자로 바꿀 수 있는지 검토</span></li>
+          </ul>
+        </div>
+        <div>
+          <div class="card-head" style="font-size:var(--text-lead)">읽게 된 계기 <span class="en">How I got here</span></div>
+          <ul class="list" style="font-size:var(--text-small)">
+            <li><b>NVIDIA Earth-2 / FourCastNet</b>을 접함<span class="note">ERA5 재분석 자료로 학습한 전역 기상 대리모델. 핵심 연산자가 <b>AFNO</b>(Adaptive Fourier Neural Operator) — Neural Operator 계열</span></li>
+            <li>본 연구도 입력이 <b>동일한 ERA5 2D field</b><span class="note">같은 자료에서 검증된 계열이라면 기존 CNN 인코더보다 나은 결과를 줄 수 있을 것으로 기대</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-foot"><span>Weekly Report · 7월 3주차</span><span class="page">04 / 07</span></div>
+  </section>
+
+  <!-- 05 · 논문 리뷰: 요약 -->
+  <section class="slide" data-label="논문 요약" data-screen-label="논문 리뷰 — 요약">
+    <div class="slide-head">
+      <div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div>
+      <div class="meta">W29 · 2026.07.13</div>
+    </div>
+    <div class="title-block">
+      <p class="kicker">Paper Review · Abstract</p>
+      <h2 class="slide-title">논문 요약<span class="en">Neural Operator — learning maps between function spaces</span></h2>
+    </div>
+    <div class="slide-body cols-5-7 dense">
+      <div class="stack gap-5">
+        <div class="card subtle paper-meta">
+          <table class="tbl">
+            <tr><td class="muted">저자</td><td><b>Kovachki, Li 외 5인</b> <span class="muted">· Caltech · NVIDIA · Purdue</span></td></tr>
+            <tr><td class="muted">게재</td><td><b>JMLR</b>, Vol. 24, No. 89 (2023)</td></tr>
+            <tr><td class="muted">분야</td><td>Operator Learning · PDE 대리모델</td></tr>
+          </table>
+        </div>
+        <div class="abstract">
+          <p><b>요약.</b> 신경망을 <b>함수공간 사이의 연산자</b>를 학습하도록 일반화한 프레임워크입니다. 대표 구현인 <b>FNO</b>는 커널을 Fourier 공간에서 매개화하며, PDE 해를 수치 솔버보다 빠르게 근사합니다.</p>
+        </div>
+      </div>
+      <div>
+        <div class="card-head">핵심 개념 <span class="en">Key points</span></div>
+        <ul class="list">
+          <li><b>연산자 학습</b> — 격자 위 벡터가 아닌 <b>함수 → 함수</b> 사상을 직접 학습</li>
+          <li><b>이산화 불변성</b> — 한 해상도로 학습해 다른 해상도에서 <b>재학습 없이</b> 추론</li>
+          <li><b>빠른 추론</b> — 시간 스텝 반복 없이 신경망 <b>한 번 통과</b>로 해를 근사</li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-foot"><span>Weekly Report · 7월 3주차</span><span class="page">05 / 07</span></div>
+  </section>
+
+
+  <!-- 06 · 연안 파랑 시뮬레이션에의 접목 -->
+  <section class="slide" data-label="접목 아이디어" data-screen-label="연안 파랑 시뮬레이션에의 접목">
+    <div class="slide-head">
+      <div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div>
+      <div class="meta">W29 · 2026.07.13</div>
+    </div>
+    <div class="title-block">
+      <p class="kicker">Idea · Application</p>
+      <h2 class="slide-title">연안 파랑 시뮬레이션에의 접목<span class="en">An operator that takes fields as input, not grids</span></h2>
+    </div>
+    <div class="slide-body stack gap-5 dense bump">
+      <p class="muted" style="margin:0">연안 파랑·폭풍해일은 <b>field</b>가 지배하는 현상이므로, <b>field를 함수로 받아 함수로 내보내는</b> Neural Operator와 맞는다고 보았습니다.</p>
+      <div class="flow">
+        <div class="node">
+          <span class="nk">입력 · 함수</span>
+          <span class="nv">해상 강제력 field</span>
+          <span class="nd">바람장 · 기압장 · 파랑장 · 수심 (ERA5 2D field)</span>
+        </div>
+        <span class="arrow">→</span>
+        <div class="node op">
+          <span class="nk">NEURAL OPERATOR</span>
+          <span class="nv">field → field 사상 학습</span>
+          <span class="nd">격자가 아닌 함수 단위로 연산</span>
+        </div>
+        <span class="arrow">→</span>
+        <div class="node">
+          <span class="nk">출력</span>
+          <span class="nv">연안 응답</span>
+          <span class="nd">파랑장 · 관측소 storm-surge residual</span>
+        </div>
+      </div>
+      <div class="cols-2">
+        <div class="card subtle">
+          <div class="card-head" style="font-size:var(--text-lead)"><span class="pill note" style="margin-right:6px">기대</span>접목 이유</div>
+          <ul class="list">
+            <li><b>field 입력을 그대로 다룸</b> — 강제력장 전체를 하나의 함수로 취급</li>
+            <li><b>해상도 불변</b> — ERA5 <span class="mono">0.25°</span>로 학습 후 조밀한 연안 격자에 적용할 여지</li>
+            <li><b>전역 수용영역</b> — 태풍이 멀어도 원거리 forcing을 함께 반영</li>
+          </ul>
+        </div>
+        <div class="card subtle">
+          <div class="card-head" style="font-size:var(--text-lead)"><span class="pill prog" style="margin-right:6px">범위</span>접목 범위</div>
+          <ul class="list">
+            <li><b>수치모형 대리모델</b> — 파랑 수치모형의 반복 계산을 대체</li>
+            <li><b>현 모델의 field 처리부</b> — CNN encoder를 포함해 field를 받는 구간</li>
+            <li class="muted">정독을 모두 마친 뒤 판단하겠습니다</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-foot"><span>Weekly Report · 7월 3주차</span><span class="page">06 / 07</span></div>
+  </section>
+
+  <!-- 07 · 정리 및 이번 주 계획 -->
+  <section class="slide" data-label="정리" data-screen-label="정리 및 이번 주 계획">
+    <div class="slide-head">
+      <div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div>
+      <div class="meta">W29 · 2026.07.13</div>
+    </div>
+    <div class="title-block">
+      <p class="kicker">Summary &amp; Plan</p>
+      <h2 class="slide-title">정리 및 이번 주 계획<span class="en">Where I am, and what comes this week</span></h2>
+    </div>
+    <div class="slide-body cols-2" style="align-items:start">
+      <div class="stack gap-5">
+        <div class="card-head" style="font-size:var(--text-lead)">지금까지 정리 <span class="en">Summary</span></div>
+        <ul class="list">
+          <li><b>논문 리뷰 진행 중</b><span class="note">Neural Operator (JMLR 2023) 정독 중입니다</span></li>
+          <li><b>접목 가능성 확인</b><span class="note">field를 함수로 다루는 구조가 연안 파랑·폭풍해일 입력과 맞습니다</span></li>
+          <li><b>자격·어학 준비 병행</b><span class="note">토목기사 실기 · TEPS 학습 진행 중입니다</span></li>
+        </ul>
+      </div>
+      <div class="card subtle">
+        <div class="card-head" style="font-size:var(--text-lead)">이번 주 계획 <span class="en">This week</span></div>
+        <ul class="list" style="font-size:var(--text-small)">
+          <li><b>토목기사 실기 공부</b><span class="note">과년도 기출 풀이 이어서 진행</span></li>
+          <li><b>TEPS 공부</b><span class="note">기준 점수 달성을 목표로 학습 지속</span></li>
+          <li><b>논문 리뷰 완료</b><span class="note">Neural Operator 정독 마무리</span></li>
+          <li><b>Delft3D 설치 시도</b><span class="note">연안 파랑 수치모형 실행 환경 구축</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-foot"><span>Weekly Report · 7월 3주차</span><span class="page">07 / 07</span></div>
+  </section>
+
+  <!-- 08 · 마무리 (표지와 동일 디자인) -->
+  <section class="slide slide--title dark closing" data-label="감사합니다" data-screen-label="감사합니다">
+    <div class="title-lab">Flow Physics and Informatics Laboratory <span>· 서울대학교 건설환경도시공학부</span></div>
+    <h1 class="report-hero">감사합니다</h1>
+    <div class="report-sub">질문과 조언 부탁드립니다</div>
+  </section>
+
+</deck-stage>
+<script src="./deck-stage.js"></script>
+</body>
+</html>

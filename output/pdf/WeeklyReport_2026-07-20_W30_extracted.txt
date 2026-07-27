@@ -1,0 +1,152 @@
+Flow Physics and Informatics Laboratory · 서울대학교 건설환경도시공학부
+
+Weekly Report
+7월 4주차 주간 활동 보고
+토목기사 실기시험 대비 및 조석 관련 논문 검토
+WEEK          DATE           발표자
+2026 · W30    2026.07.20     장민엽
+Flow Physics & Informatics Lab · 건설환경도시공학부                                                        W30 · 2026.07.20
+
+
+WEEKLY ACTIVITIES
+저번 주 활동
+Civil Engineer practical exam preparation, workstation setup, and paper review
+7월 19일 토목기사 실기시험을 대비했고, 연구실 컴퓨터 세팅을 완료했으며, 지난주 말씀해주신 조석 내용을 알아보기 위해
+교수님 논문을 읽었습니다.
+시험 대비                                             논문 검토                          환경 구축
+
+
+토목기사 실기시험                                         조석 관련 내용 확인                    컴퓨터 세팅 완료
+7월 19일 일요일 시험에 대비해 토목기사 실기                        조석력에 따른 해수위의 변화를 확인하기 위해       연구실에서 사용할 컴퓨터의 기본 환경
+과목을 학습했습니다.                                       교수님께서 공저하신 황해 물리과정 리뷰          설정을 마쳤습니다.
+                                                  논문을 읽었습니다.
+토목기사 실기시험 대비를 3차 시험에도 준비해야 할 것                                                   연구 작업을 시작할 수 있도록 사용 환경을 준비했습니다.
+같습니다.                                             조석 성분의 종류와 황해의 조차 특성을 중심으로
+                                                  확인했습니다.
+
+Weekly Report · 7월 4주차                                                                                     02 / 08
+Flow Physics & Informatics Lab · 건설환경도시공학부                                                          W30 · 2026.07.20
+
+
+PAPER REVIEW
+논문 검토
+Hwang et al. (2014), The physical processes in the Yellow Sea
+
+The physical processes in the Yellow Sea                                     읽은 이유
+
+Jin Hwan Hwang, Sy Pham Van, Byoung-Ju Choi, Yeon Sik Chang, Yong Hoon Kim   조석의 발생 원인 및 종류를 확인하기 위해
+Ocean & Coastal Management 102 (2014) 449–457                                읽었습니다.
+                                                                             논문에서 조석을 다룬 부분을 중심으로 보았습니다.
+
+01                                                 02                              03
+
+조석의 수학적 계산                                         조석에 영향을 주는 요소 및 분류              황해의 조차 특성
+조석력의 수학적 표현에 대해 알아보았습니다.                           조석 운동에 영향을 주는 요소 및              조석 운동을 기반으로 황해의 조차 특성에
+                                                   분류를 알아보았습니다.                    대해 알아보았습니다.
+
+
+Weekly Report · 논문 검토                                                                                        03 / 08
+Flow Physics & Informatics Lab · 건설환경도시공학부                                                       W30 · 2026.07.20
+
+
+TIDAL EQUATIONS
+조석 관련 식 확인
+Equations reviewed while reading about tides
+관측 조위는 여러 조석 성분의 합으로 표현되며, 조석파의 전파속도는 얕은물에서 수심의 영향을 받는다는 점을
+정리했습니다.
+관측 조위의 조화합성                                                          얕은물 조석파의 전파속도
+η(t) = Z0 + ∑ Ai cos(ωi t − ϕi )
+                 ​       ​   ​            ​   ​
+
+
+
+
+                                                                     c=    gh   ​
+
+
+
+
+                     i
+
+각 분조의 진폭과 위상이 합쳐져 한 지점의 실제 조위가 만들어집니다.                               수심 h가 얕아지면 전파속도 c가 느려집니다. 황해는 평균 수심 44 m 로,
+                                                                     얕은 수심과 해안 형상에 따른 반사·공명이 조석의 진폭과 위상에 영향을 줄
+        Z0                       Ai                ωi       ϕi       수 있음을 확인했습니다.
+     평균해수면                       진폭               각주파수      위상
+             ​                        ​                 ​        ​
+
+
+
+
+Weekly Report · 조석 관련 식                                                                                   04 / 08
+Flow Physics & Informatics Lab · 건설환경도시공학부                                                     W30 · 2026.07.20
+
+
+TIDAL CONSTITUENTS
+주요 조석 성분 확인
+Main constituents and their astronomical origins
+교수님 논문에 제시된 황해의 주요 조석 성분을 기준으로, 각 성분의 주기와 발생 원인을 함께 확인했습니다.
+  분조                       명칭                      주기             발생 원인
+  M2                   ​   주태음 반일주조                약 12.42 h      달의 직접적인 조석력
+  S2   ​
+                           주태양 반일주조                12.00 h        태양의 직접적인 조석력
+  N2           ​
+                           타원율성 태음 반일주조            약 12.66 h      달 궤도의 타원성과 지구–달 거리 변화
+  K2               ​       일월합성 반일주조               약 11.97 h      달·태양의 적위 변화가 만드는 반일주 효과
+  K1               ​       일월합성 일주조                약 23.93 h      달·태양의 적위 변화가 만드는 일주 효과
+  O1       ​
+                           주태음 일주조                 약 25.82 h      달의 적위 변화가 만드는 일주 효과
+  Sa                       태양 연주조                  약 365.24 day   지구–태양계의 연주기 변화와 계절적 해수면 변화
+Weekly Report · 조석 성분                                                                                   05 / 08
+Flow Physics & Informatics Lab · 건설환경도시공학부                                                       W30 · 2026.07.20
+
+
+YELLOW SEA TIDES
+황해 조차 특성 확인
+Tidal characteristics noted in Hwang et al. (2014)
+논문에서 황해는 조차가 큰 대조차 해역으로 정리되어 있으며, 반일주조 성분이 우세하다는 점을 확인했습니다.
+                                                     반일주조 성분 우세
+COASTAL MAXIMUM TIDAL AMPLITUDE                      M2가 대부분의 해역에서 지배적이며, M2, S2, N2 등의 반일주조 성분이 K1, O1 등의 일주조
+                                                     성분보다 우세한 것으로 정리되어 있습니다.
+                                                          ​                  ​   ​   ​             ​
+
+
+
+
+≈ 10 m                                               얕은 수심과 해안 형상의 영향
+논문에서 제시한 황해 연안의 최대 조석 진폭입니다. 황해가 대조차
+환경이라는 것을 수치로 확인했습니다.                                 경기만에서는 얕고 좁은 수로 형상에 따른 공명으로 큰 조석 진폭이 나타나며, 반사와 분지 형상에 따라
+                                                     황해 내부의 진폭과 위상이 달라진다는 내용을 확인했습니다.
+
+
+
+Weekly Report · 황해 조차                                                                                     06 / 08
+Flow Physics & Informatics Lab · 건설환경도시공학부                                           W30 · 2026.07.20
+
+
+FURTHER STUDY
+추가로 진행할 내용
+방법론 논문 검토 및 데이터 준비
+추천해주신 방법론 논문 두 편을 읽고, 적용을 검토하기 위한 여수·마산 자료를 확보할 예정입니다.
+Methodology                                                            Data
+
+
+추천 논문 2편 읽기                                                            여수·마산 자료 확보
+01   Effectiveness of the Ike Dike in mitigating coastal flood         01     여수
+     risk under multiple climate and sea level rise projections
+     Son et al. · Risk Analysis (2025)
+
+
+
+02   Impact of atmospheric forcing on storm surge prediction between   02     마산
+     numerical weather model and parametric typhoon model
+     Jo et al. · Ocean Engineering (2025)
+
+
+
+
+Weekly Report · 추가 학습                                                                         07 / 08
+Flow Physics and Informatics Laboratory · 서울대학교 건설환경도시공학부
+
+감사합니다
+질문과 조언 부탁드립니다.
+

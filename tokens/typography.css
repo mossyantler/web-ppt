@@ -1,0 +1,35 @@
+:root {
+  /* ── Families ───────────────────────────────────────── */
+  --font-sans: 'Pretendard', 'Pretendard Variable', -apple-system, BlinkMacSystemFont,
+               'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', 'D2Coding', ui-monospace, monospace;
+
+  /* ── Weights ────────────────────────────────────────── */
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semibold: 600;
+  --weight-bold:    700;
+  --weight-extrabold: 800;
+
+  /* ── Type scale (slide-authored @ 1280×720) ─────────── */
+  --text-hero:    64px;  /* title-slide主제목 */
+  --text-display: 44px;  /* slide title */
+  --text-title:   30px;  /* section / block heading */
+  --text-lead:    22px;  /* lead paragraph */
+  --text-body:    19px;  /* body */
+  --text-small:   16px;  /* secondary */
+  --text-caption: 14px;  /* captions / footnotes */
+  --text-kicker:  13px;  /* eyebrow / label */
+  --text-metric:  52px;  /* KPI number */
+
+  /* ── Line heights ───────────────────────────────────── */
+  --leading-tight: 1.12;
+  --leading-snug:  1.28;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* ── Tracking ───────────────────────────────────────── */
+  --tracking-kicker: 0.14em;
+  --tracking-tight:  -0.01em;
+  --tracking-normal: 0;
+}

@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "score_before": 14.0,
+    "score_after": 2.0,
+    "score_improvement": 12.0,
+    "s1_residual": 0,
+    "s2_residual": 1,
+    "over_polish_signals": [],
+    "verdict": "accept",
+    "quality_level": "A"
+  },
+  "residual_findings": [
+    {
+      "category": "I-4",
+      "severity": "S2",
+      "text_span": "확인하겠습니다 / 검토하겠습니다",
+      "reason": "다음 확인 사항에서 필요한 공식 보고 어미이므로 유지",
+      "action": "none"
+    }
+  ],
+  "over_polish_findings": [],
+  "unclassified_candidates": [],
+  "next_action": {"type": "accept", "targets": []}
+}

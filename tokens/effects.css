@@ -1,0 +1,24 @@
+:root {
+  /* ── Corner radii ───────────────────────────────────── */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  /* ── Borders ────────────────────────────────────────── */
+  --border-hairline: 1px solid var(--border-subtle);
+  --border-line: 1px solid var(--border-default);
+  --rule-accent: 3px solid var(--accent);
+
+  /* ── Shadows (restrained, academic) ─────────────────── */
+  --shadow-sm: 0 1px 2px rgba(20, 24, 31, 0.06);
+  --shadow-md: 0 2px 8px rgba(20, 24, 31, 0.07), 0 1px 2px rgba(20, 24, 31, 0.05);
+  --shadow-lg: 0 8px 28px rgba(20, 24, 31, 0.10);
+
+  /* ── Motion ─────────────────────────────────────────── */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* @kind other */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --dur-fast: 140ms; /* @kind other */
+  --dur-base: 240ms; /* @kind other */
+}
