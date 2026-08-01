@@ -1,0 +1,845 @@
+  html,
+  body {
+    margin: 0;
+    background: var(--navy-900);
+  }
+
+  deck-stage .slide {
+    width: 100%;
+    height: 100%;
+  }
+
+  .slide {
+    --text-caption: 16px;
+    --text-kicker: 14px;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  .slide .slide-head,
+  .slide .title-block {
+    margin-bottom: var(--space-6);
+  }
+
+  .slide-title {
+    font-size: 40px;
+    line-height: var(--leading-tight);
+  }
+
+  .slide-title .en {
+    font-size: var(--text-small);
+    margin-top: var(--space-2);
+  }
+
+  .slide-foot {
+    bottom: var(--space-5);
+  }
+
+  .eyebrow {
+    font-size: var(--text-small);
+    color: var(--navy-200);
+    letter-spacing: var(--tracking-kicker);
+    text-transform: uppercase;
+    font-weight: var(--weight-bold);
+  }
+
+  .report-topic {
+    max-width: 820px;
+    margin-top: var(--space-3);
+    font-size: 30px;
+    line-height: var(--leading-snug);
+    font-weight: var(--weight-semibold);
+    color: var(--navy-100);
+  }
+
+  .title-meta {
+    gap: var(--space-12);
+    font-size: var(--text-lead);
+  }
+
+  .title-meta .k {
+    font-size: var(--text-small);
+  }
+
+  .lead {
+    max-width: 1040px;
+    font-size: var(--text-lead);
+    line-height: var(--leading-normal);
+    font-weight: var(--weight-semibold);
+    color: var(--text-strong);
+  }
+
+  /* ── 02 · 저번 주 활동 ─────────────────────────────── */
+  .activity-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin-top: var(--space-6);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .activity-card {
+    min-height: 262px;
+    padding: var(--space-6);
+  }
+
+  .activity-card:first-child {
+    padding-left: 0;
+  }
+
+  .activity-card + .activity-card {
+    padding-right: 0;
+    border-left: var(--border-hairline);
+  }
+
+  .status-label {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-kicker);
+    text-transform: uppercase;
+  }
+
+  .activity-card.paper .status-label {
+    color: var(--teal);
+  }
+
+  .activity-card h3 {
+    margin: var(--space-5) 0 var(--space-3);
+    font-size: 26px;
+    line-height: var(--leading-snug);
+    color: var(--text-strong);
+  }
+
+  .activity-card p {
+    margin: 0;
+    font-size: 18px;
+    line-height: var(--leading-relaxed);
+    color: var(--text-default);
+  }
+
+  .activity-note {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: var(--border-hairline);
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--text-muted);
+  }
+
+  /* ── 03 · 논문 개요 ────────────────────────────────── */
+  .paper-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .paper-card,
+  .purpose-card {
+    min-height: 188px;
+    padding: var(--space-6) var(--space-8) var(--space-5) 0;
+  }
+
+  .purpose-card {
+    padding-right: 0;
+    padding-left: var(--space-8);
+    border-left: var(--border-hairline);
+  }
+
+  .paper-title {
+    font-size: 26px;
+    line-height: var(--leading-snug);
+    font-weight: var(--weight-bold);
+    color: var(--text-strong);
+  }
+
+  .paper-author {
+    margin-top: var(--space-3);
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--text-default);
+  }
+
+  .paper-journal {
+    margin-top: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    font-weight: var(--weight-semibold);
+    color: var(--teal);
+  }
+
+  .purpose-card .label {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-kicker);
+  }
+
+  .purpose-card strong {
+    display: block;
+    margin-top: var(--space-3);
+    font-size: 24px;
+    line-height: var(--leading-snug);
+    color: var(--text-strong);
+  }
+
+  .purpose-card p {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--text-default);
+  }
+
+  .review-scope {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: var(--space-6);
+    border-top: var(--border-hairline);
+    border-bottom: var(--border-hairline);
+  }
+
+  .scope-item {
+    min-height: 126px;
+    padding: var(--space-4) var(--space-6);
+  }
+
+  .scope-item:first-child {
+    padding-left: 0;
+  }
+
+  .scope-item + .scope-item {
+    border-left: var(--border-hairline);
+  }
+
+  .scope-item:last-child {
+    padding-right: 0;
+  }
+
+  .scope-item .number {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    font-weight: var(--weight-bold);
+    color: var(--accent);
+  }
+
+  .scope-item h3 {
+    margin: var(--space-2) 0;
+    font-size: var(--text-lead);
+    color: var(--text-strong);
+  }
+
+  .scope-item p {
+    margin: 0;
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--text-default);
+  }
+
+  /* ── 04 · 연구 흐름 ────────────────────────────────── */
+  .flow-chain {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin-top: var(--space-5);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .flow-step {
+    position: relative;
+    min-height: 132px;
+    padding: var(--space-5) var(--space-4) var(--space-5) 0;
+  }
+
+  .flow-step + .flow-step {
+    padding-left: var(--space-4);
+    border-left: var(--border-hairline);
+  }
+
+  .flow-step:last-child {
+    padding-right: 0;
+  }
+
+  .flow-step .number {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-kicker);
+    color: var(--accent);
+  }
+
+  .flow-step h3 {
+    margin: var(--space-2) 0 var(--space-2);
+    font-size: 19px;
+    line-height: var(--leading-snug);
+    color: var(--text-strong);
+  }
+
+  .flow-step p {
+    margin: 0;
+    font-size: 14px;
+    line-height: var(--leading-normal);
+    color: var(--text-muted);
+  }
+
+  .forcing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: var(--space-6);
+    border-bottom: var(--border-hairline);
+  }
+
+  .forcing-item {
+    min-height: 154px;
+    padding: var(--space-5) var(--space-8) var(--space-5) 0;
+  }
+
+  .forcing-item + .forcing-item {
+    padding-right: 0;
+    padding-left: var(--space-8);
+    border-left: var(--border-hairline);
+  }
+
+  .forcing-item .label {
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-kicker);
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+
+  .forcing-item h3 {
+    margin: var(--space-3) 0 var(--space-3);
+    font-size: 22px;
+    color: var(--text-strong);
+  }
+
+  .forcing-item p {
+    margin: 0;
+    font-size: 16px;
+    line-height: var(--leading-relaxed);
+    color: var(--text-default);
+  }
+
+  /* ── 05 / 08 · 수식 ────────────────────────────────── */
+  .equation-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    margin-top: var(--space-5);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .equation-card {
+    box-sizing: border-box;
+    min-width: 0;
+    padding: var(--space-5) var(--space-8) var(--space-5) 0;
+  }
+
+  .equation-card + .equation-card {
+    padding-right: 0;
+    padding-left: var(--space-8);
+    border-left: var(--border-hairline);
+  }
+
+  .equation-card h3 {
+    margin: 0;
+    font-size: 22px;
+    color: var(--text-strong);
+  }
+
+  .equation-box {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 84px;
+    margin: var(--space-3) 0 var(--space-4);
+    padding: var(--space-3) 0;
+    border-top: var(--border-hairline);
+    border-bottom: var(--border-hairline);
+    color: var(--navy-800);
+  }
+
+  .equation-box .katex-display {
+    margin: 0;
+    font-size: 1.05em;
+  }
+
+  .equation-card p {
+    margin: 0;
+    font-size: 16px;
+    line-height: var(--leading-normal);
+    color: var(--text-default);
+  }
+
+  .symbol-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: var(--space-4);
+    border-top: var(--border-hairline);
+  }
+
+  .symbol-row > span {
+    padding: var(--space-2) var(--space-1);
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.35;
+    color: var(--text-default);
+  }
+
+  .symbol-row > span + span {
+    border-left: var(--border-hairline);
+  }
+
+  .symbol-row > span > strong {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--teal);
+  }
+
+  /* ── 표 ────────────────────────────────────────────── */
+  .data-table-wrap {
+    margin-top: var(--space-5);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 15px;
+    color: var(--text-default);
+  }
+
+  .data-table th {
+    padding: var(--space-3) var(--space-4);
+    border-top: var(--rule-accent);
+    border-bottom: 2px solid var(--navy-800);
+    text-align: left;
+    font-size: var(--text-caption);
+    color: var(--text-strong);
+  }
+
+  .data-table td {
+    padding: 10px var(--space-4);
+    border-bottom: var(--border-hairline);
+    line-height: 1.4;
+    vertical-align: middle;
+  }
+
+  .data-table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .data-table th:first-child,
+  .data-table td:first-child {
+    padding-left: 0;
+  }
+
+  .data-table .rowhead {
+    font-weight: var(--weight-bold);
+    color: var(--text-strong);
+  }
+
+  .data-table .num {
+    font-family: var(--font-mono);
+    text-align: right;
+  }
+
+  .data-table .best {
+    color: var(--teal);
+    font-weight: var(--weight-bold);
+  }
+
+  /* ── 07 · 실험 setup ──────────────────────────────── */
+  .setup-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: var(--space-5);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .setup-item {
+    min-height: 236px;
+    padding: var(--space-5) var(--space-6) var(--space-5) 0;
+  }
+
+  .setup-item + .setup-item {
+    padding-left: var(--space-6);
+    border-left: var(--border-hairline);
+  }
+
+  .setup-item:last-child {
+    padding-right: 0;
+  }
+
+  .setup-item .tag {
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-kicker);
+    color: var(--accent);
+  }
+
+  .setup-item.wrf .tag {
+    color: var(--teal);
+  }
+
+  .setup-item h3 {
+    margin: var(--space-3) 0 var(--space-3);
+    font-size: 22px;
+    line-height: var(--leading-snug);
+    color: var(--text-strong);
+  }
+
+  .setup-item p {
+    margin: 0;
+    font-size: 16px;
+    line-height: var(--leading-relaxed);
+    color: var(--text-default);
+  }
+
+  .setup-item .metric {
+    margin-top: var(--space-4);
+    padding-top: var(--space-3);
+    border-top: var(--border-hairline);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .setup-item .metric b {
+    color: var(--navy-800);
+  }
+
+  /* ── 09 · 결과 ────────────────────────────────────── */
+  .result-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+    margin-top: var(--space-5);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .result-stat {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 292px;
+    padding: var(--space-6) var(--space-8) var(--space-6) 0;
+  }
+
+  .result-stat .label {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-kicker);
+    color: var(--text-muted);
+  }
+
+  .result-stat .value {
+    margin: var(--space-4) 0 var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 68px;
+    line-height: 1;
+    font-weight: var(--weight-bold);
+    color: var(--navy-800);
+  }
+
+  .result-stat p {
+    margin: 0;
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--text-default);
+  }
+
+  .result-table {
+    padding-left: var(--space-8);
+    border-left: var(--border-hairline);
+  }
+
+  .result-table .data-table th:first-child,
+  .result-table .data-table td:first-child {
+    padding-left: 0;
+  }
+
+  .result-table .data-table th {
+    border-top: 0;
+  }
+
+  .result-note {
+    margin-top: var(--space-4);
+    font-size: var(--text-small);
+    line-height: var(--leading-normal);
+    color: var(--text-muted);
+  }
+
+  /* ── 10 · 결론 ────────────────────────────────────── */
+  .finding-list {
+    margin-top: var(--space-5);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .finding {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-4) 0;
+  }
+
+  .finding + .finding {
+    border-top: var(--border-hairline);
+  }
+
+  .finding .number {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    font-weight: var(--weight-bold);
+    color: var(--accent);
+  }
+
+  .finding h3 {
+    margin: 0 0 var(--space-1);
+    font-size: 21px;
+    line-height: var(--leading-snug);
+    color: var(--text-strong);
+  }
+
+  .finding p {
+    margin: 0;
+    font-size: 16px;
+    line-height: var(--leading-relaxed);
+    color: var(--text-default);
+  }
+
+  .limit-note {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    column-gap: var(--space-6);
+    align-items: baseline;
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+  }
+
+  .limit-note .label {
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-kicker);
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .limit-note p {
+    margin: 0;
+    font-size: var(--text-small);
+    line-height: var(--leading-relaxed);
+    color: var(--text-default);
+  }
+
+  /* ── 11 · 추가 진행 ───────────────────────────────── */
+  .study-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
+    margin-top: var(--space-6);
+    border-top: var(--rule-accent);
+    border-bottom: var(--border-hairline);
+  }
+
+  .study-question {
+    min-height: 292px;
+    padding: var(--space-8) var(--space-8) var(--space-8) 0;
+  }
+
+  .study-question .kicker,
+  .study-topics-intro .kicker,
+  .study-topic .number,
+  .study-paper .number {
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-kicker);
+    color: var(--accent);
+  }
+
+  .study-question h3,
+  .study-topics h3 {
+    margin: var(--space-5) 0 var(--space-4);
+    font-size: 28px;
+    line-height: 1.15;
+    color: var(--text-strong);
+  }
+
+  .study-paper-list {
+    margin-top: var(--space-5);
+    border-top: var(--border-hairline);
+  }
+
+  .study-paper {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: var(--space-3);
+    box-sizing: border-box;
+    min-height: 100px;
+    padding: var(--space-4) 0;
+  }
+
+  .study-paper + .study-paper {
+    border-top: var(--border-hairline);
+  }
+
+  .study-paper h4 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.42;
+    color: var(--text-strong);
+  }
+
+  .study-paper p {
+    margin-top: var(--space-1);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  .study-topics {
+    padding-left: var(--space-8);
+    border-left: var(--border-hairline);
+  }
+
+  .study-topics-intro {
+    padding: var(--space-8) 0 var(--space-4);
+  }
+
+  .study-topics h3 {
+    margin: 18px 0 0;
+  }
+
+  .study-topics > .study-paper-list {
+    margin-top: var(--space-1);
+  }
+
+  /* 08 · SuWAT — 연속식과 전체 운동량방정식을 세로로 쌓음 */
+  .equation-stack {
+    margin-top: var(--space-3);
+    border-top: var(--rule-accent);
+  }
+
+  .equation-row {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    column-gap: var(--space-6);
+    align-items: start;
+    padding: var(--space-3) 0;
+    border-bottom: var(--border-hairline);
+  }
+
+  .equation-row h3 {
+    grid-row: 1 / span 2;
+    grid-column: 1;
+    margin: 0;
+    font-size: 20px;
+    line-height: var(--leading-snug);
+    color: var(--text-strong);
+  }
+
+  .equation-row .equation-box,
+  .equation-row p {
+    grid-column: 2;
+  }
+
+  .equation-row .equation-box {
+    justify-content: flex-start;
+    min-height: 0;
+    margin: 0 0 var(--space-2);
+    padding: 0;
+    border: 0;
+    color: var(--navy-800);
+  }
+
+  .equation-row .equation-box .katex-display {
+    margin: 0;
+    font-size: 1em;
+  }
+
+  .equation-row.wide .equation-box .katex-display {
+    font-size: 0.88em;
+  }
+
+  .equation-row p {
+    margin: 0;
+    font-size: 15px;
+    line-height: var(--leading-normal);
+    color: var(--text-default);
+  }
+
+  .symbol-row.eight {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    margin-top: var(--space-3);
+    border-top: 0;
+    border-bottom: var(--border-hairline);
+  }
+
+  .symbol-row.eight > span {
+    padding: var(--space-1) var(--space-1) var(--space-2);
+    font-size: 12px;
+  }
+
+  /* 09 · PSH 경험식 — 긴 회귀식과 기호표를 한 화면에 맞춤 */
+  .slide.psh .lead {
+    font-size: var(--text-small);
+    font-weight: var(--weight-regular);
+    color: var(--text-muted);
+  }
+
+  .slide.psh .equation-box {
+    min-height: 80px;
+    margin: var(--space-4) 0 var(--space-3);
+  }
+
+  .slide.psh .data-table-wrap {
+    margin-top: var(--space-3);
+  }
+
+  .slide.psh .equation-box .katex-display {
+    font-size: 0.92em;
+  }
+
+  .slide.psh .data-table td {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+
+  .slide.psh .data-table th {
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+  }
+
+  /* 12 · 추가 진행 — 카드 높이를 줄여 푸터와의 간격 확보 */
+  .slide.further .study-question {
+    min-height: 268px;
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-6);
+  }
+
+  .slide.further .study-topics-intro {
+    padding-top: var(--space-6);
+  }
+
+  .slide.further .study-paper {
+    min-height: 94px;
+  }
+
+  .closing {
+    justify-content: center;
+  }
+
+  .closing .report-hero {
+    margin: var(--space-6) 0 var(--space-4);
+  }

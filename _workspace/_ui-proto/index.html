@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>편집 모드 UI 4안 비교</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  html, body { margin: 0; background: #11161d; color: #e6edf5; font-family: var(--font-sans); }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 56px 28px 80px; }
+  h1 { font-size: 30px; font-weight: 800; margin: 0 0 8px; letter-spacing: -.01em; }
+  .sub { color: #8494a6; font-size: 15px; line-height: 1.7; margin: 0 0 36px; }
+  .sub code { font-family: var(--font-mono); color: #9fd48b; font-size: 13px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  a.card2 {
+    display: block; text-decoration: none; color: inherit;
+    background: #161d26; border: 1px solid #263140; border-radius: 12px;
+    padding: 20px 20px 18px; transition: border-color .15s, background .15s;
+  }
+  a.card2:hover { border-color: #4a7fc1; background: #1a222d; }
+  .k { font-family: var(--font-mono); font-size: 11px; color: #6b8bb5; letter-spacing: .1em; }
+  h2 { font-size: 19px; margin: 6px 0 10px; font-weight: 700; }
+  .desc { font-size: 13px; line-height: 1.65; color: #93a2b3; margin: 0 0 12px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag2 { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: #1e2833; color: #8fa3b8; border: 1px solid #2b3746; }
+  .tag2[data-good] { color: #9fd48b; border-color: #33502f; background: #182317; }
+  .tag2[data-bad] { color: #e5a3a3; border-color: #5a2f2f; background: #241717; }
+  .how { margin-top: 40px; background: #0f151d; border: 1px solid #232c38; border-radius: 12px; padding: 20px 24px; }
+  .how h3 { font-size: 14px; margin: 0 0 12px; color: #b9c6d4; letter-spacing: .04em; }
+  .how ul { margin: 0; padding-left: 18px; color: #93a2b3; font-size: 13px; line-height: 1.9; }
+  .how kbd {
+    font-family: var(--font-mono); font-size: 11px; background: #1c242e;
+    border: 1px solid #2e3a48; border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; color: #cfdbe8;
+  }
+  .note { margin-top: 24px; font-size: 12px; color: #64738550; }
+  .note { color: #647385; line-height: 1.8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>편집 모드 UI — 4안 실물 비교</h1>
+  <p class="sub">
+    진짜 W31 슬라이드 + 진짜 디자인 시스템(<code>styles.css</code>, <code>slides.css</code>) 위에
+    편집 크롬만 4가지로 바꿔 얹었다. 선택·이동·복제·삭제·블록 삽입·텍스트 편집은 <b>전부 실제로 동작</b>한다.
+    저장만 가짜(토스트)다. 좌측 레일은 실제 <code>deck-stage</code> 레일 자리를 재현한 것.
+  </p>
+
+  <a class="card2" href="powerpoint.html" style="grid-column:1/-1;margin-bottom:16px;border-color:#4a7fc1;background:#141d29">
+    <div class="k">PARADIGM E — 새로 추가</div>
+    <h2>PowerPoint형</h2>
+    <p class="desc">
+      리본 툴바(홈/삽입/서식) · 개체 단위 선택 · 8핸들 · 드래그 이동 · 우클릭 메뉴 · 서식 창 · 상태바.
+      PPT의 <b>“그룹”</b>을 DOM 중첩에 대응시켰다 — 카드 안 글자를 클릭해도 카드가 통으로 잡히고,
+      더블클릭하면 그룹 안으로 들어가 내부 개체를 다룬다. <code>slide-body</code> 같은 레이아웃 껍데기는 아예 안 잡힌다.
+      <b>스냅 배치 / 자유 배치</b> 두 모드를 리본에서 바로 바꿔 비교할 수 있다.
+    </p>
+    <div class="tags">
+      <span class="tag2" data-good>PPT 조작감</span>
+      <span class="tag2" data-good>레이아웃 껍데기 안 보임</span>
+      <span class="tag2" data-good>배치 모드 비교 내장</span>
+      <span class="tag2" data-bad>자유 배치는 정렬 책임이 사용자</span>
+    </div>
+  </a>
+
+  <div class="grid">
+    <a class="card2" href="floating.html">
+      <div class="k">PARADIGM A</div>
+      <h2>플로팅 툴바형</h2>
+      <p class="desc">고정 패널 없음. 요소를 클릭하면 그 위에 작은 툴바가 뜨고, 요소 위/아래 경계에 ＋ 삽입 버튼이 붙는다. Notion·Medium 방식.</p>
+      <div class="tags">
+        <span class="tag2" data-good>캔버스 최대</span>
+        <span class="tag2" data-good>학습곡선 0</span>
+        <span class="tag2" data-good>구현 가벼움</span>
+        <span class="tag2" data-bad>세부 속성은 ⋯ 안에 숨음</span>
+      </div>
+    </a>
+
+    <a class="card2" href="inspector.html">
+      <div class="k">PARADIGM B</div>
+      <h2>인스펙터 패널형</h2>
+      <p class="desc">우측 300px 고정 패널. breadcrumb으로 부모 계층 타고 올라가 선택, 클래스 토글·그리드 전환·블록 팔레트가 항상 보인다. Figma·DevTools 방식.</p>
+      <div class="tags">
+        <span class="tag2" data-good>기능 밀도 최고</span>
+        <span class="tag2" data-good>계층 파악 쉬움</span>
+        <span class="tag2" data-bad>캔버스 축소</span>
+        <span class="tag2" data-bad>구현량 큼</span>
+      </div>
+    </a>
+
+    <a class="card2" href="modes.html">
+      <div class="k">PARADIGM C</div>
+      <h2>모드 전환형</h2>
+      <p class="desc">상단에 <b>텍스트 / 구조 / 발표</b> 3모드. 텍스트 모드는 한 번 클릭으로 바로 타이핑돼서 실수로 구조가 깨질 일이 없다. 구조 모드에서만 블록 라벨·아웃라인이 드러난다. Keynote 방식.</p>
+      <div class="tags">
+        <span class="tag2" data-good>실수 방지 최강</span>
+        <span class="tag2" data-good>인지부하 낮음</span>
+        <span class="tag2" data-bad>모드 왕복 귀찮음</span>
+      </div>
+    </a>
+
+    <a class="card2" href="outline.html">
+      <div class="k">PARADIGM D</div>
+      <h2>아웃라인 트리형</h2>
+      <p class="desc">우측에 슬라이드 DOM 트리. 트리 행에 hover하면 캔버스에서 해당 요소가 하이라이트되고, ⣿ 핸들을 드래그해 형제끼리 재배치한다.</p>
+      <div class="tags">
+        <span class="tag2" data-good>깊은 중첩 접근 강함</span>
+        <span class="tag2" data-bad>시선 왕복 큼</span>
+        <span class="tag2" data-bad>비용 대비 실사용 적음</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="how">
+    <h3>어느 안에서든 되는 조작</h3>
+    <ul>
+      <li><b>클릭</b> — 요소 선택 (파란 실선 + 좌상단에 <code>div.card</code> 같은 라벨)</li>
+      <li><b>더블클릭</b> — 그 자리에서 텍스트 편집 · <kbd>Enter</kbd>도 동일</li>
+      <li><kbd>⌥</kbd><kbd>↑</kbd> / <kbd>⌥</kbd><kbd>↓</kbd> — 형제 사이 순서 이동</li>
+      <li><kbd>⌘</kbd><kbd>D</kbd> — 복제 (덱 전용 일회용 블록도 이 방식으로 안전하게 늘림)</li>
+      <li><kbd>Delete</kbd> — 삭제 · <kbd>Esc</kbd> — 선택 해제</li>
+      <li><kbd>⌘</kbd><kbd>Z</kbd> — 되돌리기 · <kbd>⌘</kbd><kbd>S</kbd> — 저장 (프로토타입이라 토스트만)</li>
+      <li>좌측 레일에서 <b>03 논문 개요</b> / <b>06 PTM vs WRF</b> 두 장 전환 가능</li>
+    </ul>
+  </div>
+
+  <p class="note">
+    이 폴더는 UI 결정용 임시 프로토타입이다. 실제 <code>_workspace/2026-07-27-001/index.html</code>은 건드리지 않는다.<br>
+    비교 포인트: ① 텍스트만 고칠 때 손이 몇 번 가는가 ② 카드 하나 늘릴 때 몇 번 가는가 ③ 화면이 답답한가.
+  </p>
+</div>
+</body>
+</html>
