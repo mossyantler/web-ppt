@@ -69,7 +69,9 @@ export class Mapping {
         this.reverse.get(k).push({ key, value: valueOf(key), variant, classes });
       }
     }
-    this.inlineClasses = new Set(json.inlineClasses);
+    // §2.4.1 — `역할 이름 → 클래스` 표. 검사에 쓰는 것은 값(클래스) 집합이고,
+    // 테마 간 이식에 쓰는 것은 키(역할)다.
+    this.inlineClasses = new Set(Object.values(json.inlineClasses));
 
     // 클래스 없는 매핑(예: text/default = 클래스 없는 <p>)은 역방향 키가 없다.
     // 그런 값은 기본 태그로만 되찾을 수 있다 — 클래스 없는 요소의 추정에 쓴다.

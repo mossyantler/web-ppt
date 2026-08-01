@@ -42,7 +42,8 @@ const SAFE_HREF = /^(?:https?:|mailto:|[^a-z0-9+.-]|[^:]*$)/i;
 export function normalizeInline(html, mapping, leafValue = null) {
   if (typeof html !== 'string') return { ok: false, reason: 'html 이 문자열이 아니다' };
 
-  const inlineClasses = new Set(mapping?.json?.inlineClasses ?? []);
+  // §2.4.1 — `역할 이름 → 클래스` 표. 보존 판정에 쓰는 것은 값(클래스) 집합이다.
+  const inlineClasses = new Set(Object.values(mapping?.json?.inlineClasses ?? {}));
 
   // grammar.md §3.6 L6 조항 5 — "normalizeInline 은 해당 리프 값의 leafStructure 선언을
   // 받아, 선언된 (태그, 클래스) 쌍을 **보존**한다". 받지 않으면 `<li>`·`<td>` 가 허용

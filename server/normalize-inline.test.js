@@ -87,7 +87,7 @@ test('기준 10 — 허용목록 밖 클래스만 제거된다', () => {
 
 test('기준 10 — 허용목록이 mapping.json 에서 온다 (하드코딩 아님)', () => {
   for (const c of ['cite', 'title', 'src', 'mono', 'num', 'unit', 'lbl', 'delta']) {
-    assert.ok(mapping.json.inlineClasses.includes(c), `mapping.json 에 없다: ${c}`);
+    assert.ok(Object.values(mapping.json.inlineClasses).includes(c), `mapping.json 에 없다: ${c}`);
     assert.equal(out(`<span class="${c}">x</span>`), `<span class="${c}">x</span>`);
   }
 });

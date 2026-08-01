@@ -30,11 +30,23 @@ export function retheme(raw, from, to) {
   const gaps = [];
   let touched = 0;
 
+  // 슬라이드가 없는 파일은 이식 대상이 아니다 — 대표적으로 불투명 리프의 스캐폴딩 조각.
+  // 그 안에는 어휘 주석이 없어 짚을 것이 없고(§3.2 L2), 테마마다 손으로 쓴다.
+  // **명세에 그렇게 적어 두고 도구가 덮어쓰면 명세가 거짓말이 된다** — 실제로 한 번
+  // 그렇게 덮어썼고, 그래서 도구가 스스로 알아보게 만든다.
+  if (findSections(doc).length === 0) {
+    return { edits: [], gaps: [], touched: 0, html: raw, skipped: 'no-section' };
+  }
+
   // 테마가 소유하는 표면은 `blocks` 하나가 아니다. 아래 셋이 저작 트리에 **어휘 주석
   // 없이** 붙어 있고, 처음 이식을 돌렸을 때 게이트를 60% 로 떨어뜨린 것이 이들이다.
-  const structMap = structuralClassMap(from, to);   // L6 구조 자식의 클래스
-  const propMap = dataPropMap(from, to);            // §3.4 데이터 채널 프로퍼티 이름
-  const inlineMap = inlineClassMap(from, to);       // §8.6 인라인 클래스 허용목록
+  const structMap = structuralClassMap(from, to);            // L6 구조 자식의 클래스
+  const propMap = dataPropMap(from, to);                     // §3.4 데이터 채널 프로퍼티 이름
+  const { map: inlineMap, missing } = inlineClassMap(from, to); // §2.4.1 인라인 클래스 역할
+
+  // 대상 테마가 역할을 선언하지 않았다면 그 자리는 이식할 수 없다. 조용히 원 테마
+  // 클래스를 남기면 게이트는 통과하고 서식만 틀린다 — 배열 시절의 실패와 같은 종류다.
+  for (const role of missing) gaps.push({ kind: 'inlineClasses', role });
 
   for (const el of findSections(doc)) {
     const { root } = buildTree(raw, el, from, 'declared');
@@ -115,18 +127,24 @@ function dataPropMap(from, to) {
 }
 
 /**
- * §8.6 인라인 클래스 허용목록의 대응표.
+ * §2.4.1 인라인 클래스 대응표 — **역할 이름으로 짝짓는다.**
  *
- * **순서로 짝짓는다.** 인라인 클래스에는 어휘 값이 없어 의미로 대응시킬 근거가 없기
- * 때문이다. 이 자의성 자체가 발견이다 — 허용목록이 두 테마 사이에서 무엇으로 이어지는지
- * 계약에 적혀 있지 않다.
+ * 배열이던 시절에는 순서로 짝지을 수밖에 없었고, 그 때문에 SNU 의 `num`(수치 셀)이
+ * 다른 테마의 6번째 항목으로 가서 표의 숫자 열이 서식을 잃었다. 게이트는 통과했다 —
+ * 게이트가 인라인 클래스의 의미를 재지 않기 때문이다. 역할 이름이 그 추측을 없앤다.
+ *
+ * 키 집합이 갈리면 이식이 다시 추측이 되므로, 갈린 키는 갭으로 보고한다.
  */
 function inlineClassMap(from, to) {
-  const a = from.json.inlineClasses ?? [];
-  const b = to.json.inlineClasses ?? [];
+  const a = from.json.inlineClasses ?? {};
+  const b = to.json.inlineClasses ?? {};
   const map = new Map();
-  a.forEach((c, i) => { if (b[i]) map.set(c, b[i]); });
-  return map;
+  const missing = [];
+  for (const [role, cls] of Object.entries(a)) {
+    if (b[role] === undefined) { missing.push(role); continue; }
+    map.set(cls, b[role]);
+  }
+  return { map, missing };
 }
 
 /** 어휘 값이 없는 요소의 클래스를 두 표로 갈아끼운다. 바뀔 게 없으면 null. */
@@ -223,10 +241,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     totalGaps += r.gaps.length;
     totalTouched += r.touched;
 
+    if (r.skipped) {
+      console.log(`– ${basename(file).padEnd(22)} 건너뜀 (슬라이드 없음 — 테마마다 손으로 쓰는 조각)`);
+      continue;
+    }
     const mark = r.gaps.length ? '✘' : '✔';
     console.log(`${mark} ${basename(file).padEnd(22)} 클래스 ${String(r.touched).padStart(3)}개 교체 · 갭 ${r.gaps.length}`);
     for (const g of r.gaps) {
-      console.log(`    미선언  ${g.key}|${g.variant}${g.regionSlot ? `@${g.regionSlot}` : ''}  (line ${g.line})`);
+      console.log(g.kind === 'inlineClasses'
+        ? `    미선언  inlineClasses.${g.role}  (§2.4.1 역할 키가 갈렸다)`
+        : `    미선언  ${g.key}|${g.variant}${g.regionSlot ? `@${g.regionSlot}` : ''}  (line ${g.line})`);
     }
     if (outDir) writeFileSync(join(outDir, basename(file)), r.html, 'utf8');
   }

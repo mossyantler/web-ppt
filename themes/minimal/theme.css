@@ -82,6 +82,23 @@
 .m-caption { font-size: 11px; color: var(--m-ink-soft); }
 .m-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .m-table td, .m-table th { border-bottom: 1px solid var(--m-line); padding: 6px 8px; text-align: left; }
+
+/* --- 인라인 역할 (§2.4.1) — 키는 문법, 클래스는 테마 -------------------- */
+.m-num, .m-table td.m-num, .m-table th.m-num { text-align: right; font-family: var(--m-mono); }
+.m-tt { font-family: var(--m-mono); }
+.m-alt { display: block; font-size: 14px; font-weight: 400; color: var(--m-ink-soft); }
+.m-refno { font-family: var(--m-mono); color: var(--m-accent); }
+.m-cite { color: var(--m-ink); }
+.m-lead-in { font-weight: 600; }
+.m-where { color: var(--m-ink-soft); font-style: italic; }
+.m-unit { font-size: 0.5em; color: var(--m-ink-soft); margin-left: 3px; }
+.m-label { font-size: 11px; color: var(--m-ink-soft); }
+.m-delta { font-size: 11px; font-weight: 600; }
+.m-k { display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--m-ink-soft); }
+.m-v { font-weight: 500; }
+.m-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--m-accent); display: inline-block; }
+.m-when { font-family: var(--m-mono); font-size: 11px; color: var(--m-accent); }
+.m-what { font-size: 13px; }
 .m-figure { border: 1px dashed var(--m-line); display: flex; flex-direction: column;
             align-items: center; justify-content: center; gap: 6px; min-height: 140px; }
 .m-fig-icon { font-size: 28px; color: var(--m-ink-soft); }

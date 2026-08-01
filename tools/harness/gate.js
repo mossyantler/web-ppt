@@ -5,6 +5,7 @@
 
 import { attrOf, hasAttr, classesOf, findSections, parseDocument, INLINE_TAGS } from './tree.js';
 import { roundTrip } from './serialize.js';
+import { themeName } from './mapping.js';
 
 const GEOMETRY_PROPS = ['left', 'top', 'width', 'height'];
 
@@ -51,6 +52,7 @@ export function documentGate(raw, file) {
   const findings = [];
   const scripts = [];
   const styles = [];
+  const sheets = [];
   let htmlEl = null;
 
   (function walk(n) {
@@ -72,6 +74,10 @@ export function documentGate(raw, file) {
       if (n.tagName === 'style') {
         const loc = n.sourceCodeLocation;
         styles.push({ line: loc ? lineOf(raw, loc.startOffset) : null, scope: 'deck-local' });
+      }
+      if (n.tagName === 'link' && (attrOf(n, 'rel') ?? '').toLowerCase() === 'stylesheet') {
+        const loc = n.sourceCodeLocation;
+        sheets.push({ href: attrOf(n, 'href') ?? '', line: loc ? lineOf(raw, loc.startOffset) : null });
       }
     }
     for (const c of n.childNodes ?? []) walk(c);
@@ -110,18 +116,59 @@ export function documentGate(raw, file) {
     });
   }
 
+  // §6.4 테마 시트 — 경고이지 잠금이 아니다.
+  const themeWarnings = themeSheetWarnings(sheets);
+
   return {
     ok: findings.length === 0,
     locked: findings.some((f) => f.code === 'grammar.document-script'),
     findings,
     scripts,
     styles,
+    sheets,
     undeclaredScripts: undeclared.length,
-    warnings: undeclared.length
-      ? [`선언되지 않은 스크립트 ${undeclared.length}개 (${undeclared.map((s) => `${s.ref}, line ${s.line}`).join(' · ')}). 이 스크립트가 슬라이드 내용을 바꾸는지 확인이 필요합니다.`]
-      : [],
+    warnings: [
+      ...(undeclared.length
+        ? [`선언되지 않은 스크립트 ${undeclared.length}개 (${undeclared.map((s) => `${s.ref}, line ${s.line}`).join(' · ')}). 이 스크립트가 슬라이드 내용을 바꾸는지 확인이 필요합니다.`]
+        : []),
+      ...themeWarnings,
+    ],
     doc,
   };
+}
+
+/**
+ * §6.4 — `<head>` 의 테마 스타일시트 검사 *(2026-08-01 신설)*.
+ *
+ * **문법은 `<section>` 안만 본다.** 그래서 테마를 바꿔 클래스를 전부 갈아도 문서가 원
+ * 테마의 시트를 물고 있으면 **게이트는 통과하고 화면만 깨진다** — 실측으로 드러난 갭이다
+ * (§2.4 "테마가 소유하는 표면은 다섯이다" 결론 3).
+ *
+ * **잠그지 않고 경고만 한다.** 잠금은 사용자가 나갈 문이 있을 때만 정당하고, 이것을
+ * 고치는 명령(`setTheme`)은 아직 없다(M5). 문이 없는 방에 사람을 가두지 않는다.
+ *
+ * 탐지는 **확실한 것만** 한다 — href 가 다른 테마 디렉터리를 명시적으로 가리키는 경우.
+ * `../theme.css` 같은 상대 경로는 문서 위치를 알아야 어느 테마인지 정해지므로 추측하지
+ * 않는다. 추측으로 경고를 만들면 오탐이 쌓이고, 그러면 경고를 아무도 안 본다(§12 시나리오 2).
+ */
+function themeSheetWarnings(sheets) {
+  const active = themeName();
+  const out = [];
+
+  const foreign = sheets.filter((s) => {
+    const m = /(?:^|\/)themes\/([^/]+)\//.exec(s.href);
+    return m && m[1] !== active;
+  });
+  if (foreign.length) {
+    out.push(`다른 테마의 스타일시트를 링크한다 — ${foreign.map((s) => `${s.href} (line ${s.line})`).join(' · ')}. `
+      + `활성 테마는 '${active}' 이고, 본문 클래스가 이 시트에 없으면 문법은 통과하고 화면만 깨진다.`);
+  }
+
+  if (sheets.length && !sheets.some((s) => /theme\.css$/.test(s.href))) {
+    out.push(`테마 스타일시트(theme.css)를 링크하지 않는다. 조판이 덱 로컬 CSS 에만 의존한다면 setTheme 이 사실상 no-op 이다 (계획 §8.4).`);
+  }
+
+  return out;
 }
 
 function readScriptPolicy(doc) {

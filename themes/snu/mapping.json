@@ -111,7 +111,26 @@
     "box:region": "div"
   },
 
-  "inlineClasses": ["en", "n", "cite", "title", "src", "num", "unit", "lbl", "delta", "mono", "k", "v", "task", "pct", "dot", "when", "what", "muted"],
+  "inlineClasses": {
+    "titleAlt": "en",
+    "refIndex": "n",
+    "refBody": "cite",
+    "refLead": "title",
+    "refSource": "src",
+    "numeric": "num",
+    "numericUnit": "unit",
+    "metricLabel": "lbl",
+    "metricDelta": "delta",
+    "monospace": "mono",
+    "metaKey": "k",
+    "metaValue": "v",
+    "progressLabel": "task",
+    "progressText": "pct",
+    "stepMarker": "dot",
+    "stepTime": "when",
+    "stepBody": "what",
+    "muted": "muted"
+  },
 
   "dataProps": {
     "progress": {

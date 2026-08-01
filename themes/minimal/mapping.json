@@ -107,7 +107,26 @@
     "box:region": "div"
   },
 
-  "inlineClasses": ["m-alt", "m-n", "m-cite", "m-work", "m-where", "m-fig", "m-unit", "m-label", "m-delta", "m-tt", "m-k", "m-v", "m-task", "m-pct", "m-dot", "m-when", "m-what", "m-dim"],
+  "inlineClasses": {
+    "titleAlt": "m-alt",
+    "refIndex": "m-refno",
+    "refBody": "m-cite",
+    "refLead": "m-lead-in",
+    "refSource": "m-where",
+    "numeric": "m-num",
+    "numericUnit": "m-unit",
+    "metricLabel": "m-label",
+    "metricDelta": "m-delta",
+    "monospace": "m-tt",
+    "metaKey": "m-k",
+    "metaValue": "m-v",
+    "progressLabel": "m-task",
+    "progressText": "m-pct",
+    "stepMarker": "m-dot",
+    "stepTime": "m-when",
+    "stepBody": "m-what",
+    "muted": "m-dim"
+  },
 
   "dataProps": {
     "progress": {
