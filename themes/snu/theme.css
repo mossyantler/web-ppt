@@ -14,3 +14,25 @@
 .prog-fill {
   width: calc(var(--pct, 0) * 1%);
 }
+
+/* `el:code` — 어휘 §2.1 의 18번. M1 종료 시점에 blocks 매핑이 비어 있어(`{}`)
+ * classFor() 가 항상 null 이었고, insertElement 경로가 없는 유일한 어휘 값이었다.
+ *
+ * `<pre>` 안의 공백은 규약 G1 의 불투명 노드다(§1 표 3행). 재직렬화가 공백을
+ * 정규화하지 않으므로, 화면에서도 소스 그대로 보이도록 white-space 를 보존한다.
+ * 이 선언이 없으면 문법은 통과하고 들여쓰기만 무너진다 — .prog-fill 과 같은 실패 모드다.
+ */
+.code {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  line-height: var(--leading-relaxed);
+  color: var(--text-body);
+  white-space: pre;
+  overflow-x: auto;
+  tab-size: 2;
+}

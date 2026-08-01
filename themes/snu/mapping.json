@@ -36,7 +36,7 @@
     "el:metric": { "default": "kpi" },
     "el:pill": { "default": "pill", "prog": "pill prog", "block": "pill block", "note": "pill note" },
     "el:callout": { "default": "callout", "risk": "callout risk", "warn": "callout warn" },
-    "el:code": {},
+    "el:code": { "default": "code" },
     "el:rule": { "default": "title-rule" },
     "el:equation": { "default": "" },
     "el:progress": { "default": "prog-row" },
@@ -127,6 +127,8 @@
   "leafStructure": {
     "list": [{ "tag": "li" }],
     "table": [
+      { "tag": "colgroup" },
+      { "tag": "col" },
       { "tag": "thead" },
       { "tag": "tbody" },
       { "tag": "tr" },
@@ -187,6 +189,12 @@
     "box:region|cols57": ["fixtures/templates/method.html:20"],
     "box:region|stackGap6": ["fixtures/templates/progress.html:20"],
     "regionSlots": ["core/grammar.md §2.2 · 계획 3판 M1 개정 기록 2 G-2"],
+    "el:code|default": [
+      "코퍼스 근거 없음 — 템플릿 10종이 코드 블록을 쓰지 않는다. 어휘 §2.1 에 값이 있는데 variant 가 하나도 없어 classFor() 가 항상 null 이었고, insertElement 경로가 없는 유일한 어휘 값이었다. 값을 늘린 것이 아니라 선언된 값의 빈 매핑을 채운 것이다."
+    ],
+    "leafStructure:table|colgroup,col": [
+      "_workspace/2026-07-27-001/index.html:991 — 실제 산출 덱이 <colgroup><col> 로 열 너비를 준다. 표준 표 태그이며 저작물이 아니라 조판이므로 어느 테마에서도 같다. 선언 누락으로 규칙 2 위반 13건이 발생했다."
+    ],
     "removed": {
       "el:meta|titleMeta": ".title-meta 는 display:flex 컨테이너다 (slides/slides.css:136-141). 리프가 아니라 box:row|titleMeta 로 옮겼다 — 자식 3개(title-a.html:17-19)가 리프 안의 비인라인 자식이 되어 규칙 2를 깨뜨렸다.",
       "box:grid|tab": ".col-tab 은 inline-block 라벨이다 (slides/slides.css:186-198). 그리드 컨테이너가 아니라 el:heading|colTab 이다 — 텍스트 한 줄을 n단 그리드로 분류하는 것은 계획 §12 완화 3이 금지한 뭉뚱그리기다."

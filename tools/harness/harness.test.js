@@ -36,6 +36,30 @@ test('불투명 리프는 equation·progress 둘뿐이다 (§3.2 상한)', () =>
   assert.deepEqual(Object.keys(mapping.json.opaqueLeaves).sort(), ['equation', 'progress']);
 });
 
+test('어휘 값 21+8 전부가 insertElement 경로를 갖는다 — 빈 매핑이 없다', () => {
+  // el:code 는 M1 종료 시점에 blocks 가 `{}` 였다. classFor() 가 항상 null 이면
+  // 그 값은 어휘에 이름만 있고 만들 수 없다 — 검증되지 않은 채 통과하던 구멍이다.
+  const empty = Object.keys(mapping.json.blocks)
+    .filter((k) => k !== 'section')
+    .filter((k) => mapping.classFor(k, 'default', k === 'box:region' ? 'body' : null) === null);
+  assert.deepEqual(empty, [], '기본 variant 가 없는 어휘 값');
+});
+
+test('el:code 가 매핑·기본 태그·CSS 계약을 갖춘다', () => {
+  assert.equal(mapping.classFor('el:code'), 'code');
+  assert.equal(mapping.defaultTagFor('el:code'), 'pre');
+  // `<pre>` 의 공백은 규약 G1 의 불투명 노드다. 화면에서도 보존되어야 문법 통과와
+  // 렌더 결과가 어긋나지 않는다 — .prog-fill 과 같은 실패 모드 (§3.2).
+  const css = readFileSync(join('themes', 'snu', 'theme.css'), 'utf8');
+  assert.match(css, /\.code\s*\{[^}]*white-space:\s*pre/s);
+});
+
+test('table 의 구조 자식이 colgroup·col 을 포함한다 (L6 조항 6 깊이 2)', () => {
+  for (const tag of ['colgroup', 'col', 'thead', 'tbody', 'tr', 'th', 'td', 'caption']) {
+    assert.ok(mapping.isDeclaredStructuralChild('table', tag, []), `미선언: ${tag}`);
+  }
+});
+
 /* -------------------------------------------------------------------- splice */
 
 test('spliced 는 구간 밖 바이트를 건드리지 않는다', () => {
@@ -154,8 +178,10 @@ const GREEN = `<!DOCTYPE html>
       <div class="a">답</div>
     </div>
     <table data-el="table" data-node-id="n9" class="tbl">
+      <colgroup><col style="width:40%"><col style="width:60%"></colgroup>
       <tr><td>가</td><td>나</td></tr>
     </table>
+    <pre data-el="code" data-node-id="nd" class="code">u_t + u u_x = 0</pre>
     <div data-el="progress" data-node-id="na" class="prog-row" data-value="72" style="--pct:72">
       <span class="task">작업</span>
       <div class="prog-track"><div class="prog-fill" ></div></div>
@@ -351,7 +377,9 @@ test('legacyEditableRatio 를 산출한다 (게이트 아님)', () => {
 /* ------------------------------------------------------------------ 삽입 합성 */
 
 test('synthesize 가 선언되지 않은 (값, variant) 쌍을 만들어내지 않는다', () => {
-  assert.equal(mapping.classFor('el:code', 'default'), null, 'SNU 테마는 code 의 클래스를 선언하지 않았다');
+  // el:code 는 M1 종료 시점에 blocks 가 `{}` 였고 이 자리에 그 구멍이 기대값으로 박혀
+  // 있었다. 매핑이 채워졌으므로 이제는 선언되지 않은 variant 로 같은 성질을 검사한다.
+  assert.equal(mapping.classFor('el:code', 'nosuchvariant'), null, '선언되지 않은 variant 는 만들어내지 않는다');
   assert.equal(mapping.classFor('box:grid', 'tab'), null, 'col-tab 은 grid 의 variant 가 아니라 el:heading 이다');
   const kinds = blockKindsOf(greenSection());
   for (const [, k] of kinds) {

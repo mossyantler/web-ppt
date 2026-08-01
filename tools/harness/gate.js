@@ -216,7 +216,14 @@ export function sectionGate(root, raw, mapping, file) {
     const decls = parseStyle(style);
 
     // 규칙 5 — 인라인 기하는 canvas 의 자식만. 커스텀 프로퍼티는 대상 아님 (§3.4)
-    const geom = decls.filter((d) => GEOMETRY_PROPS.includes(d.prop));
+    //
+    // 예외: `table` 의 <col>/<colgroup>. 이 둘은 박스를 만들지 않으므로 자기 기하를
+    // 결정하지 않는다 — 표 안에서 열이 갖는 지분을 선언할 뿐이다. 규칙 5 의 목적은
+    // "요소의 위치·크기 권한을 흐름과 canvas 둘로만 나눈다" 인데, 열 지분은 그 어느
+    // 쪽도 결정할 수 없다(표마다 다르고 테마 CSS 가 알 수 없다). §5 규칙 5 예외 참조.
+    const isColumnSpec = n.kind === 'structural-child' && n.structRoot === 'table'
+      && (n.tag === 'col' || n.tag === 'colgroup');
+    const geom = decls.filter((d) => GEOMETRY_PROPS.includes(d.prop) && !(isColumnSpec && d.prop === 'width'));
     if (geom.length && !(n.parent && n.parent.value === 'canvas')) {
       findings.push(finding('5-R5', 'grammar.illegal-child', n, raw, file,
         `인라인 ${geom.map((g) => g.prop).join('/')} 는 data-box="canvas" 의 자식에서만 허용된다. 흐름 배치는 컨테이너가, 자유 배치는 canvas 가 결정한다`,
