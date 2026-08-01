@@ -1,0 +1,15 @@
+{
+  "name": "weekly-slide-editor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "HTML slide editing system — M1: grammar v1, fixtures, round-trip harness, adopt CLI",
+  "scripts": {
+    "harness": "node tools/harness/index.js",
+    "adopt": "node tools/adopt/index.js",
+    "test": "node --test tools/**/*.test.js"
+  },
+  "dependencies": {
+    "parse5": "^7.2.1"
+  }
+}
