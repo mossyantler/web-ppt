@@ -24,6 +24,10 @@ import { loadDeck, DocError } from './doc.js';
 import { handlerFor } from './commands.js';
 import { atomicWrite } from './atomic.js';
 
+// 명령 등록은 부수효과다. 레지스트리가 비어 있으면 모든 커밋이 422 이므로,
+// 등록 모듈을 여기서 한 번 적재한다 — 등록 지점을 흩뿌리지 않는다.
+import './attr-commands.js';
+
 /**
  * 커밋 하나를 적용한다.
  * @returns CommitResult — 계획 §3.1

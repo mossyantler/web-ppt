@@ -152,9 +152,12 @@ test('미등록 명령 → 422 이고 파일은 바뀌지 않는다 (조용한 �
   assert.equal(onDisk(), before);
 });
 
-test('M2-1 은 명령을 하나도 등록하지 않았다 — 단계 경계의 기록', async () => {
+test('구조 명령은 아직 등록되지 않았다 — M2-3 의 단계 경계', async () => {
   const { registeredOps } = await server();
-  assert.deepEqual(registeredOps(), [], 'M2-2 가 속성 명령부터 채운다');
+  const structural = ['insertElement', 'removeElement', 'moveElement', 'setContent',
+    'wrapElements', 'unwrapElement', 'duplicateElement', 'adoptSection'];
+  const registered = new Set(registeredOps());
+  assert.deepEqual(structural.filter((op) => registered.has(op)), [], 'M2-3 이 채운다');
 });
 
 /* ------------------------------------------------------------------ 트리 */

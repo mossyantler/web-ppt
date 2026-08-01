@@ -175,6 +175,11 @@ function makeNode(raw, node, mapping, mode, parent, notes) {
     declared: { el: el ?? null, box: box ?? null },
     inferred: null,
     attrs: node.attrs ?? [],
+    // 속성별 소스 구간 (parse5 sourceCodeLocation.attrs, 키는 소문자 속성명).
+    // 속성 명령이 **그 속성의 바이트만** 갈아끼우려면 이것이 필요하다 — 여는 태그를
+    // 통째로 다시 쓰면 손대지 않은 속성의 인용 부호·공백이 정규화되어 P2 가 재는
+    // "구간 밖 동일" 은 성립해도 구간 **안**에서 불필요한 바이트가 바뀐다.
+    attrLocs: loc.startTag?.attrs ?? null,
     hasSlideAttr: hasAttr(node, 'data-slide'),
     nodeId: attrOf(node, 'data-node-id') ?? null,
     trackId: attrOf(node, 'data-track-id') ?? null,
