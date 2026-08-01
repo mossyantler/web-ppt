@@ -23,12 +23,15 @@ import { splicedMany, spliced, outsideIdentical, hashOf } from '../tools/harness
 import { loadDeck, DocError } from './doc.js';
 import { handlerFor } from './commands.js';
 import { atomicWrite } from './atomic.js';
+import { lookup, remember } from './idempotency.js';
+import * as history from './history.js';
 
 // 명령 등록은 부수효과다. 레지스트리가 비어 있으면 모든 커밋이 422 이므로,
 // 등록 모듈을 여기서 한 번 적재한다 — 등록 지점을 흩뿌리지 않는다.
 import './attr-commands.js';
 import './structure-commands.js';
 import './content-commands.js';
+import './section-commands.js';
 
 /**
  * 커밋 하나를 적용한다.
@@ -38,6 +41,18 @@ export function applyCommit(deckId, envelope) {
   validateEnvelope(envelope);
 
   const deck = loadDeck(deckId);
+
+  // 3.5 — 멱등 2겹. **낙관적 락보다 먼저 본다.** 순서가 뒤바뀌면 재시도가 409 를 받고
+  // 사용자에게 가짜 충돌 배너가 뜬다 — 멱등이 막으려던 바로 그 실패다 (§3.3).
+  const replay = lookup(deckId, envelope.commitId);
+  if (replay) {
+    return result({
+      applied: false,
+      resultHash: replay.resultHash,
+      currentHash: deck.docHash,
+      nodeIds: {},
+    });
+  }
 
   // 4 — 낙관적 락. Estradeck `splice.ts:20` 과 같은 자리다.
   if (envelope.pre.docHash !== deck.docHash) {
@@ -82,10 +97,48 @@ export function applyCommit(deckId, envelope) {
   const next = splicedMany(deck.raw, edits);
   assertOutsideIdentical(deck.raw, next, edits);
 
+  // 7 — 쓰기 직전 스냅샷. Estradeck `writeSpliced` 가 `recordHistory` 를 부르는 자리다.
+  history.push(deckId, 'edit', deck.raw, envelope.label ?? '');
+  // §3.4 커서 모델 — 새 편집은 redo 를 무효화한다. 남겨 두면 이어지지 않는 두 역사가 생긴다.
+  history.clear(deckId, 'redo');
+
   atomicWrite(deck.path, next);
 
   const resultHash = hashOf(next);
+  remember(deckId, envelope.commitId, resultHash);
   return result({ applied: true, resultHash, currentHash: resultHash, nodeIds });
+}
+
+/**
+ * Undo / Redo — 계획 §3.4.
+ *
+ * 역연산이 아니라 **스냅샷 복원**이다. 되돌리기 전 상태를 반대편 링에 넣고, 대상 링에서
+ * 꺼낸 바이트를 그대로 쓴다. 두 방향이 완전히 대칭이므로 편집 100 + undo 100 + redo 100
+ * 이 전부 성립한다.
+ *
+ * **`history.push` 로 기록하되 `edit` 링을 소모하지 않는다** — 그것이 A2 가 고친 결함이고,
+ * 링을 나눈 유일한 이유다.
+ */
+export function applyUndo(deckId, { label = 'undo' } = {}) {
+  return shiftHistory(deckId, 'edit', 'redo', label);
+}
+
+export function applyRedo(deckId, { label = 'redo' } = {}) {
+  return shiftHistory(deckId, 'redo', 'edit', label);
+}
+
+function shiftHistory(deckId, from, to, label) {
+  const deck = loadDeck(deckId);
+  const snapshot = history.pop(deckId, from);
+  if (!snapshot) {
+    throw new DocError(409, `${from} 링이 비어 있다 — 되돌릴 것이 없다`, { code: `commit.${from}-empty` });
+  }
+
+  history.push(deckId, to, deck.raw, label);
+  atomicWrite(deck.path, snapshot.content);
+
+  const resultHash = hashOf(snapshot.content);
+  return result({ applied: true, resultHash, currentHash: resultHash, nodeIds: {} });
 }
 
 /**

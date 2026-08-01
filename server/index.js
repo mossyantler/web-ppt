@@ -14,7 +14,7 @@
 
 import { createServer } from 'node:http';
 
-import { applyCommit } from './commit.js';
+import { applyCommit, applyUndo, applyRedo } from './commit.js';
 import { loadDeck, DocError } from './doc.js';
 import { PathError } from './paths.js';
 
@@ -34,12 +34,19 @@ export function createDeckServer() {
 async function route(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const commit = url.pathname.match(/^\/deck\/([^/]+)\/commit$/);
+  const undo = url.pathname.match(/^\/deck\/([^/]+)\/(undo|redo)$/);
   const read = url.pathname.match(/^\/deck\/([^/]+)$/);
 
   if (commit && req.method === 'POST') {
     const deckId = decodeURIComponent(commit[1]);
     const envelope = JSON.parse(await readBody(req));
     return sendJson(res, 200, applyCommit(deckId, envelope));
+  }
+
+  if (undo && req.method === 'POST') {
+    const deckId = decodeURIComponent(undo[1]);
+    const fn = undo[2] === 'undo' ? applyUndo : applyRedo;
+    return sendJson(res, 200, fn(deckId));
   }
 
   if (read && req.method === 'GET') {
