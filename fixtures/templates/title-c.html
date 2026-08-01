@@ -1,0 +1,42 @@
+<!-- @dsCard group="Slides" viewport="1280x720" name="표지 C · 사이드바" subtitle="좌측 네이비 사이드바 + 우측 제목 분할형" -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="slides.css">
+<style>
+  body { margin: 0; }
+  a { color: var(--accent); } a:hover { color: var(--accent-hover); }
+  .slide--split { flex-direction: row; padding: 0; }
+  .split-side {
+    width: 360px; flex: none; background: var(--surface-accent);
+    color: var(--navy-100); padding: var(--slide-pad-y) 48px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .split-side .brand { font-size: var(--text-lead); font-weight: var(--weight-semibold); line-height: var(--leading-snug); }
+  .split-side .brand span { display: block; font-size: var(--text-small); color: var(--navy-300); font-weight: 400; margin-top: 6px; }
+  .split-side .foot-meta { font-family: var(--font-mono); font-size: var(--text-caption); color: var(--navy-200); }
+  .split-side .foot-meta div { margin-bottom: 6px; }
+  .split-main { flex: 1; padding: var(--slide-pad-y) 72px; display: flex; flex-direction: column; justify-content: center; }
+</style>
+</head>
+<body>
+<section class="slide slide--split" data-screen-label="표지 C">
+  <aside class="split-side">
+    <div class="brand">Flow Physics and Informatics Laboratory<span>서울대학교 건설환경도시공학부<br>Civil &amp; Environmental Engineering</span></div>
+    <div class="foot-meta">
+      <div>WEEK &nbsp; 2026 · W28</div>
+      <div>DATE &nbsp; 2026.07.13</div>
+      <div>발표 &nbsp; 학부연구생 장민엽</div>
+    </div>
+  </aside>
+  <main class="split-main">
+    <p class="kicker">Weekly Research Report</p>
+    <h1 class="report-hero" style="font-size:56px">주간 연구<br>진행 보고</h1>
+    <div class="title-rule"></div>
+    <div class="report-sub">지난주 요약 · 진행 상황 · 실험 결과 · 다음 주 계획</div>
+  </main>
+</section>
+</body>
+</html>

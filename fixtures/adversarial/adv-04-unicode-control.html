@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>adversarial 04 — unicode / emoji / format control chars</title>
+</head>
+<body>
+<section class="slide" data-screen-label="유니코드와 제어문자">
+  <div class="slide-head">
+    <div class="lab">Adversarial Fixture 04</div>
+    <div class="meta">유니코드 바이트 보존</div>
+  </div>
+  <div class="slide-body stack gap-6">
+    <p class="lead">이 섹션의 모든 문자는 UTF-8 멀티바이트이거나 보이지 않는 서식 문자다. 정규화(NFC/NFD 변환)나 이스케이프 재작성이 일어나면 바이트가 달라진다.</p>
+
+    <div class="card">
+      <div class="card-head">이모지 — 결합 시퀀스</div>
+      <ul class="list">
+        <li>ZWJ 가족 시퀀스: 👨‍👩‍👧‍👦 (U+1F468 ZWJ U+1F469 ZWJ U+1F467 ZWJ U+1F466)</li>
+        <li>피부색 수정자: 👍🏽 · 🙋🏿‍♀️</li>
+        <li>변이 선택자: ▶️ ✔️ ❤️ (U+FE0F 포함) vs 변이 선택자 없음: ▶ ✔ ❤</li>
+        <li>국기 = 지역 표시자 쌍: 🇰🇷 🇺🇳</li>
+        <li>키캡 시퀀스: 1️⃣ #️⃣</li>
+        <li>서로게이트 쌍 단독: 𝕊𝕃𝕀𝔻𝔼 · 𐍈 · 🜛</li>
+      </ul>
+    </div>
+
+    <div class="card subtle">
+      <div class="card-head">보이지 않는 서식 문자</div>
+      <ul class="list">
+        <li>제로폭 공백(U+200B): 앞​뒤</li>
+        <li>제로폭 비결합자(U+200C): 앞‌뒤</li>
+        <li>단어 결합자(U+2060): 앞⁠뒤</li>
+        <li>소프트 하이픈(U+00AD): 하­이­픈</li>
+        <li>비분리 공백(U+00A0): 12 kPa · 좁은 비분리 공백(U+202F): 12 kPa</li>
+        <li>BOM이 아닌 위치의 U+FEFF: 앞﻿뒤</li>
+        <li>탭 문자(U+0009)를 텍스트 노드 안에:	← 앞에 탭 1개</li>
+      </ul>
+      <p class="note">C0 제어문자 중 NUL(U+0000)과 U+0001–U+0008은 넣지 않았다. HTML 파서가 U+FFFD로 치환하거나 파싱 오류를 내므로, 이 픽스처의 시험 대상(바이트 보존)이 파싱 오류 시험과 뒤섞인다. 서식 문자(Cf)와 탭만 쓴다.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-head">정규화 함정</div>
+      <ul class="list">
+        <li>한글 NFC: 각 (U+AC01) · 같은 글자 NFD: 각 (U+1100 U+1161 U+11A8)</li>
+        <li>결합 분음 기호: é (U+00E9) vs é (U+0065 U+0301)</li>
+        <li>일본어 반각·전각: ｱｲｳ vs アイウ · ＡＢＣ vs ABC</li>
+        <li>호환 문자: ㎡ ㎥ ℃ ㈜ Ⅷ ①</li>
+        <li>따옴표·대시: “곡선 따옴표” ‘홑곡선’ — 엠대시 – 엔대시 … 줄임표</li>
+      </ul>
+    </div>
+
+    <div class="card subtle">
+      <div class="card-head">양방향 텍스트</div>
+      <p dir="rtl" lang="ar">هذه فقرة عربية داخل شريحة كورية.</p>
+      <p>명시적 방향 삽입: ‫عربي‬ 뒤의 한국어 · 격리자(U+2066/U+2069): ⁦LTR⁩ 끝</p>
+    </div>
+
+    <div class="card">
+      <div class="card-head">이스케이프 vs 리터럴 (같은 글자, 다른 바이트)</div>
+      <p>리터럴: &amp; &lt; &gt; " ' · 수치 참조: &#38; &#60; &#62; &#34; &#39; · 16진 참조: &#x26; &#x3C; &#x3E;</p>
+      <p>이스케이프 불필요한 리터럴 앰퍼샌드: a & b · 이스케이프된 것: a &amp; b</p>
+    </div>
+  </div>
+  <div class="slide-foot"><span>Adversarial corpus</span><span class="page">04 / 04</span></div>
+</section>
+</body>
+</html>

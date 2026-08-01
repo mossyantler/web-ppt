@@ -1,0 +1,195 @@
+{
+  "_provenance": {
+    "theme": "snu",
+    "note": "테마 매핑의 단일 진실 원천. core/grammar.md §2.4 가 요구하는 절을 담는다. tools/harness 와 tools/adopt 는 **이 파일만** 읽는다 — 계획 3판 'M1 개정 기록 2 · 단일 매핑 원천을 M1으로 당긴다'.",
+    "rule": "값은 테마가 소유한다(문법 §7). 어휘 값 자체(리프 21 · 컨테이너 8 · 불투명 리프 2)를 늘리려면 계획 개정이 필요하다. 이 파일은 (값, variant) → 클래스만 늘린다.",
+    "grammarSource": "core/grammar.md",
+    "version": "v1",
+    "updatedAt": "2026-07-28"
+  },
+
+  "blocks": {
+    "el:title": { "default": "slide-title" },
+    "el:subtitle": { "default": "report-sub", "en": "en" },
+    "el:kicker": { "default": "kicker" },
+    "el:hero": { "default": "report-hero" },
+    "el:heading": {
+      "default": "card-head",
+      "colTab": "col-tab",
+      "colTabMuted": "col-tab muted"
+    },
+    "el:meta": {
+      "default": "meta",
+      "lab": "lab",
+      "page": "page",
+      "brand": "brand",
+      "titleLab": "title-lab"
+    },
+    "el:text": { "default": "", "lead": "lead", "note": "note", "quote": "q" },
+    "el:list": { "default": "list", "check": "list check" },
+    "el:step": { "default": "tl-item" },
+    "el:citation": { "default": "ref" },
+    "el:caption": { "default": "cap" },
+    "el:table": { "default": "tbl" },
+    "el:image": { "default": "" },
+    "el:figure": { "default": "figure" },
+    "el:metric": { "default": "kpi" },
+    "el:pill": { "default": "pill", "prog": "pill prog", "block": "pill block", "note": "pill note" },
+    "el:callout": { "default": "callout", "risk": "callout risk", "warn": "callout warn" },
+    "el:code": {},
+    "el:rule": { "default": "title-rule" },
+    "el:equation": { "default": "" },
+    "el:progress": { "default": "prog-row" },
+
+    "box:stack": {
+      "default": "stack",
+      "gap4": "stack gap-4",
+      "gap6": "stack gap-6",
+      "footMeta": "foot-meta"
+    },
+    "box:row": { "default": "", "titleMeta": "title-meta" },
+    "box:grid": {
+      "default": "cols-2",
+      "cols3": "cols-3",
+      "cols57": "cols-5-7"
+    },
+    "box:group": { "default": "title-block", "plain": "" },
+    "box:card": { "default": "card", "subtle": "card subtle" },
+    "box:sequence": { "default": "timeline", "refs": "refs" },
+    "box:canvas": { "default": "free-layer" },
+    "box:region": {
+      "default": "",
+      "cols2": "cols-2",
+      "cols57": "cols-5-7",
+      "stackGap6": "stack gap-6"
+    },
+
+    "section": {
+      "default": "slide",
+      "split": "slide slide--split",
+      "title": "slide slide--title"
+    }
+  },
+
+  "regionSlots": {
+    "head": "slide-head",
+    "body": "slide-body",
+    "foot": "slide-foot",
+    "side": "split-side",
+    "main": "split-main"
+  },
+
+  "defaultTag": {
+    "el:title": "h2",
+    "el:subtitle": "div",
+    "el:kicker": "p",
+    "el:hero": "h1",
+    "el:heading": "div",
+    "el:meta": "div",
+    "el:text": "p",
+    "el:list": "ul",
+    "el:step": "div",
+    "el:citation": "div",
+    "el:caption": "div",
+    "el:table": "table",
+    "el:image": "img",
+    "el:figure": "div",
+    "el:metric": "div",
+    "el:pill": "span",
+    "el:callout": "div",
+    "el:code": "pre",
+    "el:rule": "div",
+    "el:equation": "span",
+    "el:progress": "div",
+    "box:stack": "div",
+    "box:row": "div",
+    "box:grid": "div",
+    "box:group": "div",
+    "box:card": "div",
+    "box:sequence": "div",
+    "box:canvas": "div",
+    "box:region": "div"
+  },
+
+  "inlineClasses": ["en", "n", "cite", "title", "src", "num", "unit", "lbl", "delta", "mono", "k", "v", "task", "pct", "dot", "when", "what", "muted"],
+
+  "dataProps": {
+    "progress": {
+      "--pct": { "from": "data-value", "type": "number", "min": 0, "max": 100 }
+    }
+  },
+
+  "scaffolds": {
+    "progress": "themes/snu/templates/progress-row.html",
+    "equation": null
+  },
+
+  "leafStructure": {
+    "list": [{ "tag": "li" }],
+    "table": [
+      { "tag": "thead" },
+      { "tag": "tbody" },
+      { "tag": "tr" },
+      { "tag": "th" },
+      { "tag": "td" },
+      { "tag": "caption" }
+    ],
+    "figure": [
+      { "tag": "div", "class": "ic" },
+      { "tag": "div", "class": "cap" }
+    ],
+    "callout": [
+      { "tag": "div", "class": "q" },
+      { "tag": "div", "class": "a" }
+    ]
+  },
+
+  "opaqueLeaves": {
+    "equation": { "kind": "runtime-render", "sourceChildren": "empty", "command": "setTex" },
+    "progress": { "kind": "theme-scaffold", "sourceChildren": "present", "command": "setValue" }
+  },
+
+  "voidLeaves": ["image", "rule"],
+
+  "regionEnum": ["head", "body", "foot", "side", "main"],
+  "slideKindEnum": ["title", "content", "break", "closing"],
+
+  "_adoption": {
+    "note": "이 절은 판정에 쓰이지 않는다. 각 (값, variant) 가 어느 템플릿의 어느 줄 때문에 존재하는지의 기록이다 — 계획 §11 M1 '각 값의 채택 근거'. 줄 번호는 fixtures/templates/*.html (= slides/*.html 의 바이트 사본) 기준.",
+    "el:heading|colTab": ["fixtures/templates/summary-plan.html:29"],
+    "el:heading|colTabMuted": ["fixtures/templates/summary-plan.html:21"],
+    "el:meta|titleLab": ["fixtures/templates/title-a.html:12", "fixtures/templates/title-b.html:12"],
+    "el:pill|block": ["fixtures/templates/blockers.html:22"],
+    "el:pill|note": ["fixtures/templates/blockers.html:33", "fixtures/templates/next-steps.html:36"],
+    "el:pill|prog": ["fixtures/templates/next-steps.html:35"],
+    "el:callout|risk": ["fixtures/templates/blockers.html:23"],
+    "el:callout|warn": ["fixtures/templates/blockers.html:27"],
+    "box:row|default": [
+      "fixtures/templates/blockers.html:22",
+      "fixtures/templates/blockers.html:33",
+      "fixtures/templates/next-steps.html:34"
+    ],
+    "box:row|titleMeta": ["fixtures/templates/title-a.html:16", "fixtures/templates/title-b.html:16"],
+    "box:group|plain": [
+      "fixtures/templates/method.html:22",
+      "fixtures/templates/method.html:30",
+      "fixtures/templates/results.html:29",
+      "fixtures/templates/summary-plan.html:20",
+      "fixtures/templates/summary-plan.html:28"
+    ],
+    "box:stack|footMeta": ["fixtures/templates/title-c.html:28"],
+    "box:region|cols2": [
+      "fixtures/templates/blockers.html:20",
+      "fixtures/templates/next-steps.html:20",
+      "fixtures/templates/results.html:20",
+      "fixtures/templates/summary-plan.html:20"
+    ],
+    "box:region|cols57": ["fixtures/templates/method.html:20"],
+    "box:region|stackGap6": ["fixtures/templates/progress.html:20"],
+    "regionSlots": ["core/grammar.md §2.2 · 계획 3판 M1 개정 기록 2 G-2"],
+    "removed": {
+      "el:meta|titleMeta": ".title-meta 는 display:flex 컨테이너다 (slides/slides.css:136-141). 리프가 아니라 box:row|titleMeta 로 옮겼다 — 자식 3개(title-a.html:17-19)가 리프 안의 비인라인 자식이 되어 규칙 2를 깨뜨렸다.",
+      "box:grid|tab": ".col-tab 은 inline-block 라벨이다 (slides/slides.css:186-198). 그리드 컨테이너가 아니라 el:heading|colTab 이다 — 텍스트 한 줄을 n단 그리드로 분류하는 것은 계획 §12 완화 3이 금지한 뭉뚱그리기다."
+    }
+  }
+}

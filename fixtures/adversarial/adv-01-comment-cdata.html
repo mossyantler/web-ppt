@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>adversarial 01 — comment + CDATA inside section</title>
+</head>
+<body>
+<section class="slide" data-screen-label="주석과 CDATA">
+  <!-- 섹션 안 1행 주석. 규약 G1의 직접 대상 (§2.0) -->
+  <div class="slide-head">
+    <div class="lab">Adversarial Fixture 01</div>
+    <!--
+      여러 행 주석.
+        들여쓰기가 불규칙하다	(탭 1개 포함)
+      주석 안에 태그처럼 보이는 것: <div class="not-a-real-div">
+      주석 안에 속성처럼 보이는 것: data-el="text" data-node-id="nFAKE"
+    -->
+    <div class="meta">주석·CDATA 보존</div>
+  </div>
+  <div class="slide-body stack gap-6">
+    <p class="lead">이 섹션은 어휘 밖 노드의 <b>불투명 보존</b>을 시험한다.</p>
+    <!-- 형제 사이에 끼인 주석: moveElement 재직렬화 경로에서 위치와 바이트가 모두 보존돼야 한다 -->
+    <div class="card">
+      <div class="card-head">CDATA 유사 구간</div>
+      <!-- HTML 파서는 아래를 bogus comment로 처리한다. 저작 트리는 원문 바이트로 보존해야 한다. -->
+      <![CDATA[ 여기는 XML CDATA 문법이다. <b>태그</b> & 앰퍼샌드 & "인용부호" 가 이스케이프 없이 들어 있다. ]]>
+      <p>CDATA 구간 바로 뒤의 형제 노드.</p>
+    </div>
+    <div class="card subtle">
+      <!--[if IE]> 조건부 주석. 레거시 산출물에 남아 있을 수 있다. <![endif]-->
+      <p>조건부 주석 뒤의 형제 노드.</p>
+      <!-- 주석 안 연속 하이픈은 넣지 않았다: HTML 주석 안 `--`는 파서 오류를 유발하므로
+           바이트 보존 시험이 파싱 오류 시험과 뒤섞인다. 이 픽스처는 보존만 시험한다. -->
+    </div>
+  </div>
+  <div class="slide-foot"><span>Adversarial corpus</span><span class="page">01 / 04</span></div>
+  <!-- 섹션 닫는 태그 직전 주석 -->
+</section>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<!-- SNU 테마 스캐폴딩 조각 — 불투명 리프 `progress` (core/grammar.md §3.2 L2 "삽입 경로").
+     `insertElement(parent, i, 'progress')` 는 클라이언트가 보낸 원시 HTML 을 쓰지 않는다.
+     서버가 mapping.json 의 scaffolds["progress"] 가 가리키는 이 파일을 복사해 스캐폴딩을 만든다.
+
+     치환 자리 (서버가 채운다)
+       {{nodeId}}  data-node-id       — §4.1 발급 절차대로 락 안에서 발급
+       {{value}}   data-value / --pct — 0–100 정수. 둘은 항상 같은 값이다 (§3.4 조항 4 동기 불변식)
+       {{label}}   data-label / .task — 표시 라벨
+
+     .prog-track / .prog-fill 은 테마 조판 스캐폴딩이며 규약 G1 의 불투명 노드다.
+     폭은 인라인 width 가 아니라 데이터 채널 --pct 로 온다 — 테마 CSS 가
+     `.prog-fill { width: calc(var(--pct, 0) * 1%); }` 로 기하로 바꾼다. -->
+<div data-el="progress" data-node-id="{{nodeId}}" data-value="{{value}}" data-label="{{label}}" class="prog-row" style="--pct:{{value}}"><span class="task">{{label}}</span><div class="prog-track"><div class="prog-fill"></div></div><span class="pct">{{value}}%</span></div>

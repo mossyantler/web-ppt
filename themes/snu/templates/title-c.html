@@ -1,0 +1,43 @@
+<!-- @dsCard group="Slides" viewport="1280x720" name="표지 C · 사이드바" subtitle="좌측 네이비 사이드바 + 우측 제목 분할형" -->
+<!DOCTYPE html>
+<html data-deck-grammar="v1" lang="ko">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../../styles.css">
+<link rel="stylesheet" href="../../../slides/slides.css">
+<link rel="stylesheet" href="../theme.css">
+<style>
+  body { margin: 0; }
+  a { color: var(--accent); } a:hover { color: var(--accent-hover); }
+  .slide--split { flex-direction: row; padding: 0; }
+  .split-side {
+    width: 360px; flex: none; background: var(--surface-accent);
+    color: var(--navy-100); padding: var(--slide-pad-y) 48px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .split-side .brand { font-size: var(--text-lead); font-weight: var(--weight-semibold); line-height: var(--leading-snug); }
+  .split-side .brand span { display: block; font-size: var(--text-small); color: var(--navy-300); font-weight: 400; margin-top: 6px; }
+  .split-side .foot-meta { font-family: var(--font-mono); font-size: var(--text-caption); color: var(--navy-200); }
+  .split-side .foot-meta div { margin-bottom: 6px; }
+  .split-main { flex: 1; padding: var(--slide-pad-y) 72px; display: flex; flex-direction: column; justify-content: center; }
+</style>
+</head>
+<body>
+<section data-slide data-variant="split" data-slide-kind="title" data-node-id="n1" class="slide slide--split" data-screen-label="표지 C">
+  <aside data-box="region" data-region="side" data-node-id="n2" class="split-side">
+    <div data-el="meta" data-variant="brand" data-node-id="n3" class="brand">Flow Physics and Informatics Laboratory<span>서울대학교 건설환경도시공학부<br>Civil &amp; Environmental Engineering</span></div>
+    <div data-box="stack" data-variant="footMeta" data-node-id="n4" class="foot-meta">
+      <div data-el="text" data-node-id="n5">WEEK &nbsp; 2026 · W28</div>
+      <div data-el="text" data-node-id="n6">DATE &nbsp; 2026.07.13</div>
+      <div data-el="text" data-node-id="n7">발표 &nbsp; 학부연구생 장민엽</div>
+    </div>
+  </aside>
+  <main data-box="region" data-region="main" data-node-id="n8" class="split-main">
+    <p data-el="kicker" data-node-id="n9" class="kicker">Weekly Research Report</p>
+    <h1 data-el="hero" data-node-id="na" class="report-hero" style="font-size:56px">주간 연구<br>진행 보고</h1>
+    <div data-el="rule" data-node-id="nb" class="title-rule"></div>
+    <div data-el="subtitle" data-node-id="nc" class="report-sub">지난주 요약 · 진행 상황 · 실험 결과 · 다음 주 계획</div>
+  </main>
+</section>
+</body>
+</html>

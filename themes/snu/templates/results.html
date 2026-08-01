@@ -1,0 +1,50 @@
+<!-- @dsCard group="Slides" viewport="1280x720" name="실험/결과 · Results" subtitle="그래프 자리 + 결과 표 좌우 배치" -->
+<!DOCTYPE html>
+<html data-deck-grammar="v1" lang="ko">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../../styles.css">
+<link rel="stylesheet" href="../../../slides/slides.css">
+<link rel="stylesheet" href="../theme.css">
+<style> body { margin: 0; } a { color: var(--accent); } a:hover { color: var(--accent-hover); } </style>
+</head>
+<body>
+<section data-slide data-variant="default" data-slide-kind="content" data-node-id="n1" class="slide" data-screen-label="결과">
+  <div data-box="region" data-region="head" data-node-id="n2" class="slide-head">
+    <div data-el="meta" data-variant="lab" data-node-id="n3" class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div>
+    <div data-el="meta" data-node-id="n4" class="meta">W28 · 2026.07.13</div>
+  </div>
+  <div data-box="group" data-node-id="n5" class="title-block">
+    <p data-el="kicker" data-node-id="n6" class="kicker">Results</p>
+    <h2 data-el="title" data-node-id="n7" class="slide-title">실험 &amp; 해석 결과<span class="en">Measured vs. simulated settlement</span></h2>
+  </div>
+  <div data-box="region" data-variant="cols2" data-region="body" data-node-id="n8" class="slide-body cols-2">
+    <div data-box="stack" data-variant="gap4" data-node-id="n9" class="stack gap-4">
+      <div data-el="figure" data-node-id="na" class="figure" style="flex:1">
+        <div class="ic">📈</div>
+        <div class="cap">침하량–시간 곡선 (계측 vs 해석) 그래프 삽입</div>
+      </div>
+      <p data-el="text" data-node-id="nb" class="muted" style="font-size:var(--text-caption); margin:0">그림 1. 재하 후 90일간 침하 거동 비교</p>
+    </div>
+    <div data-box="stack" data-variant="gap6" data-node-id="nc" class="stack gap-6">
+      <div data-box="group" data-variant="plain" data-node-id="nd">
+        <div data-el="heading" data-node-id="ne" class="card-head" style="font-size:var(--text-lead)">주요 결과값</div>
+        <table data-el="table" data-node-id="nf" class="tbl">
+          <thead><tr><th>항목</th><th class="num">계측</th><th class="num">해석</th><th class="num">오차</th></tr></thead>
+          <tbody>
+            <tr><td>최종 침하량</td><td class="num">112 mm</td><td class="num">118 mm</td><td class="num"><b>+5.4%</b></td></tr>
+            <tr><td>90% 압밀 도달</td><td class="num">58 일</td><td class="num">61 일</td><td class="num"><b>+5.2%</b></td></tr>
+            <tr><td>과잉간극수압 peak</td><td class="num">42 kPa</td><td class="num">40 kPa</td><td class="num"><b>−4.8%</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div data-el="callout" data-node-id="ng" class="callout">
+        <div class="q">관찰</div>
+        <div class="a">해석 모델이 계측 침하 거동을 <b>오차 ±6% 이내</b>로 재현. 초기 재하 구간에서 다소 과대평가 경향.</div>
+      </div>
+    </div>
+  </div>
+  <div data-box="region" data-region="foot" data-node-id="nh" class="slide-foot"><span>Weekly Research Report</span><span class="page">05 / 09</span></div>
+</section>
+</body>
+</html>
