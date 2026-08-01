@@ -106,7 +106,13 @@ export function applyCommit(deckId, envelope) {
 
   const resultHash = hashOf(next);
   remember(deckId, envelope.commitId, resultHash);
-  return result({ applied: true, resultHash, currentHash: resultHash, nodeIds });
+  return result({
+    applied: true,
+    resultHash,
+    currentHash: resultHash,
+    nodeIds,
+    spliceRanges: edits.map((e) => ({ start: e.start, end: e.end, text: e.text })),
+  });
 }
 
 /**
@@ -169,11 +175,15 @@ function assertOutsideIdentical(before, after, edits) {
   }
 }
 
-function result({ applied, resultHash, currentHash, nodeIds }) {
+function result({ applied, resultHash, currentHash, nodeIds, spliceRanges = [] }) {
   return {
     applied,
     resultHash,
     currentHash,
+    // 계획 §11 관측성 — 어느 구간이 splice 되었는가. 델타 경로가 틀렸을 때 어디를 봐야
+    // 하는지가 이것에만 있다 (`docs/m2-reconcile-policy.md` "M2 가 지켜야 하는 것" 3항).
+    // P2 매트릭스 테스트도 이 값을 쓴다 — 테스트가 구간을 다시 계산하면 같은 버그를 두 번 쓴다.
+    spliceRanges,
     // §3.3 — resultHash ≠ currentHash 이면 클라이언트는 성공이 아니라 재동기화로 다룬다.
     // M2-1 에는 멱등 재생 경로가 없으므로 항상 false 다. M2-5 가 채운다.
     superseded: resultHash !== currentHash,
