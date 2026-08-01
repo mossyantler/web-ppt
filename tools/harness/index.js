@@ -30,7 +30,7 @@ const ROOT = process.cwd();
 // `fixtures/templates/*.html` 은 같은 10종의 **주석 이전** 바이트 사본이며, 분모가 아니라
 // adoptSection 의 입력이자 왕복 바이트 픽스처다. 둘을 분모에 함께 넣으면 같은 섹션을 두 번 센다.
 const GROUPS = [
-  { name: 'theme-templates', dir: 'themes/snu/templates', inDenominator: true },
+  { name: 'theme-templates', dir: `themes/${process.env.THEME || 'snu'}/templates`, inDenominator: true },
   { name: 'templates', dir: 'fixtures/templates', inDenominator: false },
   { name: 'legacy', dir: 'fixtures/legacy', inDenominator: false },
   { name: 'adversarial', dir: 'fixtures/adversarial', inDenominator: false },

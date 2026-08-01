@@ -1,0 +1,111 @@
+/* minimal 테마 — 어휘 v1 의 보편성을 실증하기 위한 두 번째 테마.
+ *
+ * 계획 §14 후속 과제 8 — "두 번째 테마를 실제로 만들어 토큰 계약을 실증
+ * (계약은 사용되기 전까지 가설이다)".
+ *
+ * **SNU 를 흉내 내지 않는다.** 색·자간·조판을 전부 다르게 잡는다. 이름만 바꾼 사본이면
+ * 아무것도 증명하지 못한다. 증명해야 하는 것은 "같은 저작 트리가 다른 조판으로 선다" 이지
+ * "클래스 이름을 바꿔도 된다" 가 아니다.
+ *
+ * 후속 과제 10(컴포넌트 클래스 계약)이 요구한 것이 이 파일이다 — 토큰 계약은 커스텀
+ * 프로퍼티 **이름만** 정의하므로, `.card`·`.timeline` 급 규칙이 없는 테마에서는 템플릿이
+ * 무너진다. 여기서는 그 규칙을 최소분으로 갖춘다.
+ */
+
+:root {
+  --m-ink: #14161a;
+  --m-ink-soft: #5b626e;
+  --m-line: #d6dae0;
+  --m-accent: #7a3e12;      /* SNU 네이비와 겹치지 않는 계열 */
+  --m-surface: #ffffff;
+  --m-surface-quiet: #f5f4f1;
+  --m-sans: "Helvetica Neue", Arial, sans-serif;
+  --m-mono: "SF Mono", Menlo, monospace;
+  --m-gap-s: 8px;
+  --m-gap-l: 24px;
+}
+
+/* --- 섹션 -------------------------------------------------------------- */
+.m-slide { width: 1280px; height: 720px; padding: 48px 56px; background: var(--m-surface);
+           color: var(--m-ink); font-family: var(--m-sans); display: flex; flex-direction: column; }
+.m-slide-cover { justify-content: center; }
+.m-slide-split { }
+
+/* --- region 슬롯 ------------------------------------------------------- */
+.m-zone-top { display: flex; justify-content: space-between; align-items: baseline;
+              border-bottom: 1px solid var(--m-line); padding-bottom: 10px; }
+.m-zone-mid { flex: 1; padding: 20px 0; min-height: 0; }
+.m-zone-bot { display: flex; justify-content: space-between; align-items: baseline;
+              border-top: 1px solid var(--m-line); padding-top: 10px; font-size: 12px;
+              color: var(--m-ink-soft); }
+.m-zone-aside { }
+.m-zone-main { }
+
+/* --- 컨테이너 ---------------------------------------------------------- */
+.m-col { display: flex; flex-direction: column; gap: 14px; }
+.m-gap-s { gap: var(--m-gap-s); }
+.m-gap-l { gap: var(--m-gap-l); }
+.m-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.m-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.m-grid-split { display: grid; grid-template-columns: 5fr 7fr; gap: 22px; }
+.m-panel { border: 1px solid var(--m-line); border-radius: 2px; padding: 16px 18px; }
+.m-panel-quiet { background: var(--m-surface-quiet); border-color: transparent; }
+.m-titlegroup { margin: 18px 0 6px; }
+.m-titlebar { display: flex; gap: 16px; align-items: baseline; }
+.m-footbar { display: flex; flex-direction: column; gap: 4px; }
+.m-track { display: flex; flex-direction: column; gap: 10px; }
+.m-reflist { display: flex; flex-direction: column; gap: 6px; }
+.m-layer { position: relative; }
+
+/* --- 리프 -------------------------------------------------------------- */
+.m-h { font-size: 34px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+.m-display { font-size: 52px; font-weight: 700; margin: 0; }
+.m-sub { font-size: 16px; color: var(--m-ink-soft); }
+.m-sub-alt { display: block; font-size: 15px; color: var(--m-ink-soft); font-weight: 400; }
+.m-eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+             color: var(--m-accent); margin: 0 0 4px; }
+.m-blockhead { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.m-tab { display: inline-block; font-size: 12px; padding: 2px 8px; border: 1px solid var(--m-line); }
+.m-dim { color: var(--m-ink-soft); }
+.m-meta { font-size: 12px; color: var(--m-ink-soft); }
+.m-org { font-weight: 600; color: var(--m-ink); }
+.m-org-lg { font-size: 15px; font-weight: 600; }
+.m-pageno { font-family: var(--m-mono); }
+.m-brand { letter-spacing: 0.08em; }
+.m-lead { font-size: 17px; line-height: 1.5; }
+.m-note { font-size: 12px; color: var(--m-ink-soft); }
+.m-quote { font-style: italic; border-left: 2px solid var(--m-accent); padding-left: 12px; }
+.m-list { margin: 0; padding-left: 18px; line-height: 1.7; }
+.m-list-check { list-style: none; padding-left: 0; }
+.m-step { padding-left: 14px; border-left: 2px solid var(--m-line); }
+.m-ref { font-size: 12px; line-height: 1.6; }
+.m-caption { font-size: 11px; color: var(--m-ink-soft); }
+.m-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.m-table td, .m-table th { border-bottom: 1px solid var(--m-line); padding: 6px 8px; text-align: left; }
+.m-figure { border: 1px dashed var(--m-line); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 6px; min-height: 140px; }
+.m-fig-icon { font-size: 28px; color: var(--m-ink-soft); }
+.m-fig-cap { font-size: 11px; color: var(--m-ink-soft); }
+.m-stat { display: flex; flex-direction: column; gap: 2px; }
+.m-tag { display: inline-block; font-size: 11px; padding: 1px 7px; border: 1px solid var(--m-line); }
+.m-tag-run { border-color: var(--m-accent); color: var(--m-accent); }
+.m-tag-stop { border-color: #b0261a; color: #b0261a; }
+.m-tag-info { color: var(--m-ink-soft); }
+.m-note-box { border-left: 3px solid var(--m-line); padding: 10px 14px; background: var(--m-surface-quiet); }
+.m-risk { border-left-color: #b0261a; }
+.m-warn { border-left-color: #b8860b; }
+.m-ask { font-weight: 600; margin-bottom: 4px; }
+.m-ans { color: var(--m-ink-soft); }
+.m-code { margin: 0; padding: 10px 14px; background: var(--m-surface-quiet);
+          border: 1px solid var(--m-line); font-family: var(--m-mono); font-size: 12px;
+          line-height: 1.55; white-space: pre; overflow-x: auto; tab-size: 2; }
+.m-divider { height: 2px; background: var(--m-accent); width: 56px; }
+
+/* --- 불투명 리프 `progress` — 데이터 채널 ------------------------------ */
+/* SNU 는 `--pct`, minimal 은 `--fill`. 문법은 이름을 요구하지 않는다 (§3.4).
+   이 한 줄이 없으면 문법은 통과하고 화면만 깨진다 — SNU 의 `.prog-fill` 과 같은 자리다. */
+.m-bar { display: grid; grid-template-columns: 1fr 3fr auto; gap: 10px; align-items: center; }
+.m-bar-rail { height: 6px; background: var(--m-surface-quiet); border: 1px solid var(--m-line); }
+.m-bar-fill { height: 100%; background: var(--m-accent); width: calc(var(--fill, 0) * 1%); }
+.m-task { font-size: 12px; }
+.m-pct { font-family: var(--m-mono); font-size: 11px; color: var(--m-ink-soft); }

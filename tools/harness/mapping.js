@@ -14,11 +14,25 @@ import { dirname, join } from 'node:path';
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 /** 테마 매핑의 단일 진실 원천. 하네스와 마이그레이터가 같은 파일을 읽는다 (계획 3판 M1 개정 기록 2). */
-export const MAPPING_PATH = join(HERE, '..', '..', 'themes', 'snu', 'mapping.json');
+/**
+ * 활성 테마 이름. `THEME` 환경변수로 바꾼다 (기본 `snu`).
+ *
+ * 경로를 박아 두면 **테마가 하나뿐인지 어휘가 하나에 종속됐는지 구별할 수 없다** —
+ * 계획 후속 과제 8 이 "계약은 사용되기 전까지 가설이다" 라고 적은 지점이다.
+ * 두 번째 테마로 같은 저작 트리를 렌더해 보는 것이 그 가설의 유일한 검증이다.
+ */
+export const themeName = () => process.env.THEME || 'snu';
+
+export const themeDir = (theme = themeName()) => join(HERE, '..', '..', 'themes', theme);
+
+export const mappingPathFor = (theme = themeName()) => join(themeDir(theme), 'mapping.json');
+
+/** 하위 호환 — 기존 호출부가 인자 없이 쓰던 기본 경로. */
+export const MAPPING_PATH = mappingPathFor();
 
 export const REQUIRED_CLAUSES = ['blocks', 'regionSlots', 'inlineClasses', 'dataProps', 'scaffolds', 'leafStructure'];
 
-export function loadMapping(path = MAPPING_PATH) {
+export function loadMapping(path = mappingPathFor()) {
   const json = JSON.parse(readFileSync(path, 'utf8'));
   const missing = REQUIRED_CLAUSES.filter((c) => !(c in json));
   if (missing.length) {

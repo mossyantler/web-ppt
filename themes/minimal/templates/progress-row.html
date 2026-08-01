@@ -1,0 +1,16 @@
+<!-- minimal 테마 스캐폴딩 조각 — 불투명 리프 `progress` (core/grammar.md §3.2 L2 "삽입 경로").
+
+     **이 파일은 이식되지 않는다. 테마마다 손으로 쓴다.**
+     불투명 리프의 자식 서브트리는 저작물이 아니라 테마의 산출물이고(§3.2), 어휘 주석이
+     하나도 없다. 어휘로 찾을 수 있는 것이 없으므로 기계적 이식의 대상이 아니다.
+     SNU 판(`themes/snu/templates/progress-row.html`)과 비교하면 내부 구조도 클래스도
+     전부 다르다 — 같아야 할 이유가 없다는 것이 불투명 리프의 정의다.
+
+     치환 자리 (서버가 채운다)
+       {{nodeId}}  data-node-id        — §4.1 발급 절차대로 락 안에서 발급
+       {{value}}   data-value / --fill — 0–100 정수. 둘은 항상 같은 값이다 (§3.4 동기 불변식)
+       {{label}}   data-label          — 표시 라벨
+
+     프로퍼티 이름이 SNU 의 `--pct` 가 아니라 `--fill` 이다. 문법은 이름을 요구하지 않고
+     `dataProps` 선언의 **존재**만 요구한다 — 이름이 테마 소유임을 실증하는 자리다. -->
+<div data-el="progress" data-node-id="{{nodeId}}" data-value="{{value}}" data-label="{{label}}" class="m-bar" style="--fill:{{value}}"><span class="m-task">{{label}}</span><div class="m-bar-rail"><div class="m-bar-fill"></div></div><span class="m-pct">{{value}}%</span></div>

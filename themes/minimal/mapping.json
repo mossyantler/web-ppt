@@ -1,0 +1,163 @@
+{
+  "_provenance": {
+    "theme": "minimal",
+    "note": "어휘 v1 의 보편성을 실증하기 위한 **두 번째 테마**. 계획 §14 후속 과제 8 — '두 번째 테마를 실제로 만들어 토큰 계약을 실증 (계약은 사용되기 전까지 가설이다)'.",
+    "rule": "SNU 를 흉내 내지 않는다. 클래스 이름·조판·색을 전부 다르게 짓고, 그래도 **같은 저작 트리**가 렌더되는지를 본다. 이름만 바꾼 사본이면 아무것도 증명하지 못한다.",
+    "grammarSource": "core/grammar.md",
+    "version": "v1",
+    "updatedAt": "2026-08-01"
+  },
+
+  "blocks": {
+    "el:title": { "default": "m-h" },
+    "el:subtitle": { "default": "m-sub", "en": "m-sub-alt" },
+    "el:kicker": { "default": "m-eyebrow" },
+    "el:hero": { "default": "m-display" },
+    "el:heading": {
+      "default": "m-blockhead",
+      "colTab": "m-tab",
+      "colTabMuted": "m-tab m-dim"
+    },
+    "el:meta": {
+      "default": "m-meta",
+      "lab": "m-meta m-org",
+      "page": "m-meta m-pageno",
+      "brand": "m-meta m-brand",
+      "titleLab": "m-org-lg"
+    },
+    "el:text": { "default": "", "lead": "m-lead", "note": "m-note", "quote": "m-quote" },
+    "el:list": { "default": "m-list", "check": "m-list m-list-check" },
+    "el:step": { "default": "m-step" },
+    "el:citation": { "default": "m-ref" },
+    "el:caption": { "default": "m-caption" },
+    "el:table": { "default": "m-table" },
+    "el:image": { "default": "" },
+    "el:figure": { "default": "m-figure" },
+    "el:metric": { "default": "m-stat" },
+    "el:pill": {
+      "default": "m-tag",
+      "prog": "m-tag m-tag-run",
+      "block": "m-tag m-tag-stop",
+      "note": "m-tag m-tag-info"
+    },
+    "el:callout": {
+      "default": "m-note-box",
+      "risk": "m-note-box m-risk",
+      "warn": "m-note-box m-warn"
+    },
+    "el:code": { "default": "m-code" },
+    "el:rule": { "default": "m-divider" },
+    "el:equation": { "default": "" },
+    "el:progress": { "default": "m-bar" },
+
+    "box:stack": {
+      "default": "m-col",
+      "gap4": "m-col m-gap-s",
+      "gap6": "m-col m-gap-l",
+      "footMeta": "m-footbar"
+    },
+    "box:row": { "default": "", "titleMeta": "m-titlebar" },
+    "box:grid": { "default": "m-grid-2", "cols3": "m-grid-3", "cols57": "m-grid-split" },
+    "box:group": { "default": "m-titlegroup", "plain": "" },
+    "box:card": { "default": "m-panel", "subtle": "m-panel m-panel-quiet" },
+    "box:sequence": { "default": "m-track", "refs": "m-reflist" },
+    "box:canvas": { "default": "m-layer" },
+    "box:region": { "default": "", "cols2": "m-grid-2", "cols57": "m-grid-split", "stackGap6": "m-col m-gap-l" },
+
+    "section": { "default": "m-slide", "split": "m-slide m-slide-split", "title": "m-slide m-slide-cover" }
+  },
+
+  "regionSlots": {
+    "head": "m-zone-top",
+    "body": "m-zone-mid",
+    "foot": "m-zone-bot",
+    "side": "m-zone-aside",
+    "main": "m-zone-main"
+  },
+
+  "defaultTag": {
+    "el:title": "h2",
+    "el:subtitle": "div",
+    "el:kicker": "p",
+    "el:hero": "h1",
+    "el:heading": "div",
+    "el:meta": "div",
+    "el:text": "p",
+    "el:list": "ul",
+    "el:step": "div",
+    "el:citation": "div",
+    "el:caption": "div",
+    "el:table": "table",
+    "el:image": "img",
+    "el:figure": "div",
+    "el:metric": "div",
+    "el:pill": "span",
+    "el:callout": "div",
+    "el:code": "pre",
+    "el:rule": "div",
+    "el:equation": "span",
+    "el:progress": "div",
+    "box:stack": "div",
+    "box:row": "div",
+    "box:grid": "div",
+    "box:group": "div",
+    "box:card": "div",
+    "box:sequence": "div",
+    "box:canvas": "div",
+    "box:region": "div"
+  },
+
+  "inlineClasses": ["m-alt", "m-n", "m-cite", "m-work", "m-where", "m-fig", "m-unit", "m-label", "m-delta", "m-tt", "m-k", "m-v", "m-task", "m-pct", "m-dot", "m-when", "m-what", "m-dim"],
+
+  "dataProps": {
+    "progress": {
+      "--fill": { "from": "data-value", "type": "number", "min": 0, "max": 100 }
+    }
+  },
+
+  "scaffolds": {
+    "progress": "themes/minimal/templates/progress-row.html",
+    "equation": null
+  },
+
+  "leafStructure": {
+    "list": [{ "tag": "li" }],
+    "table": [
+      { "tag": "colgroup" },
+      { "tag": "col" },
+      { "tag": "thead" },
+      { "tag": "tbody" },
+      { "tag": "tr" },
+      { "tag": "th" },
+      { "tag": "td" },
+      { "tag": "caption" }
+    ],
+    "figure": [
+      { "tag": "div", "class": "m-fig-icon" },
+      { "tag": "div", "class": "m-fig-cap" }
+    ],
+    "callout": [
+      { "tag": "div", "class": "m-ask" },
+      { "tag": "div", "class": "m-ans" }
+    ]
+  },
+
+  "opaqueLeaves": {
+    "equation": { "kind": "runtime-render", "sourceChildren": "empty", "command": "setTex" },
+    "progress": { "kind": "theme-scaffold", "sourceChildren": "present", "command": "setValue" }
+  },
+
+  "voidLeaves": ["image", "rule"],
+
+  "regionEnum": ["head", "body", "foot", "side", "main"],
+  "slideKindEnum": ["title", "content", "break", "closing"],
+
+  "_findings": {
+    "note": "이 테마를 지으면서 드러난 것. 어휘 보편성 논의의 근거다.",
+    "el:meta|lab, el:meta|titleLab": "SNU 의 `.lab`/`.title-lab` 은 '연구실 이름' 이다. 일반 테마에는 그 개념이 없어 '조직 라벨' 로 넓혀야 했다. **어휘 값이 아니라 variant 이름이 장르에 묶여 있다.**",
+    "el:pill|prog, block, note": "'진행/차단/참고' 는 주간 보고의 상태 어휘다. 일반 슬라이드 테마라면 이 셋을 미리 정해 두지 않는다.",
+    "el:step, box:sequence|default": "타임라인 한 칸과 그 묶음. 주간 보고의 '이번 주 활동' 에서 나왔다.",
+    "box:region": "머리/본문/꼬리 3분할은 이 덱 포맷의 규약이지 보편 컴포넌트가 아니다. 다만 슬라이드 포맷이면 대개 갖는다.",
+    "el:progress": "진척도 바. 보고 장르 고유이되 데이터 채널 계약(`dataProps`)은 그대로 성립했다 — 프로퍼티 이름을 `--pct` 에서 `--fill` 로 바꿔도 문법은 무관했다."
+  }
+}

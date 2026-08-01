@@ -21,7 +21,7 @@ import { dirname, join } from 'node:path';
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 /** 테마 매핑의 단일 진실 원천 — 하네스(`tools/harness/mapping.js`)와 같은 파일이다. */
-export const MAPPING_PATH = join(HERE, '..', '..', 'themes', 'snu', 'mapping.json');
+export const MAPPING_PATH = join(HERE, '..', '..', 'themes', process.env.THEME || 'snu', 'mapping.json');
 
 export const THEME = JSON.parse(readFileSync(MAPPING_PATH, 'utf8'));
 
