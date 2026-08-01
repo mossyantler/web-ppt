@@ -38,6 +38,7 @@ const HTML = `<!DOCTYPE html>
     <div data-box="card" data-node-id="n6" class="card">
       <div data-el="heading" data-node-id="n7" class="card-head">제목</div>
     </div>
+    <ul data-el="list" data-node-id="nc" class="list"><li>첫째</li><li>둘째</li><li>셋째</li></ul>
     <span data-el="equation" data-node-id="n8" data-tex="a=b" data-display="false"></span>
     <div data-el="progress" data-node-id="n9" data-value="72" style="--pct:72" class="prog-row"><span class="task">작업</span><div class="prog-track"><div class="prog-fill"></div></div><span class="pct">72%</span></div>
     <div data-box="canvas" data-node-id="na" class="free-layer">
@@ -85,6 +86,10 @@ const MATRIX = [
   ['wrapElements', { target: ['n4', 'n5'], args: { boxType: 'card' } }],
   ['unwrapElement', { target: 'n3' }],
   ['reserveSections', { args: { n: 2, templateId: 'blockers' } }],
+  ['reorderChildren', { target: 'nc', args: { order: [2, 0, 1] } }],
+  ['insertChild', { target: 'nc', args: { index: 1, tag: 'li', html: '새 항목' } }],
+  ['removeChild', { target: 'nc', args: { index: 1 } }],
+  ['setChildContent', { target: 'nc', args: { index: 0, html: '고침' } }],
 ];
 
 /* --------------------------------------------------------------- 기준 5 */

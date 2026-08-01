@@ -31,6 +31,7 @@ import * as history from './history.js';
 import './attr-commands.js';
 import './structure-commands.js';
 import './content-commands.js';
+import './child-commands.js';
 import './section-commands.js';
 
 /**

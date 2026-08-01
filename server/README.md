@@ -58,7 +58,10 @@ POST /deck/:id/commit
 | **속성** | `setProps` `setSectionProps` `setTex` `setValue` `setPosition` | 여는 태그. 대상의 내부 HTML 은 정의상 바이트 동일 |
 | **구조** | `insertElement` `removeElement` `moveElement` `duplicateElement` `wrapElements` `unwrapElement` | 슬라이드 전체 (재직렬화) |
 | **내용** | `setContent` | 리프의 내부 구간 `[innerStart, innerEnd)` |
+| **구조 자식** | `reorderChildren` `insertChild` `removeChild` `setChildContent` | 부모의 내부 구간 (`setChildContent` 는 자식 하나의 내부) |
 | **섹션** | `reserveSections` | 앵커 섹션 뒤 삽입 |
+
+구조 자식(`<li>`·`<td>`)은 L6 면제로 `data-node-id` 를 갖지 않아 `moveElement` 로 지목할 수 없다. **순번으로 지목한다** — `reorderChildren(target, order)`. `reorderChildren` 과 `removeChild` 는 HTML 을 받지 않으므로 정화기를 지나지 않고, 그래서 순서를 바꾸는 일이 내용을 바꾸지 않는다 (§3.6 L6.1).
 
 속성 명령은 여는 태그를 **통째로 다시 쓰지 않는다.** 속성 하나만 splice 한다 — 다시 쓰면 손대지 않은 속성의 인용 부호·공백이 정규화되고, 사용자가 바꾼 건 하나인데 diff 는 줄 전체로 뜬다.
 

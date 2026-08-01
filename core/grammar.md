@@ -431,6 +431,7 @@ THEME=minimal node tools/harness/index.js
 3. **규칙 2·3 면제** — 선언된 구조 자식은 `data-el`/`data-box`와 `data-node-id`를 요구받지 않는다.
 4. **`grammar.illegal-child` 미발화** — 선언된 구조 자식은 위반이 아니다. **선언되지 않은** 비인라인 자식은 여전히 위반이다.
 5. **저작 대상이다** — `setContent`가 적용된다. `normalizeInline`은 해당 리프 값의 `leafStructure` 선언을 받아, 선언된 (태그, 클래스) 쌍을 **보존**한다. 선언 밖 요소는 기존 규칙대로 언랩한다.
+   **다만 구조 자식을 편집하는 정규 경로는 `setContent`가 아니라 구조 자식 명령 4종이다** — 아래 L6.1.
 6. **중첩 깊이 1** — 구조 자식 안에는 인라인과 `inlineClasses`만 온다. 구조 자식이 다시 구조 자식을 갖지 않는다. 예외는 `table`의 `thead`/`tbody`/`colgroup`이며, 이 셋만 깊이 2를 허용한다(`tbody > tr > td`, `colgroup > col`).
 7. **불투명 리프와 배타** — 한 리프 값이 `leafStructure`와 `scaffolds`를 동시에 가질 수 없다. 가지면 테마 적합성 오류다.
 
@@ -458,6 +459,31 @@ THEME=minimal node tools/harness/index.js
 ```
 
 **`<tbody>` 부재에 관한 주 (중요).** `slides/method.html:32`는 `<table class="tbl">` 바로 아래 `<tr>`이고 `<tbody>`가 없다[g7]. 브라우저 파서는 이 자리에 `<tbody>`를 삽입한다. **문법 v1은 이것을 위반으로 보지 않는다.** 저작 트리는 소스 바이트를 읽지 라이브 DOM을 읽지 않으므로 삽입된 `<tbody>`를 본 적이 없고, 위 선언이 `tbody`와 `tr` 둘 다 허용하므로 어느 쪽 소스도 통과한다. 저자의 손버릇에 게이트가 달려 있지 않게 하는 것이 이 선언의 목적이다.
+
+### L6.1 — 구조 자식 명령 *(2026-08-01 신설)*
+
+> **구조 자식은 이름이 아니라 순번으로 지목한다. 부모 리프는 이름이 있으므로 `(리프 id, 순번)` 쌍이면 충분하고, `<li>`에 `data-node-id`를 붙일 필요가 없다.**
+
+**신설 근거 — 면제가 만든 구멍.** L6은 구조 자식을 규칙 2·3에서 면제했다. 옳은 결정이다(표 하나에 id 24개가 붙으면 손편집이 불가능해진다). 대가는 **명령이 그것들을 지목할 수 없다**는 것이고, 그래서 목록 순서를 바꾸려면 `setContent`로 리프 전체를 갈아야 했다.
+
+**그 우회가 실제로 내용을 훼손했다.** `setContent`는 텍스트 편집 명령이라 `normalizeInline`을 지난다. 실측: `<li>PTM 구현 <span class="wrf">주1</span></li>`의 순서만 바꿨는데 `class="wrf"`가 사라졌다 — 허용목록 밖 클래스이므로 정화기가 지웠다. **사용자는 순서만 만졌고, 무엇이 사라졌는지 모른다.** P4("몰래 고치지 않는다") 위반이고, 계획 3판 M1 개정 기록 1이 "알려진 제약"으로 적어 둔 항목이다.
+
+| 명령 | 인자 | 정화기 | 쓰기 단위 |
+|---|---|---|---|
+| `reorderChildren` | `target, parentPath?, order[]` | **안 지남** | 부모의 내부 구간 |
+| `removeChild` | `target, parentPath?, index` | **안 지남** | 부모의 내부 구간 |
+| `insertChild` | `target, parentPath?, index, tag, className?, html?` | 새 자식의 내용만 | 부모의 내부 구간 |
+| `setChildContent` | `target, parentPath?, index, html` | 그 자식 안에서만 | **자식 하나의 내부 구간** |
+
+**세 조항.**
+
+1. **`reorderChildren`·`removeChild`는 HTML을 받지 않는다.** 순열과 순번만 받으므로 정화기를 지날 이유가 없고, 서버는 기존 자식의 원문 바이트를 자리만 바꿔 다시 붙인다. **내용에 손댈 경로 자체가 없다.**
+2. **재배열은 자리를 고정하고 내용만 바꾼다.** 자식 사이의 들여쓰기와 주석은 원문 그대로 남는다 — 규약 G1의 어휘 밖 노드가 정확히 거기 있다.
+3. **`insertChild`의 태그는 `leafStructure` 선언에서만 고른다.** 클라이언트가 구조를 보내지 못하게 하는 것이 §3.2 L2 "삽입 경로"와 같은 원칙이다 — 구조는 테마가 정한다.
+
+**`parentPath`는 깊이 2를 위한 것이다.** 표는 `table > tbody > tr > td`이므로(조항 6) 행을 재배열하려면 `tbody`를 가리켜야 한다. `parentPath: [1]`이 그것이고, 기본값 `[]`는 리프 자신이다. `setChildContent`가 구조 자식을 또 가진 노드를 받으면 422와 함께 "`parentPath`로 내려가라"고 안내한다.
+
+**`setContent`는 여전히 유효하다.** 리프 내용을 통째로 바꾸는 것이 의도일 때 쓴다. 달라진 것은 **구조 자식을 만지는 것이 더 이상 그 명령의 부작용이 아니라는 점**이다.
 
 ### L7 — `data-variant`
 
