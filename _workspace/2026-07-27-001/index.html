@@ -876,19 +876,19 @@
     <div class="slide-head"><div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div><div class="meta">W31 · 2026.07.27</div></div>
     <div class="title-block"><p class="kicker">Weekly Activities</p><h2 class="slide-title">저번 주 활동<span class="en">TEPS examination and review of a storm surge prediction paper</span></h2></div>
     <div class="slide-body">
-      <div class="lead">7월 25일 토요일 TEPS 시험에 응시했고, 지난주에 추천해 주신 논문 두 편 중 폭풍해일 예측에 관한 논문을 검토했습니다.</div>
+      <div class="lead">7월 25일 토요일 TEPS 시험응시 및 추천 논문 두 편 중 폭풍해일 예측에 관한 논문을 검토.</div>
       <div class="activity-grid">
         <article class="activity-card">
           <span class="status-label">시험 응시</span>
           <h3>TEPS 응시</h3>
-          <p>7월 25일 토요일 TEPS 시험에 응시했습니다.</p>
-          <div class="activity-note">성적 발표 이후 필요한 경우 재응시 여부를 판단하겠습니다.</div>
+          <p>7월 25일 토요일 TEPS 시험에 응시.</p>
+          <div class="activity-note">8월 재응시 예정.</div>
         </article>
         <article class="activity-card paper">
           <span class="status-label">논문 검토</span>
           <h3>폭풍해일 예측 논문 검토</h3>
-          <p>대기 외력의 생성 방법이 폭풍해일 예측에 미치는 영향을 다룬 Jo et al. (2025) 논문을 읽었습니다.</p>
-          <div class="activity-note">PTM과 WRF의 차이, SuWAT 지배방정식, PSH 경험식을 중심으로 정리했습니다.</div>
+          <p>Impact of atmospheric forcing on storm surge prediction between numerical weather model and parametric typhoon model</p>
+          <div class="activity-note">PTM과 WRF의 차이, SuWAT 지배방정식, PSH 경험식을 중심으로 정리.</div>
         </article>
       </div>
     </div>
@@ -943,7 +943,7 @@
           <p>태풍 중심의 낮은 기압이 수면을 끌어올립니다. 정적 평형 상태의 결과가 역기압계 효과입니다.</p>
         </article>
       </div>
-      <div class="lead" style="margin-top:var(--space-5);font-size:var(--text-small);font-weight:var(--weight-regular);color:var(--text-muted);">논문의 핵심 논점은 이 두 외력을 <b>어떤 방법으로 생성하는가</b>에 있습니다.</div>
+      <div class="lead" style="margin-top:var(--space-5);font-size:var(--text-small);font-weight:var(--weight-regular);color:var(--text-muted);">논문의 핵심 논점은 이 두 외력의 <b>생성 방법</b>에 있습니다.</div>
     </div>
     <div class="slide-foot"><span>Weekly Report · 연구 흐름</span><span class="page">04 / 13</span></div>
   </section>
@@ -985,7 +985,7 @@
     <div class="slide-head"><div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div><div class="meta">W31 · 2026.07.27</div></div>
     <div class="title-block"><p class="kicker">PTM vs WRF</p><h2 class="slide-title">두 대기장 생성 방법의 비교<span class="en">Idealized parametric field versus resolved atmospheric physics</span></h2></div>
     <div class="slide-body">
-      <div class="lead">PTM은 태풍을 이상화된 원형 구조로 표현하고, WRF는 대기의 물리방정식을 직접 계산합니다.</div>
+      <div class="lead">PTM: 태풍을 이상화된 원형 구조로 표현 / WRF: 대기의 물리방정식을 직접 계산.</div>
       <div class="data-table-wrap">
         <table class="data-table">
           <colgroup><col style="width:22%"><col style="width:39%"><col style="width:39%"></colgroup>
@@ -1047,7 +1047,7 @@
         </article>
         <article class="equation-row wide">
           <h3><span data-tex="x"></span> 방향 운동량방정식</h3>
-          <div class="equation-box" data-tex="\begin{aligned}\frac{\partial M}{\partial t}+\frac{\partial}{\partial x}\left(\frac{M^2}{d}\right)+\frac{\partial}{\partial y}\left(\frac{MN}{d}\right)+gd\frac{\partial \eta}{\partial x}={}&amp;fN-\frac{d}{\rho_w}\frac{\partial P}{\partial x}\\&amp;+\frac{1}{\rho_w}\left(\tau_s^x-\tau_b^x+F_x\right)+A_h\left(\frac{\partial^2M}{\partial x^2}+\frac{\partial^2M}{\partial y^2}\right)\end{aligned}" data-display="true"></div>
+          <div class="equation-box" data-tex="\begin{aligned}\frac{\partial M}{\partial t}+\frac{\partial}{\partial x}\left(\frac{M^2}{d}\right)+\frac{\partial}{\partial y}\left(\frac{MN}{d}\right)+gd\frac{\partial \eta}{\partial x}={}fN-\frac{d}{\rho_w}\frac{\partial P}{\partial x}+\frac{1}{\rho_w}\left(\tau_s^x-\tau_b^x+F_x\right)+A_h\left(\frac{\partial^2M}{\partial x^2}+\frac{\partial^2M}{\partial y^2}\right)\end{aligned}" data-display="true"></div>
           <p>좌변은 국소 변화와 이류, 수면경사에 의한 압력경도이고, 우변은 코리올리·대기압 경도·바람응력·바닥마찰·파랑·수평 난류확산입니다. <span data-tex="y"></span> 방향은 회전 방향과 경도 방향만 바뀝니다. 대기 외력 효과에 집중하기 위해 <b>조석과 파랑을 제외</b>했으므로 <span data-tex="F_x=F_y=0"></span>입니다.</p>
         </article>
       </div>
@@ -1061,7 +1061,7 @@
         <span><strong data-tex="f"></strong>코리올리</span>
         <span><strong data-tex="A_h"></strong>수평 와점성</span>
       </div>
-      <div class="result-note">계산된 해수면은 총수위가 아니라 바람과 기압으로 발생한 순수 폭풍해일 성분이며, 관측값도 총수위에서 조석 성분을 제거한 residual surge를 사용했습니다.</div>
+      <div class="result-note">계산된 해수면은 바람과 기압으로 발생한 순수 폭풍해일 성분이며, 관측값도 총수위에서 조석 성분을 제거한 residual surge를 사용했습니다.</div>
     </div>
     <div class="slide-foot"><span>Weekly Report · SuWAT</span><span class="page">08 / 13</span></div>
   </section>
@@ -1139,7 +1139,7 @@
         <article class="finding">
           <div class="number">03</div>
           <div>
-            <h3>두 모형은 대체관계가 아니라 보완관계</h3>
+            <h3>Process-based Model 및 Empirical Model: 보완관계</h3>
             <p>수치모형은 폭풍해일의 시간변화와 공간분포를 상세히 분석하는 데, 경험식은 계산비용이 거의 들지 않아 실시간 최대 폭풍해일고 예측과 신속한 재난 대응에 유리합니다.</p>
           </div>
         </article>
@@ -1156,7 +1156,7 @@
     <div class="slide-head"><div class="lab">Flow Physics &amp; Informatics Lab <span>· 건설환경도시공학부</span></div><div class="meta">W31 · 2026.07.27</div></div>
     <div class="title-block"><p class="kicker">Further Study</p><h2 class="slide-title">추가로 진행할 내용<span class="en">남은 방법론 논문 검토 및 데이터 준비</span></h2></div>
     <div class="slide-body">
-      <div class="lead">남은 추천 논문 한 편을 검토하고, 지난주에 말씀해 주신 관측 자료를 확보하겠습니다.</div>
+      <div class="lead">남은 추천 논문 한 편을 검토 및 관측 자료를 확보.</div>
       <div class="study-layout">
         <article class="study-question">
           <div class="kicker">Methodology</div>
@@ -1168,7 +1168,7 @@
             </article>
             <article class="study-paper">
               <div class="number">02</div>
-              <div><h4>WRF와 SuWAT의 입력·출력 자료 구조 확인</h4><p>Follow-up · 이번 주 논문에서 이어지는 내용</p></div>
+              <div><h4>WRF 및 SuWAT이 사용하는 물리식 이해</h4></div>
             </article>
           </div>
         </article>
