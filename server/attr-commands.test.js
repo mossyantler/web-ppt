@@ -265,7 +265,10 @@ test('한 커밋의 여러 속성 명령이 함께 적용된다', async () => {
   assert.match(after, /--pct:30/);
 });
 
-test('M2-2 가 등록한 명령은 속성 명령 다섯이다', async () => {
+test('속성 명령 다섯이 전부 등록되어 있다', async () => {
   const { registeredOps } = await import('./commands.js');
-  assert.deepEqual(registeredOps(), ['setPosition', 'setProps', 'setSectionProps', 'setTex', 'setValue']);
+  const registered = new Set(registeredOps());
+  for (const op of ['setPosition', 'setProps', 'setSectionProps', 'setTex', 'setValue']) {
+    assert.ok(registered.has(op), `누락: ${op}`);
+  }
 });

@@ -152,12 +152,14 @@ test('미등록 명령 → 422 이고 파일은 바뀌지 않는다 (조용한 �
   assert.equal(onDisk(), before);
 });
 
-test('구조 명령은 아직 등록되지 않았다 — M2-3 의 단계 경계', async () => {
+test('setContent 와 섹션·문서 명령은 아직 등록되지 않았다 — M2-4 이후의 경계', async () => {
   const { registeredOps } = await server();
-  const structural = ['insertElement', 'removeElement', 'moveElement', 'setContent',
-    'wrapElements', 'unwrapElement', 'duplicateElement', 'adoptSection'];
+  // setContent 의 안전성은 normalizeInline 에 달려 있다(M2-4). 정규화 없이 임의 HTML 을
+  // 받는 경로를 먼저 열지 않는다는 결정을 테스트로 고정한다.
+  const later = ['setContent', 'adoptSection', 'insertSection', 'removeSection',
+    'moveSection', 'duplicateSection', 'reserveSections', 'setTheme', 'renumberPages'];
   const registered = new Set(registeredOps());
-  assert.deepEqual(structural.filter((op) => registered.has(op)), [], 'M2-3 이 채운다');
+  assert.deepEqual(later.filter((op) => registered.has(op)), []);
 });
 
 /* ------------------------------------------------------------------ 트리 */

@@ -11,12 +11,16 @@
  * @param {string} raw 원문
  * @param {Map<import('./tree.js').Node, string>} overrides 노드별 대체 바이트 (편집)
  */
-export function serialize(node, raw, overrides = new Map()) {
+export function serialize(node, raw, overrides = new Map(), mutated = new Set()) {
   if (overrides.has(node)) return overrides.get(node);
+
+  // 합성 노드 — 소스에 대응 바이트가 없다. 구조 명령이 만든 새 마크업과 들여쓰기가
+  // 여기 해당한다. 원문 슬라이스가 아니므로 자기 텍스트를 그대로 낸다.
+  if (node.synthetic) return node.text;
 
   // parse5 가 삽입한 요소는 소스에 없다 → 태그를 내지 않고 자식만 낸다.
   if (node.kind === 'synthesized') {
-    return serializeChildren(node, raw, overrides, spanOf(node));
+    return serializeChildren(node, raw, overrides, spanOf(node), mutated);
   }
 
   // 어휘 밖 노드와 불투명 서브트리는 통째로 원문 바이트다.
@@ -31,12 +35,12 @@ export function serialize(node, raw, overrides = new Map()) {
     if (node.children.length === 0) return node.bytes(raw);
     // 닫는 태그가 소스에 없는 요소 (예: </li> 생략) — 여는 태그 + 자식 + 자식 밖 잔여 바이트.
     const open = raw.slice(node.openStart, node.openEnd);
-    return open + serializeChildren(node, raw, overrides, [node.openEnd, node.end]);
+    return open + serializeChildren(node, raw, overrides, [node.openEnd, node.end], mutated);
   }
 
   const open = raw.slice(node.openStart, node.openEnd);
   const close = raw.slice(node.closeStart, node.closeEnd);
-  return open + serializeChildren(node, raw, overrides, [node.innerStart, node.innerEnd]) + close;
+  return open + serializeChildren(node, raw, overrides, [node.innerStart, node.innerEnd], mutated) + close;
 }
 
 /**
@@ -46,10 +50,16 @@ export function serialize(node, raw, overrides = new Map()) {
  * 개행(HTML 파싱 규칙이 버린다)이다. 그 바이트는 어휘 밖이므로 규약 G1 의 불투명
  * 보존 대상이고, 저작 트리가 들고 있어야 한다. 자식 span 사이를 원문으로 메우는 것이
  * 그 보존이다. 메운 바이트는 notes 가 아니라 트리 자신에 남으므로 편집 시에도 살아난다.
+ *
+ * **`mutated` 에 든 부모는 이 메움을 하지 않는다.** 메움은 "자식이 소스 순서대로 있다" 를
+ * 전제로 커서를 전진시키는데, 구조 명령이 자식을 재배열·삽입·제거하면 그 전제가 깨진다.
+ * 순서가 어긋난 자식은 `span[0] >= cursor` 가 거짓이 되어 앞선 공백이 통째로 누락되고,
+ * 결과는 들여쓰기가 무너진 소스다. 재배열된 부모에서는 **공백 텍스트 노드 자체가 자식**
+ * 이므로(어휘 밖 노드, 규약 G1) 순서대로 내는 것만으로 원문 공백이 보존된다.
  */
-function serializeChildren(node, raw, overrides, [from, to]) {
-  if (from === null || to === null) {
-    return node.children.map((c) => serialize(c, raw, overrides)).join('');
+function serializeChildren(node, raw, overrides, [from, to], mutated = new Set()) {
+  if (from === null || to === null || mutated.has(node)) {
+    return node.children.map((c) => serialize(c, raw, overrides, mutated)).join('');
   }
   let out = '';
   let cursor = from;
@@ -59,7 +69,7 @@ function serializeChildren(node, raw, overrides, [from, to]) {
       out += raw.slice(cursor, span[0]);
       cursor = span[1];
     }
-    out += serialize(c, raw, overrides);
+    out += serialize(c, raw, overrides, mutated);
   }
   return out + raw.slice(cursor, to);
 }

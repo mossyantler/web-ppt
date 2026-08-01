@@ -27,6 +27,7 @@ import { atomicWrite } from './atomic.js';
 // 명령 등록은 부수효과다. 레지스트리가 비어 있으면 모든 커밋이 422 이므로,
 // 등록 모듈을 여기서 한 번 적재한다 — 등록 지점을 흩뿌리지 않는다.
 import './attr-commands.js';
+import './structure-commands.js';
 
 /**
  * 커밋 하나를 적용한다.
@@ -47,7 +48,12 @@ export function applyCommit(deckId, envelope) {
   }
 
   // 5 — 메모리에서만 적용한다. 여기서 던지면 파일은 손대지 않은 상태다.
-  const edits = [];
+  //
+  // 구조 명령은 **같은 섹션에 대해 같은 구간**을 반복해서 낸다 — 트리를 누적해서
+  // 바꾸고 매번 그 시점의 섹션 전체를 재직렬화하기 때문이다. `splicedMany` 는 겹치는
+  // 구간을 거부하므로 구간을 키로 삼아 마지막 것만 남긴다. 재직렬화는 그 시점 트리의
+  // 함수이므로 마지막 것이 누적 결과다.
+  const byRange = new Map();
   const nodeIds = {};
   for (const [i, command] of envelope.commands.entries()) {
     const handler = handlerFor(command.op);
@@ -61,9 +67,10 @@ export function applyCommit(deckId, envelope) {
         commandIndex: i,
       });
     }
-    edits.push(...(out?.edits ?? []));
+    for (const e of out?.edits ?? []) byRange.set(`${e.start}:${e.end}`, e);
     Object.assign(nodeIds, out?.nodeIds ?? {});
   }
+  const edits = [...byRange.values()].filter((e) => deck.raw.slice(e.start, e.end) !== e.text);
 
   // 명령이 아무 바이트도 바꾸지 않았다면 쓰지 않는다. 빈 커밋으로 history 링을
   // 소모하면 undo 100 회 기준(§11 M2)이 조용히 무너진다.
