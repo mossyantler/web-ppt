@@ -7,6 +7,7 @@
 .omx/
 .codegraph
 .playwright-cli/
+.playwright-mcp/
 .superpowers/
 
 # Scratch & intermediate artifacts
@@ -15,3 +16,9 @@ verbose:-
 
 # QA screenshot dumps (regenerated per run)
 _workspace/**/qa/
+
+# Cloned reference sources (analysis only, not our code)
+reference/
+
+# Node
+node_modules/
