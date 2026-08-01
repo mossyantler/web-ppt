@@ -145,21 +145,21 @@ test('미등록 명령 → 422 이고 파일은 바뀌지 않는다 (조용한 �
     () => applyCommit(DECK, {
       commitId: 'c4',
       pre: { docHash: hashOf(before) },
-      commands: [{ op: 'setContent', target: 'n3', args: { html: '바뀜' } }],
+      commands: [{ op: 'setTheme', target: null, args: { themeId: 'snu' } }],
     }),
     (e) => e.status === 422 && e.code === 'commit.unknown-op',
   );
   assert.equal(onDisk(), before);
 });
 
-test('setContent 와 섹션·문서 명령은 아직 등록되지 않았다 — M2-4 이후의 경계', async () => {
+test('M2 범위 밖 명령은 등록되지 않았다 — 경계의 기록', async () => {
   const { registeredOps } = await server();
-  // setContent 의 안전성은 normalizeInline 에 달려 있다(M2-4). 정규화 없이 임의 HTML 을
-  // 받는 경로를 먼저 열지 않는다는 결정을 테스트로 고정한다.
-  const later = ['setContent', 'adoptSection', 'insertSection', 'removeSection',
-    'moveSection', 'duplicateSection', 'reserveSections', 'setTheme', 'renumberPages'];
+  // 이들은 M2 수용 기준에 없다. `reserveSections` 만 기준 18(문서 락) 때문에 M2-5 에서
+  // 만든다 — 그것이 등록되면 이 목록에서 빠진다.
+  const outOfScope = ['adoptSection', 'insertSection', 'removeSection',
+    'moveSection', 'duplicateSection', 'setTheme', 'renumberPages'];
   const registered = new Set(registeredOps());
-  assert.deepEqual(later.filter((op) => registered.has(op)), []);
+  assert.deepEqual(outOfScope.filter((op) => registered.has(op)), []);
 });
 
 /* ------------------------------------------------------------------ 트리 */

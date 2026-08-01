@@ -28,6 +28,7 @@ import { atomicWrite } from './atomic.js';
 // 등록 모듈을 여기서 한 번 적재한다 — 등록 지점을 흩뿌리지 않는다.
 import './attr-commands.js';
 import './structure-commands.js';
+import './content-commands.js';
 
 /**
  * 커밋 하나를 적용한다.

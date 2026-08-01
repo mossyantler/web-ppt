@@ -278,11 +278,11 @@ test('한 커밋의 구조 명령 여러 개가 같은 섹션에 겹치지 않�
   assert.match(after, /data-node-id="n4"/);
 });
 
-test('M2-3 이 등록한 명령은 구조 6종이다 — setContent 는 M2-4 다', async () => {
+test('구조 명령 6종이 전부 등록되어 있다', async () => {
   const { registeredOps } = await import('./commands.js');
-  assert.deepEqual(registeredOps(), [
-    'duplicateElement', 'insertElement', 'moveElement', 'removeElement',
-    'setPosition', 'setProps', 'setSectionProps', 'setTex', 'setValue',
-    'unwrapElement', 'wrapElements',
-  ]);
+  const registered = new Set(registeredOps());
+  for (const op of ['insertElement', 'removeElement', 'moveElement',
+    'duplicateElement', 'wrapElements', 'unwrapElement']) {
+    assert.ok(registered.has(op), `누락: ${op}`);
+  }
 });
