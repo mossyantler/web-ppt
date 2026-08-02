@@ -1,0 +1,40 @@
+/* 편집기 화면 — M3.
+ *
+ * 프로토타입(`_workspace/_ui-proto/`)의 배치·색·버튼 모양을 참고한다 (결정 10).
+ * 슬라이드 자체의 조판은 덱의 테마가 하고, 이 파일은 **편집기 껍데기**만 다룬다.
+ * 둘이 섞이면 테마를 갈았을 때 편집기가 같이 깨진다.
+ */
+
+:root {
+  --ui-bg: #16181d;
+  --ui-panel: #1d2027;
+  --ui-line: #2b2f38;
+  --ui-text: #e6e8ec;
+  --ui-dim: #8b919d;
+  --ui-accent: #3b82f6;
+  --ui-danger: #ef4444;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font: 14px/1.5 -apple-system, "Pretendard", "Apple SD Gothic Neo", sans-serif;
+}
+
+#app { padding: 40px; max-width: 900px; margin: 0 auto; }
+#app h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+.hint { color: var(--ui-dim); margin: 0 0 24px; }
+
+#deck-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+#deck-list li { display: flex; align-items: baseline; gap: 12px;
+                padding: 14px 16px; background: var(--ui-panel);
+                border: 1px solid var(--ui-line); border-radius: 6px; cursor: pointer; }
+#deck-list li:hover { border-color: var(--ui-accent); }
+#deck-list .label { font-weight: 500; font-variant-numeric: tabular-nums; }
+#deck-list .sub { color: var(--ui-dim); }
+#deck-list .meta { color: var(--ui-dim); font-size: 12px; margin-left: auto; }
+#deck-list .locked { color: var(--ui-dim); }
+#deck-list .locked .label::after { content: " · 편집 불가"; color: var(--ui-danger); font-size: 12px; }

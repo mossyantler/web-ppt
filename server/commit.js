@@ -20,7 +20,7 @@
  */
 
 import { splicedMany, spliced, outsideIdentical, hashOf } from '../tools/harness/splice.js';
-import { loadDeck, DocError } from './doc.js';
+import { loadDeck, buildDeck, DocError } from './doc.js';
 import { handlerFor } from './commands.js';
 import { atomicWrite } from './atomic.js';
 import { lookup, remember } from './idempotency.js';
@@ -95,8 +95,25 @@ export function applyCommit(deckId, envelope) {
     return result({ applied: false, resultHash: deck.docHash, currentHash: deck.docHash, nodeIds });
   }
 
-  const next = splicedMany(deck.raw, edits);
+  let next = splicedMany(deck.raw, edits);
   assertOutsideIdentical(deck.raw, next, edits);
+
+  // §3.2 — `renumberPages` 는 파생·멱등이며 **섹션 수·순서가 바뀌면 자동 부착된다.**
+  //
+  // 한 커밋 안의 명령들은 전부 같은 `deck` 스냅샷을 보므로, 뒤 명령이 앞 명령의 결과를
+  // 보지 못한다. 구조 명령은 공유 트리를 고쳐서 이를 피하지만 섹션 명령은 바이트
+  // 오프셋으로 직접 일하므로 그 방법이 통하지 않는다. 그래서 **쓰기 직전에 한 번 더**
+  // 판정한다 — 클라이언트가 두 커밋으로 나눠 보내면 드래그 한 번에 되돌리기가 두 번
+  // 걸리고, 그건 §3.1 "커밋이 원자 단위" 를 깨뜨린다.
+  const renumbered = autoRenumber(deckId, deck, next, envelope);
+  if (renumbered) {
+    assertOutsideIdentical(next, renumbered.text, renumbered.edits);
+    next = renumbered.text;
+  }
+  // 자동 부착이 만든 편집도 응답에 실어야 한다. 빠뜨리면 클라이언트 미러가 페이지
+  // 번호만 옛것으로 남고, 관측성 로그는 "이만큼만 바뀌었다" 고 거짓을 말한다.
+  // 오프셋 기준이 다르므로(1차는 원본, 2차는 1차 결과) 따로 담는다.
+  const derivedRanges = renumbered?.edits.map((e) => ({ start: e.start, end: e.end, text: e.text })) ?? [];
 
   // 7 — 쓰기 직전 스냅샷. Estradeck `writeSpliced` 가 `recordHistory` 를 부르는 자리다.
   history.push(deckId, 'edit', deck.raw, envelope.label ?? '');
@@ -113,6 +130,7 @@ export function applyCommit(deckId, envelope) {
     currentHash: resultHash,
     nodeIds,
     spliceRanges: edits.map((e) => ({ start: e.start, end: e.end, text: e.text })),
+    derivedRanges,
   });
 }
 
@@ -148,6 +166,26 @@ function shiftHistory(deckId, from, to, label) {
   return result({ applied: true, resultHash, currentHash: resultHash, nodeIds: {} });
 }
 
+/** 섹션의 수나 순서를 바꾸는 명령. 이들이 있으면 페이지 번호가 틀어진다. */
+const SECTION_ORDER_OPS = new Set(['moveSection', 'reserveSections', 'insertSection', 'removeSection', 'duplicateSection']);
+
+/**
+ * 쓰기 직전 페이지 번호 재계산. 바뀔 것이 없으면 null 을 돌려준다(멱등).
+ *
+ * 봉투에 `renumberPages` 가 이미 들어 있어도 다시 돈다 — 그 명령 역시 스냅샷을 보고
+ * 계산했으므로 이동 **전** 순서를 잰 것이고, 두 번 돌아도 결과가 같기 때문이다.
+ */
+function autoRenumber(deckId, deck, source, envelope) {
+  if (!envelope.commands.some((c) => SECTION_ORDER_OPS.has(c.op))) return null;
+
+  const after = buildDeck(deckId, deck.path, source);
+  const out = handlerFor('renumberPages')(after, { op: 'renumberPages', args: {} }, {});
+  const edits = (out?.edits ?? []).filter((e) => source.slice(e.start, e.end) !== e.text);
+  if (!edits.length) return null;
+
+  return { edits, text: splicedMany(source, edits) };
+}
+
 /**
  * 6 — P2 를 편집마다 직접 검사한다.
  *
@@ -176,7 +214,7 @@ function assertOutsideIdentical(before, after, edits) {
   }
 }
 
-function result({ applied, resultHash, currentHash, nodeIds, spliceRanges = [] }) {
+function result({ applied, resultHash, currentHash, nodeIds, spliceRanges = [], derivedRanges = [] }) {
   return {
     applied,
     resultHash,
@@ -185,6 +223,9 @@ function result({ applied, resultHash, currentHash, nodeIds, spliceRanges = [] }
     // 하는지가 이것에만 있다 (`docs/m2-reconcile-policy.md` "M2 가 지켜야 하는 것" 3항).
     // P2 매트릭스 테스트도 이 값을 쓴다 — 테스트가 구간을 다시 계산하면 같은 버그를 두 번 쓴다.
     spliceRanges,
+    // 자동 부착(`renumberPages`)이 만든 편집. 오프셋은 `spliceRanges` 를 적용한 **뒤**의
+    // 소스 기준이다. 클라이언트는 두 묶음을 순서대로 적용해야 미러가 디스크와 같아진다.
+    derivedRanges,
     // §3.3 — resultHash ≠ currentHash 이면 클라이언트는 성공이 아니라 재동기화로 다룬다.
     // M2-1 에는 멱등 재생 경로가 없으므로 항상 false 다. M2-5 가 채운다.
     superseded: resultHash !== currentHash,

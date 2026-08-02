@@ -152,14 +152,13 @@ test('미등록 명령 → 422 이고 파일은 바뀌지 않는다 (조용한 �
   assert.equal(onDisk(), before);
 });
 
-test('M2 범위 밖 명령은 등록되지 않았다 — 경계의 기록', async () => {
+test('아직 만들지 않은 명령은 등록되지 않았다 — 경계의 기록', async () => {
   const { registeredOps } = await server();
-  // 이들은 M2 수용 기준에 없다. `reserveSections` 만 기준 18(문서 락) 때문에 M2-5 에서
-  // 만든다 — 그것이 등록되면 이 목록에서 빠진다.
-  const outOfScope = ['adoptSection', 'insertSection', 'removeSection',
-    'moveSection', 'duplicateSection', 'setTheme', 'renumberPages'];
+  // `moveSection`·`renumberPages` 는 M3 결정 6(왼쪽 목록에서 슬라이드 순서 바꾸기)이
+  // 요구해서 M3-1 에서 만들었다. 아래는 아직 필요해진 적이 없는 것들이다.
+  const notYet = ['adoptSection', 'insertSection', 'removeSection', 'duplicateSection', 'setTheme'];
   const registered = new Set(registeredOps());
-  assert.deepEqual(outOfScope.filter((op) => registered.has(op)), []);
+  assert.deepEqual(notYet.filter((op) => registered.has(op)), []);
 });
 
 /* ------------------------------------------------------------------ 트리 */

@@ -45,6 +45,13 @@ const HTML = `<!DOCTYPE html>
       <div data-el="text" data-node-id="nb">자유 배치</div>
     </div>
   </div>
+  <div data-box="region" data-region="foot" data-node-id="nd" class="slide-foot"><span class="page">07 / 09</span></div>
+</section>
+<section data-slide data-variant="default" data-slide-kind="content" data-node-id="m1" class="slide">
+  <div data-box="region" data-region="body" data-node-id="m2" class="slide-body">
+    <p data-el="text" data-node-id="m3">둘째 장</p>
+  </div>
+  <div data-box="region" data-region="foot" data-node-id="m4" class="slide-foot"><span class="page">08 / 09</span></div>
 </section>
 </body>
 </html>
@@ -90,6 +97,8 @@ const MATRIX = [
   ['insertChild', { target: 'nc', args: { index: 1, tag: 'li', html: '새 항목' } }],
   ['removeChild', { target: 'nc', args: { index: 1 } }],
   ['setChildContent', { target: 'nc', args: { index: 0, html: '고침' } }],
+  ['moveSection', { target: 'n1', args: { index: 1 } }],
+  ['renumberPages', {}],
 ];
 
 /* --------------------------------------------------------------- 기준 5 */
@@ -112,12 +121,16 @@ for (const [op, command] of MATRIX) {
 
     // 구간이 하나면 그대로 검사한다. 여럿이면 뒤에서부터 누적 적용하며 각각을 본다
     // (`splicedMany` 와 같은 순서 — 앞쪽 구간의 오프셋이 밀리지 않는다).
+    // 1차(명령이 낸 편집)와 2차(자동 부착 `renumberPages`)는 오프셋 기준이 다르다.
+    // 순서대로 적용해야 디스크와 같아지고, 그 순서가 곧 클라이언트 미러의 적용 순서다.
     let cursor = before;
-    for (const e of [...r.spliceRanges].sort((a, b) => a.start - b.start).reverse()) {
-      const applied = cursor.slice(0, e.start) + e.text + cursor.slice(e.end);
-      const check = outsideIdentical(cursor, applied, e.start, e.end, e.text);
-      assert.ok(check.ok, `${op}: 구간 [${e.start},${e.end}) 밖이 바뀌었다 (prefix=${check.prefixOk} suffix=${check.suffixOk})`);
-      cursor = applied;
+    for (const group of [r.spliceRanges, r.derivedRanges ?? []]) {
+      for (const e of [...group].sort((a, b) => a.start - b.start).reverse()) {
+        const applied = cursor.slice(0, e.start) + e.text + cursor.slice(e.end);
+        const check = outsideIdentical(cursor, applied, e.start, e.end, e.text);
+        assert.ok(check.ok, `${op}: 구간 [${e.start},${e.end}) 밖이 바뀌었다 (prefix=${check.prefixOk} suffix=${check.suffixOk})`);
+        cursor = applied;
+      }
     }
     assert.equal(cursor, after, `${op}: 구간을 개별 적용한 결과가 디스크와 다르다`);
   });

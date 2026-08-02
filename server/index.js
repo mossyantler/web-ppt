@@ -13,10 +13,14 @@
  */
 
 import { createServer } from 'node:http';
+import { readFileSync, existsSync, statSync } from 'node:fs';
+import { join, resolve, dirname, extname, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { applyCommit, applyUndo, applyRedo } from './commit.js';
 import { loadDeck, DocError } from './doc.js';
 import { PathError } from './paths.js';
+import { listDecks, deckAssetPath } from './decks.js';
 
 /** 커밋 본문 상한. 슬라이드 하나의 재직렬화가 이보다 크면 명령이 잘못된 것이다. */
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
@@ -60,8 +64,61 @@ async function route(req, res) {
     });
   }
 
-  // 덱의 정적 자산 서빙은 M3 가 필요로 한다. M2-1 은 편집 경로만 연다.
+  if (url.pathname === '/decks' && req.method === 'GET') {
+    return sendJson(res, 200, { decks: listDecks() });
+  }
+
+  // 슬라이드가 참조하는 그림·글꼴. 덱 안의 파일만 나가고 봉쇄는 `deckAssetPath` 가 한다.
+  const asset = url.pathname.match(/^\/deck\/([^/]+)\/asset\/(.+)$/);
+  if (asset && req.method === 'GET') {
+    const path = deckAssetPath(decodeURIComponent(asset[1]), decodeURIComponent(asset[2]));
+    if (!path) return sendJson(res, 404, { error: '그런 파일이 없다' });
+    return sendFile(res, path);
+  }
+
+  // 편집기 화면 (결정 11 — 서버가 화면도 같이 내준다).
+  if (req.method === 'GET') {
+    const rel = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
+    const path = uiAssetPath(rel);
+    if (path) return sendFile(res, path);
+  }
+
   return sendJson(res, 404, { error: `알 수 없는 경로: ${req.method} ${url.pathname}` });
+}
+
+/**
+ * 편집기 화면 파일의 경로. `server/ui/` 밖으로는 절대 나가지 않는다.
+ *
+ * 덱과 달리 이건 우리가 만든 정적 파일이라 `_workspace` 봉쇄와 별개다. 그래도 경로를
+ * 따로 봉쇄하는 이유는 같다 — 요청이 경로를 정하는 순간 그것은 신뢰 경계다.
+ */
+function uiAssetPath(rel) {
+  const root = join(dirname(fileURLToPath(import.meta.url)), 'ui');
+  const abs = resolve(root, rel);
+  if (abs !== root && !abs.startsWith(root + sep)) return null;
+  return existsSync(abs) && statSync(abs).isFile() ? abs : null;
+}
+
+const MIME = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.woff2': 'font/woff2',
+};
+
+function sendFile(res, path) {
+  const body = readFileSync(path);
+  res.writeHead(200, {
+    'content-type': MIME[extname(path).toLowerCase()] ?? 'application/octet-stream',
+    'content-length': body.length,
+    // 편집 중 파일이 계속 바뀐다. 캐시가 남으면 고친 것이 화면에 안 나온다.
+    'cache-control': 'no-store',
+  });
+  res.end(body);
 }
 
 function readBody(req) {
