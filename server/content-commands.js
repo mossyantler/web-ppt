@@ -33,13 +33,37 @@ registerCommand('setContent', (deck, command) => {
   // 정화기가 거부하면 명령이 실패한다. 언랩이 아니라 422 다 (§6.2 마지막 행).
   // 리프 값을 함께 넘긴다 — L6 조항 5 가 그 값의 `leafStructure` 선언을 보존하라고
   // 요구한다. 넘기지 않으면 `<li>`·`<td>` 가 언랩되어 목록·표가 텍스트 뭉치가 된다.
-  const result = normalizeInline(html, deck.mapping, node.value);
+  //
+  // 리프 **안**의 이름표 붙은 노드(인라인 수식)는 원문 바이트로 되돌린다. 화면은 그
+  // 자리에 빈 자리표만 보낸다 — 렌더된 KaTeX 를 되돌려 보내는 일이 없어야 한다.
+  const result = normalizeInline(html, deck.mapping, node.value, addressableInside(deck, node));
   if (!result.ok) {
     throw new DocError(422, `인라인 정화기가 거부했다: ${result.reason}`, { code: 'commit.rejected-content' });
   }
 
   return { edits: [{ start: span[0], end: span[1], text: result.html }] };
 });
+
+/**
+ * 이 리프 안에 사는, 이름표가 붙은 노드들 — id → 원문 바이트.
+ *
+ * 깊이를 가리지 않는다. 수식이 `<strong>` 안에 들어 있어도 자리표는 같은 뜻이어야 한다.
+ *
+ * **자리표로 오지 않은 노드는 지워진다.** 사용자가 문단에서 수식을 지운 경우가 그것이고,
+ * 지울 방법이 없으면 편집기가 아니다. 대신 정화기 쪽에서 남의 id·중복 id 를 거부하므로,
+ * 지우는 일은 되고 엉뚱한 것을 되살리거나 복제하는 일은 안 된다.
+ */
+function addressableInside(deck, node) {
+  const out = new Map();
+  const visit = (n) => {
+    for (const child of n.children ?? []) {
+      if (child.nodeId) out.set(child.nodeId, deck.raw.slice(child.start, child.end));
+      visit(child);
+    }
+  };
+  visit(node);
+  return out;
+}
 
 /**
  * `setContent` 의 대상 판정.

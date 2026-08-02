@@ -38,8 +38,9 @@ const SAFE_HREF = /^(?:https?:|mailto:|[^a-z0-9+.-]|[^:]*$)/i;
  * @param {string} html
  * @param {object} mapping  테마 매핑 (`inlineClasses`, `leafStructure`)
  * @param {string|null} leafValue  대상 리프의 어휘 값. 그 값의 구조 자식(L6)이 함께 허용된다.
+ * @param {Map<string,string>|null} preserve  리프 **안**의 이름표 붙은 노드: id → 원문 바이트
  */
-export function normalizeInline(html, mapping, leafValue = null) {
+export function normalizeInline(html, mapping, leafValue = null, preserve = null) {
   if (typeof html !== 'string') return { ok: false, reason: 'html 이 문자열이 아니다' };
 
   // §2.4.1 — `역할 이름 → 클래스` 표. 보존 판정에 쓰는 것은 값(클래스) 집합이다.
@@ -55,6 +56,7 @@ export function normalizeInline(html, mapping, leafValue = null) {
 
   let rejection = null;
   const parts = [];
+  const kept = new Set();   // 이미 되돌려 놓은 자리표. 같은 id 가 두 번 오면 문서 안 유일성이 깨진다
 
   const emitChildren = (node) => {
     for (const child of node.childNodes ?? []) {
@@ -73,6 +75,34 @@ export function normalizeInline(html, mapping, leafValue = null) {
     if (!node.tagName) return;
 
     const tag = node.tagName.toLowerCase();
+
+    // 리프 **안**에 사는 이름표 붙은 노드 — 인라인 수식이 대표다.
+    //
+    // 이 정화기를 그냥 통과시키면 `data-el`·`data-node-id`·`data-tex` 가 전부 떨어져
+    // 나가고(살아남는 속성은 `class`·`href` 뿐이다), 문단을 고치는 순간 그 안의 수식이
+    // 조용히 사라진다. 실측 — W31 의 수식 53 개 중 18 개가 문단 안에 있다.
+    //
+    // 그래서 화면은 그 자리에 **빈 자리표**(`<span data-node-id="n1c"></span>`)만 보내고,
+    // 서버가 원문 바이트를 그대로 되돌려 놓는다. 편집된 것은 문단의 글자뿐이고 수식의
+    // 바이트는 한 글자도 지나가지 않는다 — 규약 G1 이 어휘 밖 노드에 대해 하는 일과 같다.
+    const nodeId = (node.attrs ?? []).find((a) => a.name.toLowerCase() === 'data-node-id')?.value;
+    if (nodeId !== undefined) {
+      if (!preserve?.has(nodeId)) {
+        // 이 리프의 자식이 아닌 id 다. 통과시키면 문서 안에 같은 id 가 둘이 되거나
+        // 남의 노드를 여기로 복제하게 된다 — 둘 다 조용히 문서를 망가뜨린다.
+        rejection = `이 리프 안의 노드가 아니다: data-node-id="${nodeId}"`;
+        return;
+      }
+      if (kept.has(nodeId)) {
+        rejection = `자리표가 중복이다: data-node-id="${nodeId}"`;
+        return;
+      }
+      kept.add(nodeId);
+      // 자식은 보지 않는다. 화면이 보낸 것은 자리표이고 안에 무엇이 들었든 원문이 이긴다.
+      parts.push({ raw: preserve.get(nodeId) });
+      return;
+    }
+
     if (REJECT_TAGS.has(tag)) {
       rejection = `스크립트성 요소는 허용하지 않는다: <${tag}>`;
       return;
@@ -169,7 +199,13 @@ function mergeText(parts) {
 }
 
 function render(parts) {
-  return parts.map((p) => (p.text !== undefined ? escapeText(p.text) : p.open ?? p.close)).join('');
+  return parts
+    .map((p) => {
+      if (p.raw !== undefined) return p.raw;   // 되돌려 놓은 원문 — 이스케이프하지 않는다
+      if (p.text !== undefined) return escapeText(p.text);
+      return p.open ?? p.close;
+    })
+    .join('');
 }
 
 /**

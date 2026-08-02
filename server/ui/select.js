@@ -38,7 +38,7 @@ const LABELS = {
 const sectionScope = (i) => `sec:${i}`;
 const isSectionScope = (s) => typeof s === 'string' && s.startsWith('sec:');
 
-export function createSelection({ stage, layer, onStatus, onActivate }) {
+export function createSelection({ stage, layer, onStatus, onActivate, editing }) {
   /** nodeId → { kind, value, edit, parentId, sectionIndex, container } */
   const index = new Map();
   let sections = [];
@@ -95,6 +95,12 @@ export function createSelection({ stage, layer, onStatus, onActivate }) {
     // 편집기 안에서 링크를 따라가면 캔버스가 슬라이드가 아닌 문서로 바뀐다.
     if (e.target.closest?.('a')) e.preventDefault();
 
+    // 글자를 고치는 중이고 그 글 안을 눌렀다 — 커서만 움직인다. 여기서 선택을 다시
+    // 계산하면 문장 가운데를 누를 때마다 편집이 끊긴다.
+    const active = editing?.active();
+    if (active?.contains(e.target)) return;
+    if (active) editing.end();
+
     const hit = resolve(e.target);
     if (!hit) return clear();
 
@@ -102,7 +108,8 @@ export function createSelection({ stage, layer, onStatus, onActivate }) {
     if (hit.nodeId === selected) {
       const inner = resolve(e.target, hit.nodeId);
       if (inner) return enter(hit.nodeId, inner.nodeId);
-      onActivate?.(hit.nodeId, index.get(hit.nodeId));
+      // 누른 자리를 함께 넘긴다 — 커서가 문단 첫머리가 아니라 누른 글자에 놓인다.
+      onActivate?.(hit.nodeId, index.get(hit.nodeId), { x: e.clientX, y: e.clientY });
       return;
     }
 
@@ -114,6 +121,20 @@ export function createSelection({ stage, layer, onStatus, onActivate }) {
     if (e.key !== 'Escape') return;
     e.preventDefault();
     escape();
+  }
+
+  /**
+   * Esc — 글자를 고치는 중이면 **한 단계만** 나간다.
+   *
+   * 편집을 끝내면서 선택까지 풀면 방금 고친 것이 어디였는지 사라진다. 파워포인트도
+   * 첫 Esc 는 상자 선택 상태로 돌아온다 (결정 2).
+   */
+  function escape() {
+    if (editing?.active()) return void editing.end();
+    if (isSectionScope(scope)) return clear();
+    const leaving = scope;
+    scope = index.get(scope).parentId;
+    select(leaving);
   }
 
   /* ------------------------------------------------------- 클릭 지점 해석 */
@@ -161,15 +182,8 @@ export function createSelection({ stage, layer, onStatus, onActivate }) {
     select(nodeId);
   }
 
-  /** 한 단계 나간다. 섹션까지 나왔으면 선택을 푼다. */
-  function escape() {
-    if (isSectionScope(scope)) return clear();
-    const leaving = scope;
-    scope = index.get(scope).parentId;
-    select(leaving);
-  }
-
   function clear() {
+    if (editing?.active()) editing.end();
     selected = null;
     scope = sectionScope(slide);
     place();
@@ -249,7 +263,12 @@ export function createSelection({ stage, layer, onStatus, onActivate }) {
     });
   }
 
-  return { load, bind, setSlide, clear, escape, place, get selected() { return selected; } };
+  return {
+    load, bind, setSlide, clear, escape, place,
+    /** 상태 표시를 다시 낸다 — 편집이 끝나 "고치는 중" 이 지워졌을 때 쓴다. */
+    refresh: report,
+    get selected() { return selected; },
+  };
 }
 
 function make(className) {

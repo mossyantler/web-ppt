@@ -30,6 +30,7 @@ const HTML = `<!DOCTYPE html>
     <span data-el="equation" data-node-id="n7" data-tex="a=b" data-display="false"></span>
     <div data-el="progress" data-node-id="n8" data-value="72" style="--pct:72" class="prog-row"><span class="task">작업</span><div class="prog-track"><div class="prog-fill"></div></div><span class="pct">72%</span></div>
     <div data-el="rule" data-node-id="n9" class="title-rule"></div>
+    <p data-el="text" data-node-id="na">바람이 <span data-el="equation" data-node-id="nb" data-tex="\\tau_s" data-display="false"></span> 항으로 들어간다</p>
   </div>
 </section>
 </body>
@@ -191,6 +192,83 @@ test('구조 자식은 선언한 리프에서만 살아남는다', async () => {
   // 같은 <li> 라도 text 리프 안에서는 선언되지 않았으므로 언랩된다. 닫힌 목록이라는 뜻이다.
   run(applyCommit, [{ op: 'setContent', target: 'n3', args: { html: '<li>목록 아님</li>' } }]);
   assert.match(onDisk(), /data-node-id="n3">목록 아님<\/p>/);
+});
+
+/* --------------------------------------------- 문단 안의 이름표 노드 (인라인 수식)
+ *
+ * 화면이 그 자리에 **빈 자리표**를 보내고 서버가 원문 바이트를 되돌린다. 이 규칙이
+ * 없으면 문단을 한 글자 고칠 때마다 그 안의 수식이 조용히 사라진다 — 정화기가 살리는
+ * 속성은 `class`·`href` 뿐이라 `data-el`·`data-node-id`·`data-tex` 가 전부 떨어진다.
+ */
+
+test('자리표로 온 인라인 수식은 원문 바이트 그대로 돌아온다', async () => {
+  reset();
+  const { applyCommit } = await api();
+  const r = run(applyCommit, [{
+    op: 'setContent',
+    target: 'na',
+    args: { html: '거센 바람이 <span data-node-id="nb"></span> 항으로 들어갑니다' },
+  }]);
+
+  assert.equal(r.applied, true);
+  const after = onDisk();
+  assert.ok(
+    after.includes('<span data-el="equation" data-node-id="nb" data-tex="\\tau_s" data-display="false"></span>'),
+    '수식의 원문 바이트가 보존되지 않았다',
+  );
+  assert.match(after, /거센 바람이 <span data-el="equation"/);
+  assert.match(after, /<\/span> 항으로 들어갑니다<\/p>/);
+});
+
+test('자리표를 빼면 그 수식은 지워진다 — 지울 방법이 없으면 편집기가 아니다', async () => {
+  reset();
+  const { applyCommit } = await api();
+  run(applyCommit, [{ op: 'setContent', target: 'na', args: { html: '수식을 뺀 문단' } }]);
+
+  const after = onDisk();
+  assert.match(after, /<p data-el="text" data-node-id="na">수식을 뺀 문단<\/p>/);
+  assert.ok(!after.includes('data-node-id="nb"'), '지웠는데 남아 있다');
+});
+
+test('이 리프 안의 것이 아닌 id 는 422 다 — 남의 노드를 복제할 수 없다', async () => {
+  reset();
+  const { applyCommit } = await api();
+  const before = onDisk();
+  assert.throws(
+    () => run(applyCommit, [{
+      op: 'setContent',
+      target: 'na',
+      // n7 은 형제 수식이다. 통과시키면 같은 id 가 문서에 둘이 된다.
+      args: { html: '<span data-node-id="n7"></span>' },
+    }]),
+    (err) => err.status === 422 && /이 리프 안의 노드가 아니다/.test(err.message),
+  );
+  assert.equal(onDisk(), before, '거부된 커밋이 파일을 건드렸다');
+});
+
+test('같은 자리표가 두 번 오면 422 다 — id 유일성이 깨진다', async () => {
+  reset();
+  const { applyCommit } = await api();
+  assert.throws(
+    () => run(applyCommit, [{
+      op: 'setContent',
+      target: 'na',
+      args: { html: '<span data-node-id="nb"></span>와 <span data-node-id="nb"></span>' },
+    }]),
+    (err) => err.status === 422 && /중복/.test(err.message),
+  );
+});
+
+test('자리표 안에 무엇이 들었든 원문이 이긴다 — 렌더된 KaTeX 가 파일에 들어가지 않는다', async () => {
+  reset();
+  const { applyCommit } = await api();
+  // 화면이 실수로 렌더 결과를 통째로 되돌려 보낸 경우를 흉내낸다.
+  const rendered = '<span data-node-id="nb" class="katex"><span class="mord">τ</span></span>';
+  run(applyCommit, [{ op: 'setContent', target: 'na', args: { html: `앞 ${rendered} 뒤` } }]);
+
+  const after = onDisk();
+  assert.ok(!after.includes('katex'), '렌더 결과가 파일에 들어갔다');
+  assert.ok(after.includes('data-tex="\\tau_s"'), '원문 수식이 사라졌다');
 });
 
 /* ------------------------------------------------------------ 재파싱·게이트 */

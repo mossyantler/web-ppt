@@ -13,6 +13,7 @@
  */
 
 import { createSelection } from './select.js';
+import { createEditor } from './edit.js';
 
 const views = {
   decks: document.getElementById('view-decks'),
@@ -26,26 +27,66 @@ const deckName = document.getElementById('deck-name');
 const deckSub = document.getElementById('deck-sub');
 const deckState = document.getElementById('deck-state');
 const selState = document.getElementById('sel-state');
+const notice = document.getElementById('notice');
 const overlay = document.getElementById('overlay');
 
 /** 목록을 화면 사이에서 재사용한다 — 편집 화면의 머리글도 여기서 이름을 얻는다. */
 let decksCache = null;
 
 /**
- * 선택 계층. 화면 하나에 하나뿐이고 리포트를 옮겨 다녀도 살아 있다 — 겹침 층과
- * 이벤트 처리기를 리포트마다 새로 만들면 옛 iframe 에 붙은 처리기가 남는다.
+ * 지금 열어 둔 리포트와 그 문서 지문.
+ *
+ * **지문은 저장할 때마다 갈아 끼운다.** 낙관적 락의 근거이고, 낡은 채로 두면 두 번째
+ * 저장이 409 를 받는다. 프리뷰를 다시 받지 않는 대신 이 값 하나만 따라간다
+ * (docs/m2-reconcile-policy.md 의 델타 경로).
  */
+const open = { deckId: null, docHash: null };
+
+/**
+ * 선택 계층과 글자 편집기. 화면 하나에 하나씩이고 리포트를 옮겨 다녀도 살아 있다 —
+ * 겹침 층과 이벤트 처리기를 리포트마다 새로 만들면 옛 iframe 에 붙은 처리기가 남는다.
+ */
+const editor = createEditor({
+  stage,
+  deckId: () => open.deckId,
+  docHash: { get: () => open.docHash, set: (h) => { open.docHash = h; } },
+  onStatus: showSelectionState,
+  onNotice: showNotice,
+  // 근거를 잃은 미러는 되맞출 방법이 없다. 문서를 다시 받는다 (재조정 정책의 예외 경로).
+  onResync: () => showEditor(open.deckId),
+  onReflow: () => selection.place(),
+});
+
 const selection = createSelection({
   stage,
   layer: overlay,
   onStatus: showSelectionState,
-  // 리프를 또 누른 것 = 글자를 고치겠다는 뜻이다. 실제 편집은 M3-4 에서 여기 붙는다.
-  onActivate: () => {},
+  // 리프를 또 누른 것 = 글자를 고치겠다는 뜻이다 (결정 2).
+  onActivate: (nodeId, info, point) => editor.begin(nodeId, info, point),
+  editing: editor,
 });
 
 function showSelectionState(state) {
+  // 편집이 끝났다는 신호다. 무엇이 골라져 있는지는 선택 계층만 아므로 되묻는다.
+  if (state.kind === 'idle') return void selection.refresh();
+
   selState.textContent = state.text;
   selState.classList.toggle('locked', state.kind === 'locked');
+  selState.classList.toggle('editing', state.kind === 'editing');
+}
+
+/**
+ * 저장 결과·거부 사유.
+ *
+ * 성공은 잠시 뒤 스스로 사라지고 **실패는 남는다.** 실패가 조용히 사라지면 사용자는
+ * 저장된 줄 알고 창을 닫는다.
+ */
+let noticeTimer = null;
+function showNotice(state) {
+  clearTimeout(noticeTimer);
+  notice.textContent = state.text;
+  notice.classList.toggle('bad', state.kind === 'error' || state.kind === 'blocked');
+  if (state.kind === 'saved') noticeTimer = setTimeout(() => { notice.textContent = ''; }, 2500);
 }
 
 async function decks() {
@@ -121,6 +162,8 @@ async function showEditor(deckId) {
 
   rail.replaceChildren(note('여는 중…'));
   selection.clear();
+  open.deckId = deckId;
+  open.docHash = null;
 
   // 목차를 슬라이드와 **함께** 받는다. 목차 없이 뜬 화면은 클릭이 먹지 않는 화면이고,
   // 사용자에게는 그것이 고장과 구별되지 않는다.
@@ -190,6 +233,8 @@ function mountStage(outline) {
   // 클릭으로 요소를 고를 수 있게 만드는 자리. 목차를 못 받았으면 붙이지 않는다 —
   // 붙여 두면 클릭이 아무 일도 하지 않고, 사용자는 왜인지 알 방법이 없다.
   if (outline) {
+    // 저장의 근거가 되는 지문이다. 목차와 슬라이드를 같은 파일에서 받았으므로 맞는다.
+    open.docHash = outline.docHash;
     selection.load(outline);
     selection.bind(doc);
     selection.setSlide(0);
