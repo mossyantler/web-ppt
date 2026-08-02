@@ -48,6 +48,13 @@ before(async () => {
   writeFileSync(join(ws, '_ui-proto', 'index.html'), deck(true, SLIDE), 'utf8');
   mkdirSync(join(ws, 'no-index'), { recursive: true });
 
+  // 슬라이드가 `../../styles.css` 로 가리키는 저장소 공용 파일들. 캔버스가 이걸
+  // 못 받으면 슬라이드가 스타일 없이 뜬다 — 화면이 뜨는 것과 제대로 뜨는 건 다르다.
+  writeFileSync(join(sandbox, 'styles.css'), ':root{}', 'utf8');
+  mkdirSync(join(sandbox, 'slides'), { recursive: true });
+  writeFileSync(join(sandbox, 'slides', 'slides.css'), '.slide{}', 'utf8');
+  writeFileSync(join(sandbox, 'secret.md'), '허용 목록 밖', 'utf8');
+
   process.chdir(sandbox);
 
   const { createDeckServer } = await import('./index.js');
@@ -125,6 +132,57 @@ test('화면 경로가 server/ui 밖으로 나가지 않는다', async () => {
     const { status } = await get(path);
     assert.equal(status, 404, path);
   }
+});
+
+/* --------------------------------------------------------- 캔버스 원본 */
+
+test('캔버스가 읽는 슬라이드 원본은 파일 바이트 그대로다', async () => {
+  const page = await get('/deck/2026-08-01-001/page');
+  assert.equal(page.status, 200);
+  assert.match(page.type, /text\/html/);
+
+  // 서버가 편집용 표시를 끼워 넣지 않는다는 것이 이 milestone 의 핵심 제약이다.
+  // 여기서 한 글자라도 달라지면 "보이는 것이 저장된 것" 이 깨진다.
+  const { body: read } = await get('/deck/2026-08-01-001');
+  assert.equal(page.body, read.html);
+});
+
+test('없는 덱의 원본은 404 이고 워크스페이스 밖은 403 이다', async () => {
+  assert.equal((await get('/deck/no-such-deck/page')).status, 404);
+  assert.equal((await get('/deck/..%2F..%2Fetc/page')).status, 403);
+});
+
+/* ------------------------------------------------- 저장소 공용 파일 */
+
+test('슬라이드가 참조하는 공용 스타일시트가 나간다', async () => {
+  const root = await get('/styles.css');
+  assert.equal(root.status, 200);
+  assert.match(root.type, /text\/css/);
+
+  const nested = await get('/slides/slides.css');
+  assert.equal(nested.status, 200);
+});
+
+test('허용 목록 밖의 저장소 파일은 안 나간다', async () => {
+  // 목록에 없는 첫 칸은 파일이 실제로 있어도 404 다 — 이 서버의 루트에는
+  // `server/`·`node_modules/` 가 같이 있고, 그것들이 새면 소스가 새는 것이다.
+  for (const path of ['/secret.md', '/package.json', '/server/commit.js']) {
+    assert.equal((await get(path)).status, 404, path);
+  }
+});
+
+test('허용된 첫 칸을 지나 밖으로 빠져나가지 못한다', async () => {
+  // 요청 문자열의 첫 칸만 보면 이것이 통과한다. resolve 결과로 판정해야 막힌다.
+  for (const path of ['/slides/../secret.md', '/assets/../../etc/passwd']) {
+    assert.equal((await get(path)).status, 404, path);
+  }
+});
+
+test('편집기 화면 파일이 저장소 파일보다 먼저다', async () => {
+  // 이름이 겹칠 때 우리 화면이 이겨야 한다. `/app.css` 는 `server/ui/` 것이다.
+  const css = await get('/app.css');
+  assert.equal(css.status, 200);
+  assert.match(css.body, /편집기 화면/);
 });
 
 /* ------------------------------------------------------------- 덱 자산 */

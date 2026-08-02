@@ -6,12 +6,35 @@
 <link rel="stylesheet" href="/app.css">
 </head>
 <body>
-<!-- M3-1 은 서버가 화면을 내주는 경로까지만 연다. 실제 화면은 M3-2 에서 만든다. -->
-<main id="app" data-stage="decks">
-  <h1>주간 리포트 편집기</h1>
-  <p class="hint">리포트를 고르세요.</p>
-  <ul id="deck-list" aria-busy="true"></ul>
-</main>
+
+<!-- 화면 둘을 한 문서에 담고 주소(#)로 갈아 끼운다. 페이지를 새로 받지 않으므로
+     리포트를 오갈 때 iframe 만 다시 뜨고 편집기 껍데기는 그대로 산다. -->
+
+<section id="view-decks" class="view">
+  <div class="pad">
+    <h1>주간 리포트 편집기</h1>
+    <p class="hint">리포트를 고르세요.</p>
+    <ul id="deck-list" aria-busy="true"></ul>
+  </div>
+</section>
+
+<section id="view-editor" class="view" hidden>
+  <header id="topbar">
+    <a class="back" href="#/">← 목록</a>
+    <span id="deck-name"></span>
+    <span id="deck-sub"></span>
+    <span id="deck-state"></span>
+  </header>
+  <div id="editor-body">
+    <nav id="rail" aria-label="슬라이드 목록"></nav>
+    <div id="canvas">
+      <!-- 슬라이드 원본을 그대로 띄운다. 편집기 CSS 와 덱 테마가 한 문서에서 섞이면
+           테마를 갈았을 때 편집기가 같이 깨지므로, 경계를 iframe 으로 못 박는다. -->
+      <iframe id="stage" title="슬라이드"></iframe>
+    </div>
+  </div>
+</section>
+
 <script type="module" src="/app.js"></script>
 </body>
 </html>

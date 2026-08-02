@@ -21,6 +21,7 @@ import { applyCommit, applyUndo, applyRedo } from './commit.js';
 import { loadDeck, DocError } from './doc.js';
 import { PathError } from './paths.js';
 import { listDecks, deckAssetPath } from './decks.js';
+import { repoAssetPath } from './repo-assets.js';
 
 /** 커밋 본문 상한. 슬라이드 하나의 재직렬화가 이보다 크면 명령이 잘못된 것이다. */
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
@@ -68,6 +69,21 @@ async function route(req, res) {
     return sendJson(res, 200, { decks: listDecks() });
   }
 
+  // 캔버스에 띄울 슬라이드 원본 (M3-2). 편집기가 iframe 으로 읽는다.
+  //
+  // **바이트를 손대지 않고 그대로 내준다.** 서버가 여기서 편집용 표시를 끼워 넣으면
+  // 화면에 보이는 문서와 파일이 달라지고, 그 순간 "보이는 것이 저장된 것" 이라는
+  // 약속이 깨진다. 편집기 표시는 부모 창이 iframe 안에 얹는다 (§Z2).
+  //
+  // 경로가 `/deck/<id>/page` 인 것도 우연이 아니다 — 덱은 자기 스타일시트를
+  // `../../styles.css` 로 가리키고, 이 깊이라야 그게 서버 루트로 떨어진다.
+  // `repoAssetPath` 가 그 자리를 받는다.
+  const page = url.pathname.match(/^\/deck\/([^/]+)\/page$/);
+  if (page && req.method === 'GET') {
+    const deck = loadDeck(decodeURIComponent(page[1]));
+    return sendHtml(res, deck.raw);
+  }
+
   // 슬라이드가 참조하는 그림·글꼴. 덱 안의 파일만 나가고 봉쇄는 `deckAssetPath` 가 한다.
   const asset = url.pathname.match(/^\/deck\/([^/]+)\/asset\/(.+)$/);
   if (asset && req.method === 'GET') {
@@ -81,6 +97,11 @@ async function route(req, res) {
     const rel = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
     const path = uiAssetPath(rel);
     if (path) return sendFile(res, path);
+
+    // 편집기 화면 파일이 아니면 슬라이드가 찾는 저장소 공용 파일일 수 있다.
+    // 편집기 화면을 먼저 보는 이유 — 이름이 겹치면 우리 화면이 이겨야 한다.
+    const shared = repoAssetPath(url.pathname);
+    if (shared) return sendFile(res, shared);
   }
 
   return sendJson(res, 404, { error: `알 수 없는 경로: ${req.method} ${url.pathname}` });
@@ -116,6 +137,16 @@ function sendFile(res, path) {
     'content-type': MIME[extname(path).toLowerCase()] ?? 'application/octet-stream',
     'content-length': body.length,
     // 편집 중 파일이 계속 바뀐다. 캐시가 남으면 고친 것이 화면에 안 나온다.
+    'cache-control': 'no-store',
+  });
+  res.end(body);
+}
+
+function sendHtml(res, text) {
+  const body = Buffer.from(text, 'utf8');
+  res.writeHead(200, {
+    'content-type': 'text/html; charset=utf-8',
+    'content-length': body.length,
     'cache-control': 'no-store',
   });
   res.end(body);
