@@ -93,6 +93,11 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
                 font-size: 12px; min-width: 1.6em; text-align: right; flex: none; }
 .rail-item .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* 끌어서 놓을 자리 — 흐름 배치에서는 "몇 번째에 끼우는가" 가 결과의 전부다.
+ * 선이 안 보이면 사용자는 놓기 전에 결과를 알 수 없다. */
+.rail-item.drop-before { box-shadow: inset 0 2px 0 var(--ui-accent); }
+.rail-item.drop-after { box-shadow: inset 0 -2px 0 var(--ui-accent); }
+
 #canvas { flex: 1; min-width: 0; display: flex; position: relative; }
 #stage { flex: 1; border: 0; background: #0f1115; }
 
@@ -130,6 +135,24 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
 }
 /* 불투명 리프(수식·진행바)는 고치는 방법이 다르다. 고르는 순간부터 달라 보여야 한다. */
 .sel-tag.opaque { background: #a855f7; }
+
+/* 고른 요소의 버튼바. 겹침 층은 클릭을 통과시키지만 **이 안은 받아야** 한다. */
+.sel-bar {
+  display: flex; gap: 2px;
+  pointer-events: auto;
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-line);
+  border-radius: 4px;
+  padding: 2px;
+}
+.sel-bar button {
+  min-width: 22px; height: 20px;
+  border: 0; border-radius: 3px;
+  background: none; color: var(--ui-text);
+  font: 12px/1 -apple-system, sans-serif; cursor: pointer;
+}
+.sel-bar button:hover:not(:disabled) { background: var(--ui-accent); color: #fff; }
+.sel-bar button:disabled { color: var(--ui-line); cursor: default; }
 
 /* 알림이 오른쪽 끝을 잡고, 선택·잠금 표시가 그 뒤에 붙는다. */
 #notice { margin-left: auto; color: var(--ui-dim); font-size: 12px; }

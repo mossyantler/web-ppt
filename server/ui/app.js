@@ -14,6 +14,8 @@
 
 import { createSelection } from './select.js';
 import { createEditor } from './edit.js';
+import { createCommitter } from './committer.js';
+import { createReorder } from './reorder.js';
 
 const views = {
   decks: document.getElementById('view-decks'),
@@ -46,15 +48,30 @@ const open = { deckId: null, docHash: null };
  * 선택 계층과 글자 편집기. 화면 하나에 하나씩이고 리포트를 옮겨 다녀도 살아 있다 —
  * 겹침 층과 이벤트 처리기를 리포트마다 새로 만들면 옛 iframe 에 붙은 처리기가 남는다.
  */
-const editor = createEditor({
-  stage,
+const committer = createCommitter({
   deckId: () => open.deckId,
   docHash: { get: () => open.docHash, set: (h) => { open.docHash = h; } },
-  onStatus: showSelectionState,
   onNotice: showNotice,
   // 근거를 잃은 미러는 되맞출 방법이 없다. 문서를 다시 받는다 (재조정 정책의 예외 경로).
   onResync: () => showEditor(open.deckId),
+});
+
+const editor = createEditor({
+  stage,
+  commit: committer,
+  onStatus: showSelectionState,
+  onNotice: showNotice,
   onReflow: () => selection.place(),
+});
+
+const reorder = createReorder({
+  stage,
+  commit: committer,
+  index: { get: (nodeId) => selection.infoOf(nodeId) },
+  onNotice: showNotice,
+  onMoved: () => selection.place(),
+  // 슬라이드 순서가 바뀌면 페이지 번호가 문서 전체에서 다시 매겨진다. 델타로 못 따라간다.
+  onResync: (slide) => showEditor(open.deckId, slide),
 });
 
 const selection = createSelection({
@@ -64,6 +81,7 @@ const selection = createSelection({
   // 리프를 또 누른 것 = 글자를 고치겠다는 뜻이다 (결정 2).
   onActivate: (nodeId, info, point) => editor.begin(nodeId, info, point),
   editing: editor,
+  actions: reorder,
 });
 
 function showSelectionState(state) {
@@ -147,7 +165,7 @@ function deckRow(deck) {
 
 /* ----------------------------------------------------------------- 편집기 */
 
-async function showEditor(deckId) {
+async function showEditor(deckId, startSlide = 0) {
   views.decks.hidden = true;
   views.editor.hidden = false;
 
@@ -172,8 +190,9 @@ async function showEditor(deckId) {
     .catch(() => null);
 
   // 슬라이드는 원본 그대로 띄운다. 편집 표시는 이 바깥(부모 문서)이 얹는다.
-  stage.src = `/deck/${encodeURIComponent(deckId)}/page`;
-  stage.onload = async () => mountStage(await outline);
+  // 캐시가 남으면 방금 저장한 것이 화면에 안 나온다. 다시 받을 때는 주소를 달리한다.
+  stage.src = `/deck/${encodeURIComponent(deckId)}/page?t=${performance.now()}`;
+  stage.onload = async () => mountStage(await outline, startSlide);
 }
 
 function note(text) {
@@ -191,7 +210,7 @@ function note(text) {
  * 순서 바꾸기·추가·삭제가 앞으로 이 레일에 붙고, 그 조작들은 전부 서버 명령이라
  * 덱이 내장한 레일과 규칙이 다르다. 둘이 같이 뜨면 어느 쪽이 진짜인지 알 수 없다.
  */
-function mountStage(outline) {
+function mountStage(outline, startSlide = 0) {
   const doc = stage.contentDocument;
   const sections = [...doc.querySelectorAll('section')];
 
@@ -223,12 +242,15 @@ function mountStage(outline) {
       || `${i + 1}장`;
 
     b.append(n, t);
+    b.draggable = true;
     b.addEventListener('click', () => goTo(el, sections, i));
     return b;
   });
 
   rail.replaceChildren(...items);
-  select(0);
+  bindRailDrag();
+  select(startSlide);
+  if (startSlide) goTo(el, sections, startSlide);
 
   // 클릭으로 요소를 고를 수 있게 만드는 자리. 목차를 못 받았으면 붙이지 않는다 —
   // 붙여 두면 클릭이 아무 일도 하지 않고, 사용자는 왜인지 알 방법이 없다.
@@ -248,6 +270,71 @@ function mountStage(outline) {
     // 안 보이는 요소를 고른 채로 두면 다음 명령이 엉뚱한 장으로 간다.
     if (outline) selection.setSlide(e.detail.index);
   });
+}
+
+/**
+ * 레일에서 끌어 슬라이드 순서 바꾸기 (결정 6).
+ *
+ * **놓을 자리를 선으로 보인다.** 흐름 배치에서 끌기는 "아무 데나 놓기" 가 아니라
+ * "몇 번째에 끼우기" 이므로, 어디에 들어갈지가 보이지 않으면 사용자는 결과를 예측할 수
+ * 없다 (결정 3 의 같은 이유다).
+ *
+ * 순서가 바뀌면 페이지 번호가 문서 전체에서 다시 매겨지므로 화면을 다시 받는다.
+ */
+function bindRailDrag() {
+  let from = null;
+
+  const clearMarks = () => {
+    for (const item of rail.children) item.classList?.remove('drop-before', 'drop-after');
+  };
+
+  rail.ondragstart = (e) => {
+    const item = e.target.closest?.('.rail-item');
+    if (!item) return;
+    from = Number(item.dataset.index);
+    e.dataTransfer.effectAllowed = 'move';
+    // 파이어폭스는 데이터가 없으면 끌기를 시작조차 하지 않는다.
+    e.dataTransfer.setData('text/plain', String(from));
+  };
+
+  rail.ondragover = (e) => {
+    const item = e.target.closest?.('.rail-item');
+    if (from === null || !item) return;
+    e.preventDefault();
+    const r = item.getBoundingClientRect();
+    const after = e.clientY > r.top + r.height / 2;
+    clearMarks();
+    item.classList.add(after ? 'drop-after' : 'drop-before');
+  };
+
+  rail.ondragleave = (e) => {
+    if (!rail.contains(e.relatedTarget)) clearMarks();
+  };
+
+  rail.ondrop = async (e) => {
+    const item = e.target.closest?.('.rail-item');
+    clearMarks();
+    if (from === null || !item) return;
+    e.preventDefault();
+
+    const over = Number(item.dataset.index);
+    const r = item.getBoundingClientRect();
+    const after = e.clientY > r.top + r.height / 2;
+    // 자기 자신을 뗀 뒤의 자리로 센다 — 서버의 `moveSection` 도 같은 셈법이다.
+    let to = after ? over + 1 : over;
+    if (from < to) to -= 1;
+    const source = from;
+    from = null;
+    if (to === source) return;
+
+    const section = selection.sectionAt(source);
+    if (!section?.nodeId) {
+      return showNotice({ kind: 'blocked', text: '이 슬라이드는 이름표가 없어 옮길 수 없습니다' });
+    }
+    await reorder.moveSection(section.nodeId, to, `${source + 1}장을 ${to + 1}번째로`);
+  };
+
+  rail.ondragend = () => { from = null; clearMarks(); };
 }
 
 /**

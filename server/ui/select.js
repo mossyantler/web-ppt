@@ -34,31 +34,38 @@ const LABELS = {
   sequence: '흐름', canvas: '자유 배치', region: '영역',
 };
 
-/** 스코프 이름. 섹션 자신은 노드가 아니므로 별도의 이름을 쓴다. */
-const sectionScope = (i) => `sec:${i}`;
-const isSectionScope = (s) => typeof s === 'string' && s.startsWith('sec:');
-
-export function createSelection({ stage, layer, onStatus, onActivate, editing }) {
-  /** nodeId → { kind, value, edit, parentId, sectionIndex, container } */
+export function createSelection({ stage, layer, onStatus, onActivate, editing, actions }) {
+  /** nodeId → { kind, value, edit, parentId, sectionIndex } */
   const index = new Map();
+  /**
+   * 섹션을 가리키는 스코프 키들 — 섹션의 **진짜 `data-node-id`** 를 쓴다.
+   *
+   * 화면 전용 이름(`sec:N`)을 쓰면 순서 바꾸기 명령이 요구하는 `newParentId` 를 화면이
+   * 만들어낼 수 없다. 서버가 아는 이름과 화면이 쓰는 이름이 갈리는 순간 명령을 못 만든다.
+   */
+  const sectionKeys = new Set();
   let sections = [];
   let slide = 0;            // 지금 보이는 장
-  let scope = sectionScope(0);
+  let scope = null;
   let selected = null;
   let doc = null;
 
   const ring = make('sel-ring');
   const tag = make('sel-tag');
   const groupRing = make('sel-group');
-  layer.append(groupRing, ring, tag);
+  const bar = makeBar();
+  layer.append(groupRing, ring, tag, bar);
 
   /* ------------------------------------------------------------ 목차 적재 */
 
   function load(outline) {
     index.clear();
+    sectionKeys.clear();
     sections = outline.sections;
     for (const section of sections) {
-      walk(section.children, sectionScope(section.index), section.index);
+      const key = scopeKeyOf(section);
+      sectionKeys.add(key);
+      walk(section.children, key, section.index);
     }
     clear();
   }
@@ -75,6 +82,10 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing })
       walk(node.children, node.nodeId, sectionIndex);
     }
   }
+
+  /** 이름표 없는 섹션도 스코프는 있어야 한다 — 고를 것이 없을 뿐이다. */
+  const scopeKeyOf = (section) => section?.nodeId ?? `sec:${section?.index ?? 0}`;
+  const isSectionScope = (s) => sectionKeys.has(s) || (typeof s === 'string' && s.startsWith('sec:'));
 
   /* -------------------------------------------------------------- 이벤트 */
 
@@ -185,7 +196,7 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing })
   function clear() {
     if (editing?.active()) editing.end();
     selected = null;
-    scope = sectionScope(slide);
+    scope = scopeKeyOf(sections[slide]);
     place();
     report();
   }
@@ -202,6 +213,52 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing })
     box(ring, selected);
     box(groupRing, isSectionScope(scope) ? null : scope);
     placeTag();
+    placeBar();
+  }
+
+  /**
+   * 고른 요소의 버튼바 — 지금은 위·아래 둘이다 (결정 3).
+   *
+   * 글자를 고치는 중에는 감춘다. 커서가 들어간 상자 위에 버튼이 떠 있으면 누르려다
+   * 편집이 끊기고, 끊기면서 저장까지 일어난다.
+   */
+  function placeBar() {
+    const editingNow = !!editing?.active();
+    if (!selected || ring.hidden || editingNow || !actions) return void (bar.hidden = true);
+
+    const up = actions.canMove(selected, -1);
+    const down = actions.canMove(selected, +1);
+    // 옮길 수 없는 요소(영역처럼 자리가 정해진 것)에는 아예 바를 띄우지 않는다.
+    // 언제나 회색 버튼만 떠 있으면 사용자는 그것이 고장인지 규칙인지 알 수 없다.
+    if (!up && !down) return void (bar.hidden = true);
+
+    bar.hidden = false;
+    bar.querySelector('[data-act="up"]').disabled = !up;
+    bar.querySelector('[data-act="down"]').disabled = !down;
+
+    const r = ring.getBoundingClientRect();
+    const host = layer.getBoundingClientRect();
+    const above = r.top - host.top - 24;
+    bar.style.transform = `translate(${r.right - host.left - bar.offsetWidth}px, ${Math.max(0, above)}px)`;
+  }
+
+  function makeBar() {
+    const el = document.createElement('div');
+    el.className = 'sel-bar';
+    el.hidden = true;
+    for (const [act, glyph, title] of [['up', '↑', '위로'], ['down', '↓', '아래로']]) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.act = act;
+      b.textContent = glyph;
+      b.title = title;
+      b.addEventListener('click', async () => {
+        const moved = await actions?.moveElement(selected, act === 'up' ? -1 : +1);
+        if (moved) place();
+      });
+      el.append(b);
+    }
+    return el;
   }
 
   function box(el, nodeId) {
@@ -265,6 +322,10 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing })
 
   return {
     load, bind, setSlide, clear, escape, place,
+    /** 노드 정보 조회 — 순서 바꾸기·추가·삭제가 부모와 종류를 알아야 한다. */
+    infoOf: (nodeId) => index.get(nodeId) ?? null,
+    /** 지금 보이는 장의 섹션 (레일 드래그가 대상 id 를 얻는 자리). */
+    sectionAt: (i) => sections[i] ?? null,
     /** 상태 표시를 다시 낸다 — 편집이 끝나 "고치는 중" 이 지워졌을 때 쓴다. */
     refresh: report,
     get selected() { return selected; },

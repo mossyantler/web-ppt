@@ -21,13 +21,7 @@
  * 아래에 실시간 미리보기가 뜨는 전용 편집기가 결정 8 이고 M3-8 이다.
  */
 
-/** 저장 실패를 사용자에게 알릴 때 쓰는 최소한의 사람 말. 코드는 콘솔에 남긴다. */
-const REASONS = {
-  'commit.stale-hash': '파일이 밖에서 바뀌었습니다. 화면을 다시 받습니다',
-  'commit.rejected-content': '넣을 수 없는 내용이 있어 되돌렸습니다',
-};
-
-export function createEditor({ stage, deckId, docHash, onStatus, onNotice, onResync, onReflow }) {
+export function createEditor({ stage, commit, onStatus, onNotice, onReflow }) {
   /** { nodeId, el, payload, dom } — 편집 중인 리프 하나. 동시에 둘은 없다. */
   let current = null;
 
@@ -83,56 +77,15 @@ export function createEditor({ stage, deckId, docHash, onStatus, onNotice, onRes
   /* -------------------------------------------------------------- 저장 보내기 */
 
   async function save(nodeId, html, el, dom) {
-    onNotice?.({ kind: 'saving', text: '저장 중…' });
+    const { ok } = await commit.send([{ op: 'setContent', target: nodeId, args: { html } }], '글자 고치기');
 
-    const envelope = {
-      // 멱등 키. 같은 저장이 두 번 도착해도 파일은 한 번만 바뀐다 (§3.3).
-      commitId: crypto.randomUUID(),
-      // 낙관적 락. 화면이 본 그 파일이 아직 그대로인지 서버가 대조한다.
-      pre: { docHash: docHash.get() },
-      label: '글자 고치기',
-      commands: [{ op: 'setContent', target: nodeId, args: { html } }],
-    };
-
-    let res;
-    let body;
-    try {
-      res = await fetch(`/deck/${encodeURIComponent(deckId())}/commit`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(envelope),
-      });
-      body = await res.json();
-    } catch (err) {
-      // 서버가 죽었거나 네트워크가 끊겼다. 화면을 되돌려 놓아야 사용자가 "저장된 줄"
-      // 알고 창을 닫는 일이 없다.
-      el.innerHTML = dom;
-      onNotice?.({ kind: 'error', text: `저장하지 못했습니다: ${err.message}` });
-      return;
-    }
-
-    if (!res.ok) {
-      console.error('setContent 거부', body);
+    if (!ok) {
       // 되돌린다. 화면에 남겨 두면 파일에 없는 글이 보이고, 그게 가장 나쁜 상태다.
+      // 실패 사유는 커미터가 이미 알렸다.
       el.innerHTML = dom;
-      onNotice?.({ kind: 'error', text: REASONS[body?.code] ?? body?.error ?? '저장하지 못했습니다' });
-      // 낡은 지문이면 화면 전체를 다시 받는 것 말고 방법이 없다 (재조정 정책의 예외 경로).
-      if (body?.code === 'commit.stale-hash') onResync?.();
       return;
     }
-
-    // `superseded` 는 성공이 아니라 **재동기화 신호**다 — 미러가 근거로 삼은 상태가
-    // 이미 지나갔으므로 델타를 적용해서는 안 된다 (docs/m2-reconcile-policy.md).
-    if (body.superseded) {
-      onNotice?.({ kind: 'error', text: '다른 변경과 겹쳤습니다. 화면을 다시 받습니다' });
-      onResync?.();
-      return;
-    }
-
-    // 기본 경로 — 프리뷰를 다시 받지 않는다. 고친 글자는 이미 화면에 있고, 다시 받으면
-    // 선택·스크롤·수식 렌더가 통째로 날아간다. 갈아 끼우는 것은 지문 하나뿐이다.
-    docHash.set(body.currentHash);
-    onNotice?.({ kind: 'saved', text: body.applied ? '저장됨' : '바뀐 내용이 없습니다' });
+    onNotice?.({ kind: 'saved', text: '저장됨' });
   }
 
   /* ---------------------------------------------------------------- 키·붙여넣기 */
