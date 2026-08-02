@@ -16,6 +16,7 @@ import { createSelection } from './select.js';
 import { createEditor } from './edit.js';
 import { createCommitter } from './committer.js';
 import { createReorder } from './reorder.js';
+import { createDrag } from './drag.js';
 
 const views = {
   decks: document.getElementById('view-decks'),
@@ -72,6 +73,15 @@ const reorder = createReorder({
   onMoved: () => selection.place(),
   // 슬라이드 순서가 바뀌면 페이지 번호가 문서 전체에서 다시 매겨진다. 델타로 못 따라간다.
   onResync: (slide) => showEditor(open.deckId, slide),
+});
+
+const drag = createDrag({
+  stage,
+  layer: overlay,
+  actions: reorder,
+  // 글자를 고치는 중인 상자 안에서 누른 것은 끌기가 아니라 커서 옮기기다.
+  onPick: (el) => !editor.active()?.contains(el),
+  onDrop: () => selection.place(),
 });
 
 const selection = createSelection({
@@ -258,6 +268,8 @@ function mountStage(outline, startSlide = 0) {
     // 저장의 근거가 되는 지문이다. 목차와 슬라이드를 같은 파일에서 받았으므로 맞는다.
     open.docHash = outline.docHash;
     selection.load(outline);
+    // 끌기가 선택보다 **먼저** 붙는다 — 끌기 뒤에 오는 click 을 삼켜야 하기 때문이다.
+    drag.bind(doc);
     selection.bind(doc);
     selection.setSlide(0);
   } else {

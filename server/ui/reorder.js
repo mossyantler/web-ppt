@@ -57,6 +57,35 @@ export function createReorder({ stage, commit, index, onNotice, onMoved, onResyn
     return true;
   }
 
+  /**
+   * 같은 부모 안의 `slot` 번째 자리로 옮긴다 (끌어 놓기가 부르는 자리).
+   *
+   * `moveElement(±1)` 과 같은 명령이고 자리만 절대값으로 온다. 화면 미러도 같은 방식으로
+   * 갱신한다 — **뗀 뒤의 자리**로 세므로, 넣을 곳은 지금 그 자리에 있는 형제의 앞이다.
+   */
+  async function moveTo(nodeId, slot) {
+    const doc = stage.contentDocument;
+    const el = doc.querySelector(`[data-node-id="${cssEscape(nodeId)}"]`);
+    const parent = el?.parentElement;
+    const parentId = parent?.dataset?.nodeId;
+    // 매개변수 이름을 `index` 로 두면 주입받은 조회기(`index`)를 가린다 — 실제로 한 번
+    // 가렸고, 끌어 놓는 순간에만 터졌다.
+    if (!el || !parentId || index.get(parentId)?.kind !== 'container') return false;
+
+    const { ok } = await commit.send(
+      [{ op: 'moveElement', target: nodeId, args: { newParentId: parentId, index: slot } }],
+      '끌어서 옮기기',
+    );
+    if (!ok) return false;
+
+    const rest = [...parent.children].filter((c) => c !== el);
+    parent.insertBefore(el, rest[slot] ?? null);
+
+    onNotice?.({ kind: 'saved', text: '자리를 옮겼습니다' });
+    onMoved?.();
+    return true;
+  }
+
   /** 이 요소를 위·아래로 옮길 수 있는가 — 버튼을 켜고 끄는 근거다. */
   const canMove = (nodeId, delta) => !!spotOf(nodeId, delta);
 
@@ -97,7 +126,7 @@ export function createReorder({ stage, commit, index, onNotice, onMoved, onResyn
     return true;
   }
 
-  return { moveElement, canMove, moveSection };
+  return { moveElement, moveTo, canMove, moveSection };
 }
 
 function cssEscape(value) {

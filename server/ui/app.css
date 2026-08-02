@@ -154,6 +154,15 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
 .sel-bar button:hover:not(:disabled) { background: var(--ui-accent); color: #fff; }
 .sel-bar button:disabled { color: var(--ui-line); cursor: default; }
 
+/* 끌어 옮기기 (M3-5b) — 움직이는 것은 그림자와 선뿐이고 슬라이드는 놓은 뒤에 바뀐다. */
+.drag-ghost {
+  background: color-mix(in srgb, var(--ui-accent) 18%, transparent);
+  border: 1px solid var(--ui-accent);
+  border-radius: 3px;
+}
+.drag-line { height: 2px; background: var(--ui-accent); border-radius: 2px; }
+.drag-line.vertical { width: 2px; height: auto; }
+
 /* 알림이 오른쪽 끝을 잡고, 선택·잠금 표시가 그 뒤에 붙는다. */
 #notice { margin-left: auto; color: var(--ui-dim); font-size: 12px; }
 #notice.bad { color: var(--ui-danger); }
