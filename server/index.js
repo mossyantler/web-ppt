@@ -23,6 +23,7 @@ import { PathError } from './paths.js';
 import { listDecks, deckAssetPath } from './decks.js';
 import { repoAssetPath } from './repo-assets.js';
 import { outlineOf } from './outline.js';
+import { vocabulary } from './vocabulary.js';
 
 /** 커밋 본문 상한. 슬라이드 하나의 재직렬화가 이보다 크면 명령이 잘못된 것이다. */
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
@@ -68,6 +69,11 @@ async function route(req, res) {
 
   if (url.pathname === '/decks' && req.method === 'GET') {
     return sendJson(res, 200, { decks: listDecks() });
+  }
+
+  // 넣을 수 있는 종류 목록 (M3-7). 테마 매핑에서 나오므로 덱과 무관하다.
+  if (url.pathname === '/vocabulary' && req.method === 'GET') {
+    return sendJson(res, 200, vocabulary());
   }
 
   // 캔버스에 띄울 슬라이드 원본 (M3-2). 편집기가 iframe 으로 읽는다.

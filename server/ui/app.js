@@ -18,6 +18,7 @@ import { createCommitter } from './committer.js';
 import { createReorder } from './reorder.js';
 import { createDrag } from './drag.js';
 import { createHistory } from './history.js';
+import { createStructure } from './structure.js';
 
 const views = {
   decks: document.getElementById('view-decks'),
@@ -91,6 +92,17 @@ const reorder = createReorder({
   onResync: (slide) => showEditor(open.deckId, slide),
 });
 
+const structure = createStructure({
+  stage,
+  commit: committer,
+  index: { get: (nodeId) => selection.infoOf(nodeId) },
+  onNotice: showNotice,
+  // 새 요소의 마크업은 테마가 정한다. 화면이 그것을 흉내내면 두 번째 어휘 구현이 되므로
+  // 다시 받고, 서버가 준 새 id 를 골라 둔다.
+  onInserted: (nodeId) => showEditor(open.deckId, currentSlide, nodeId),
+  onRemoved: () => selection.clear(),
+});
+
 const drag = createDrag({
   stage,
   layer: overlay,
@@ -107,7 +119,16 @@ const selection = createSelection({
   // 리프를 또 누른 것 = 글자를 고치겠다는 뜻이다 (결정 2).
   onActivate: (nodeId, info, point) => editor.begin(nodeId, info, point),
   editing: editor,
-  actions: reorder,
+  // 버튼바가 부르는 것들 — 옮기기·넣기·지우기가 한 자리에 모인다.
+  actions: {
+    canMove: reorder.canMove,
+    moveElement: reorder.moveElement,
+    canInsert: structure.canInsert,
+    canRemove: structure.canRemove,
+    vocabulary: structure.vocabulary,
+    insert: structure.insert,
+    remove: structure.remove,
+  },
 });
 
 function showSelectionState(state) {
@@ -191,7 +212,7 @@ function deckRow(deck) {
 
 /* ----------------------------------------------------------------- 편집기 */
 
-async function showEditor(deckId, startSlide = 0) {
+async function showEditor(deckId, startSlide = 0, selectId = null) {
   views.decks.hidden = true;
   views.editor.hidden = false;
 
@@ -218,7 +239,7 @@ async function showEditor(deckId, startSlide = 0) {
   // 슬라이드는 원본 그대로 띄운다. 편집 표시는 이 바깥(부모 문서)이 얹는다.
   // 캐시가 남으면 방금 저장한 것이 화면에 안 나온다. 다시 받을 때는 주소를 달리한다.
   stage.src = `/deck/${encodeURIComponent(deckId)}/page?t=${performance.now()}`;
-  stage.onload = async () => mountStage(await outline, startSlide);
+  stage.onload = async () => mountStage(await outline, startSlide, selectId);
 }
 
 function note(text) {
@@ -236,7 +257,7 @@ function note(text) {
  * 순서 바꾸기·추가·삭제가 앞으로 이 레일에 붙고, 그 조작들은 전부 서버 명령이라
  * 덱이 내장한 레일과 규칙이 다르다. 둘이 같이 뜨면 어느 쪽이 진짜인지 알 수 없다.
  */
-function mountStage(outline, startSlide = 0) {
+function mountStage(outline, startSlide = 0, selectId = null) {
   const doc = stage.contentDocument;
   const sections = [...doc.querySelectorAll('section')];
 
@@ -291,7 +312,9 @@ function mountStage(outline, startSlide = 0) {
     // 초점이 슬라이드 안에 있을 때의 Ctrl+Z. 부모 창에만 달면 슬라이드를 한 번 누른
     // 뒤에는 단축키가 안 듣는다 — 사용자에게는 그것이 고장으로 보인다.
     doc.addEventListener('keydown', (e) => history.onKey(e, !!editor.active()), true);
-    selection.setSlide(0);
+    selection.setSlide(startSlide);
+    // 방금 넣은 요소를 골라 둔다. 눈으로 찾게 하지 않는 것이 목적이다.
+    if (selectId) selection.pick(selectId);
   } else {
     showSelectionState({ kind: 'locked', text: '목차를 받지 못했습니다 — 고르기가 꺼져 있습니다' });
   }

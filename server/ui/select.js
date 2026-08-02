@@ -54,7 +54,8 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
   const tag = make('sel-tag');
   const groupRing = make('sel-group');
   const bar = makeBar();
-  layer.append(groupRing, ring, tag, bar);
+  const menu = makeMenu();
+  layer.append(groupRing, ring, tag, bar, menu);
 
   /* ------------------------------------------------------------ 목차 적재 */
 
@@ -182,6 +183,7 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
   /* ---------------------------------------------------------- 상태 바꾸기 */
 
   function select(nodeId) {
+    closeMenu();
     selected = nodeId;
     place();
     report();
@@ -194,6 +196,7 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
   }
 
   function clear() {
+    closeMenu();
     if (editing?.active()) editing.end();
     selected = null;
     scope = scopeKeyOf(sections[slide]);
@@ -232,9 +235,16 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
     // 언제나 회색 버튼만 떠 있으면 사용자는 그것이 고장인지 규칙인지 알 수 없다.
     if (!up && !down) return void (bar.hidden = true);
 
+    const add = actions.canInsert?.(selected) ?? false;
+    const del = actions.canRemove?.(selected) ?? false;
+    // 아무것도 할 수 없는 요소(영역처럼 자리가 정해진 것)에는 바를 띄우지 않는다.
+    // 언제나 회색 버튼만 떠 있으면 사용자는 그것이 고장인지 규칙인지 알 수 없다.
+    if (!up && !down && !add && !del) return void (bar.hidden = true);
+
     bar.hidden = false;
-    bar.querySelector('[data-act="up"]').disabled = !up;
-    bar.querySelector('[data-act="down"]').disabled = !down;
+    for (const [act, on] of [['up', up], ['down', down], ['add', add], ['remove', del]]) {
+      bar.querySelector(`[data-act="${act}"]`).disabled = !on;
+    }
 
     const r = ring.getBoundingClientRect();
     const host = layer.getBoundingClientRect();
@@ -246,19 +256,77 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
     const el = document.createElement('div');
     el.className = 'sel-bar';
     el.hidden = true;
-    for (const [act, glyph, title] of [['up', '↑', '위로'], ['down', '↓', '아래로']]) {
+
+    const buttons = [
+      ['up', '↑', '위로', () => actions?.moveElement(selected, -1)],
+      ['down', '↓', '아래로', () => actions?.moveElement(selected, +1)],
+      ['add', '＋', '아래에 넣기', () => openMenu()],
+      ['remove', '🗑', '지우기 (되돌리기로 돌아옵니다)', () => actions?.remove(selected)],
+    ];
+
+    for (const [act, glyph, title, run] of buttons) {
       const b = document.createElement('button');
       b.type = 'button';
       b.dataset.act = act;
       b.textContent = glyph;
       b.title = title;
       b.addEventListener('click', async () => {
-        const moved = await actions?.moveElement(selected, act === 'up' ? -1 : +1);
-        if (moved) place();
+        closeMenu();
+        const done = await run();
+        if (done !== false) place();
       });
       el.append(b);
     }
     return el;
+  }
+
+  /* --------------------------------------------------- 무엇을 넣을지 고르는 목록 */
+
+  function makeMenu() {
+    const el = document.createElement('div');
+    el.className = 'sel-menu';
+    el.hidden = true;
+    return el;
+  }
+
+  /** `+` 를 누르면 뜨는 목록. 종류는 테마 매핑에서 오고 이름만 여기서 붙인다. */
+  async function openMenu() {
+    const types = (await actions?.vocabulary?.()) ?? [];
+    if (!types.length) return false;
+
+    const pick = async (type, variant) => {
+      closeMenu();
+      await actions.insert(selected, type, variant);
+    };
+
+    menu.replaceChildren();
+    for (const group of ['leaf', 'container']) {
+      const rows = types.filter((t) => t.group === group);
+      if (!rows.length) continue;
+
+      const head = document.createElement('div');
+      head.className = 'menu-head';
+      head.textContent = group === 'leaf' ? '내용' : '담는 상자';
+      menu.append(head);
+
+      for (const t of rows) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = LABELS[t.type] ?? t.type;
+        b.addEventListener('click', () => pick(t.type, t.variants[0] ?? 'default'));
+        menu.append(b);
+      }
+    }
+
+    const r = ring.getBoundingClientRect();
+    const host = layer.getBoundingClientRect();
+    menu.hidden = false;
+    menu.style.transform = `translate(${r.left - host.left}px, ${r.bottom - host.top + 4}px)`;
+    return false;   // 목록을 띄웠을 뿐이고 아직 아무것도 넣지 않았다
+  }
+
+  function closeMenu() {
+    menu.hidden = true;
   }
 
   function box(el, nodeId) {
@@ -322,6 +390,18 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
 
   return {
     load, bind, setSlide, clear, escape, place,
+    /**
+     * 바깥에서 특정 노드를 골라 둔다 (막 넣은 요소로 돌아올 때).
+     * 스코프는 그 노드의 부모로 맞춘다 — 안 맞추면 다음 클릭이 바깥으로 튄다.
+     */
+    pick: (nodeId) => {
+      const info = index.get(nodeId);
+      if (!info) return false;
+      slide = info.sectionIndex;
+      scope = info.parentId;
+      select(nodeId);
+      return true;
+    },
     /** 노드 정보 조회 — 순서 바꾸기·추가·삭제가 부모와 종류를 알아야 한다. */
     infoOf: (nodeId) => index.get(nodeId) ?? null,
     /** 지금 보이는 장의 섹션 (레일 드래그가 대상 id 를 얻는 자리). */
