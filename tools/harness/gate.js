@@ -219,6 +219,15 @@ export function sectionGate(root, raw, mapping, file) {
       `data-slide-kind 는 닫힌 열거다: ${mapping.json.slideKindEnum.join('｜')}`));
   }
 
+  // §2.3.1 — 배경도 닫힌 열거다. **없는 것은 위반이 아니다** (테마 기본을 쓴다는 뜻).
+  // 열거를 재지 않으면 오타 하나가 조용히 "기본 배경" 으로 렌더되고, 사용자는 자기가
+  // 고른 것이 왜 안 먹는지 알 수 없다.
+  const bg = root.attrs.find((a) => a.name === 'data-bg')?.value;
+  if (bg !== undefined && !(mapping.json.bgEnum ?? []).includes(bg)) {
+    findings.push(finding('5-R1', 'grammar.unknown-variant', root, raw, file,
+      `data-bg 는 닫힌 열거다: ${(mapping.json.bgEnum ?? []).join('｜') || '(선언 없음)'}`));
+  }
+
   const seenIds = new Map();
 
   root.walk((n) => {

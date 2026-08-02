@@ -31,7 +31,7 @@
     "el:citation": { "default": "m-ref" },
     "el:caption": { "default": "m-caption" },
     "el:table": { "default": "m-table" },
-    "el:image": { "default": "" },
+    "el:image": { "default": "", "logo": "mk-mark" },
     "el:figure": { "default": "m-figure" },
     "el:metric": { "default": "m-stat" },
     "el:pill": {
@@ -170,6 +170,7 @@
 
   "regionEnum": ["head", "body", "foot", "side", "main"],
   "slideKindEnum": ["title", "content", "break", "closing"],
+  "bgEnum": ["light", "dark"],
 
   "_findings": {
     "note": "이 테마를 지으면서 드러난 것. 어휘 보편성 논의의 근거다.",

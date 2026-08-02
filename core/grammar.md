@@ -162,7 +162,18 @@
 - `data-slide` — 값 없는 표지 속성. 존재만으로 섹션임을 선언한다.
 - `data-slide-kind` — 닫힌 열거 `title｜content｜break｜closing`.
 - `data-variant` — §3.7. SNU 테마: `default: slide` · `split: slide slide--split` · `title: slide slide--title`.
+- `data-bg` — 닫힌 열거. 선택 속성이며 없으면 테마 기본이다. §2.3.1.
 - `data-node-id` — 필수(§4).
+
+#### 2.3.1 `data-bg` — 배경 *(2026-08-03 신설)*
+
+> **배경은 장마다 정해지는 닫힌 열거이고, 열거는 테마가 `mapping.json`의 `bgEnum`에 선언한다. 테마 CSS는 클래스가 아니라 속성 선택자(`[data-bg="dark"]`)로 받는다.**
+
+**`data-variant`와 합치지 않는 이유 — 곱해진다.** variant는 조판(기본·분할·표지)이고 배경은 그것과 직교한다. 하나로 합치면 `title`·`title-dark`·`split-dark`처럼 조합마다 값이 필요해지고, 조판을 하나 더할 때마다 배경 수만큼 늘어난다.
+
+**클래스가 아니라 속성인 이유.** 실측 코퍼스는 배경을 `class="slide slide--title dark"`의 `dark`로 표현했고, 그 클래스는 어휘에도 `blocks`에도 없어 이식 갭 목록(§2.4 6번)에 남아 있었다. 속성으로 올리면 값이 닫힌 열거가 되어 게이트가 재고, `setSectionProps`가 그대로 편집한다 — `data-*`는 이미 그 명령의 허용 목록이다.
+
+없는 문서는 그대로 통과한다. 즉 이 조항은 기존 덱 넷을 건드리지 않는다.
 
 섹션의 직계 자식은 컨테이너 또는 리프다. 실측 코퍼스에서는 `region` 셋(`head`/`body`/`foot`) 또는 `region`+`group` 조합이다[g3].
 
@@ -403,6 +414,16 @@ THEME=minimal node tools/harness/index.js
 ### L5 — 무자식 리프
 
 `image`, `rule`. 자식 노드(요소·텍스트·주석 무엇이든)를 가지면 위반이다. `setContent` 대상이 아니다(422). 편집은 `setProps`로만 한다.
+
+#### L5.1 — `image`의 편집 통로 *(2026-08-03 신설)*
+
+> **`setProps`는 `class`·`data-*`에 더해 `image` 리프에 한해 `src`·`alt`를 다룬다. 그 둘뿐이며 다른 태그에서는 여전히 거부한다.**
+
+**신설 사유 — `image`는 편집할 방법이 없는 유일한 어휘 값이었다.** `setProps`의 허용 목록이 `class`와 `data-*`였고, 그림의 내용은 `src`에 있다. 즉 어휘에 있고, 삽입할 수 있고(`insertElement`), **넣은 뒤 무엇을 가리킬지 정할 명령이 없었다.** 로고를 붙이려는 작업(`docs/specs/새-리포트-만들기.md` 결정 5)이 이 구멍을 드러냈다.
+
+`style`을 열지 않는 이유는 §6.2와 같다 — 인라인 기하는 규칙 5 위반이고 디자인 토큰 우회다. `src`·`alt`는 기하가 아니라 **그 리프의 내용**이다.
+
+경로는 덱 폴더 안으로 제한한다(`server/decks.js`의 `deckAssetPath`와 같은 봉쇄). 외부 URL을 허용하면 발표 중 네트워크에 의존하게 되고, 리포트 하나가 자기 폴더로 닫히지 않는다.
 
 ### L6 — 저작 리프의 구조 자식 *(이 명세의 신설 조항)*
 

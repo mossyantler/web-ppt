@@ -126,3 +126,18 @@
 .m-bar-fill { height: 100%; background: var(--m-accent); width: calc(var(--fill, 0) * 1%); }
 .m-task { font-size: 12px; }
 .m-pct { font-family: var(--m-mono); font-size: 11px; color: var(--m-ink-soft); }
+
+/* --- 배경 `data-bg` — 문법 §2.3.1 -------------------------------------- */
+.slide[data-bg="light"] { background: var(--m-paper); color: var(--m-ink); }
+.slide[data-bg="dark"] {
+  --m-paper: #14161a;
+  --m-surface-quiet: #1c1f25;
+  --m-ink: #eceef2;
+  --m-ink-soft: #a8adb8;
+  --m-line: #2b3038;
+  background: var(--m-paper);
+  color: var(--m-ink);
+}
+
+/* --- 로고 `el:image|logo` ---------------------------------------------- */
+.mk-mark { height: 24px; width: auto; flex: none; align-self: center; margin-right: 10px; }

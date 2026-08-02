@@ -31,7 +31,7 @@
     "el:citation": { "default": "ref" },
     "el:caption": { "default": "cap" },
     "el:table": { "default": "tbl" },
-    "el:image": { "default": "" },
+    "el:image": { "default": "", "logo": "brand-logo" },
     "el:figure": { "default": "figure" },
     "el:metric": { "default": "kpi" },
     "el:pill": { "default": "pill", "prog": "pill prog", "block": "pill block", "note": "pill note" },
@@ -174,6 +174,7 @@
 
   "regionEnum": ["head", "body", "foot", "side", "main"],
   "slideKindEnum": ["title", "content", "break", "closing"],
+  "bgEnum": ["light", "dark"],
 
   "_adoption": {
     "note": "이 절은 판정에 쓰이지 않는다. 각 (값, variant) 가 어느 템플릿의 어느 줄 때문에 존재하는지의 기록이다 — 계획 §11 M1 '각 값의 채택 근거'. 줄 번호는 fixtures/templates/*.html (= slides/*.html 의 바이트 사본) 기준.",

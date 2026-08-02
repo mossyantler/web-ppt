@@ -36,3 +36,48 @@
   overflow-x: auto;
   tab-size: 2;
 }
+
+/* --- 배경 `data-bg` — 문법 §2.3.1 (2026-08-03 신설) --------------------
+ *
+ * 배경은 장마다 정해지고(`docs/specs/새-리포트-만들기.md` 결정 4), 값은 닫힌 열거다.
+ * **테마가 받는 방법은 클래스가 아니라 속성 선택자다.** 실측 코퍼스는 이것을
+ * `class="slide slide--title dark"` 의 `dark` 로 썼고, 그 클래스는 어휘에도
+ * `blocks` 에도 없어 이식 갭 목록(§2.4 6번)에 남아 있었다.
+ *
+ * 토큰만 바꾸고 조판은 건드리지 않는다 — 배경을 갈아도 자리는 그대로여야 한다.
+ */
+.slide[data-bg="light"] {
+  --surface-page: var(--white);
+  --surface-card: var(--white);
+  --surface-subtle: var(--slate-50);
+  --text-strong: var(--slate-900);
+  --text-default: var(--slate-700);
+  --text-muted: var(--slate-500);
+  background: var(--surface-page);
+  color: var(--text-default);
+}
+
+.slide[data-bg="dark"] {
+  --surface-page: var(--navy-900);
+  --surface-card: var(--navy-800);
+  --surface-subtle: var(--navy-800);
+  --text-strong: var(--white);
+  --text-default: var(--navy-100);
+  --text-muted: var(--navy-300);
+  --border-default: var(--navy-600);
+  background: var(--surface-page);
+  color: var(--text-default);
+}
+
+/* --- 로고 `el:image|logo` — 결정 5 -------------------------------------
+ *
+ * **자리를 비워 두지 않는다.** 로고가 있으면 머리 왼쪽에 끼어들고 나머지가 밀린다.
+ * 흐름 배치이므로 미는 일은 CSS 가 아니라 문서 순서가 한다 — 여기서는 크기만 정한다.
+ */
+.brand-logo {
+  height: 28px;
+  width: auto;
+  flex: none;
+  align-self: center;
+  margin-right: var(--space-3);
+}
