@@ -33,6 +33,7 @@ import './structure-commands.js';
 import './content-commands.js';
 import './child-commands.js';
 import './section-commands.js';
+import './adopt-command.js';
 
 /**
  * 커밋 하나를 적용한다.
@@ -73,6 +74,9 @@ export function applyCommit(deckId, envelope) {
   // 함수이므로 마지막 것이 누적 결과다.
   const byRange = new Map();
   const nodeIds = {};
+  // 핸들러가 "됐지만 사람이 봐야 할 곳" 을 함께 낼 수 있다 (§3.1 diagnostics).
+  // 지금은 `adoptSlide` 하나가 쓴다 — 자동으로 판단이 안 된 자리를 그대로 올려 보낸다.
+  const diagnostics = [];
   for (const [i, command] of envelope.commands.entries()) {
     const handler = handlerFor(command.op);
     let out;
@@ -87,13 +91,16 @@ export function applyCommit(deckId, envelope) {
     }
     for (const e of out?.edits ?? []) byRange.set(`${e.start}:${e.end}`, e);
     Object.assign(nodeIds, out?.nodeIds ?? {});
+    diagnostics.push(...(out?.diagnostics ?? []));
   }
   const edits = [...byRange.values()].filter((e) => deck.raw.slice(e.start, e.end) !== e.text);
 
   // 명령이 아무 바이트도 바꾸지 않았다면 쓰지 않는다. 빈 커밋으로 history 링을
   // 소모하면 undo 100 회 기준(§11 M2)이 조용히 무너진다.
   if (edits.length === 0) {
-    return result({ applied: false, resultHash: deck.docHash, currentHash: deck.docHash, nodeIds, rings: ringsOf(deckId) });
+    // 진단은 여기서도 실어 보낸다. "붙일 이름표가 하나도 없었다" 는 결과 자체가
+    // 사용자가 알아야 할 답이고, 그 이유는 진단에만 있다.
+    return result({ applied: false, resultHash: deck.docHash, currentHash: deck.docHash, nodeIds, diagnostics, rings: ringsOf(deckId) });
   }
 
   let next = splicedMany(deck.raw, edits);
@@ -130,6 +137,7 @@ export function applyCommit(deckId, envelope) {
     resultHash,
     currentHash: resultHash,
     nodeIds,
+    diagnostics,
     spliceRanges: edits.map((e) => ({ start: e.start, end: e.end, text: e.text })),
     derivedRanges,
     rings: ringsOf(deckId),
@@ -221,7 +229,7 @@ function assertOutsideIdentical(before, after, edits) {
   }
 }
 
-function result({ applied, resultHash, currentHash, nodeIds, spliceRanges = [], derivedRanges = [], rings = null }) {
+function result({ applied, resultHash, currentHash, nodeIds, diagnostics = [], spliceRanges = [], derivedRanges = [], rings = null }) {
   return {
     applied,
     resultHash,
@@ -241,7 +249,8 @@ function result({ applied, resultHash, currentHash, nodeIds, spliceRanges = [], 
     // M2-1 에는 멱등 재생 경로가 없으므로 항상 false 다. M2-5 가 채운다.
     superseded: resultHash !== currentHash,
     nodeIds,
-    diagnostics: [],
+    // 됐지만 사람이 봐야 할 곳. 실패가 아니다 — 실패는 4xx·5xx 로 나간다.
+    diagnostics,
   };
 }
 

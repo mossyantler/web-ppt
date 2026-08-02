@@ -53,6 +53,13 @@
            슬라이드 DOM 에 표시를 넣지 않겠다는 약속이 이 한 겹으로 지켜진다.
            클릭은 이 층을 그대로 통과해 슬라이드로 간다 (pointer-events: none). -->
       <div id="overlay" aria-hidden="true"></div>
+
+      <!-- 이름표가 없어 아직 고칠 수 없는 장을 덮는 막 (결정 9). 잠그기만 하고 방법을
+           안 주면 나갈 문이 없으므로 "고치기" 버튼이 여기 붙는다. -->
+      <div id="lock" hidden></div>
+
+      <!-- 고치기 뒤에 남은, 자동으로 판단이 안 된 자리들. 실패가 아니라 할 일 목록이다. -->
+      <div id="findings" hidden></div>
     </div>
   </div>
 </section>

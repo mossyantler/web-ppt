@@ -17,6 +17,11 @@ verbose:-
 # QA screenshot dumps (regenerated per run)
 _workspace/**/qa/
 
+# Undo/redo snapshot rings. Editing state, not the report — committing these
+# would put every intermediate keystroke of a session into the history.
+_workspace/**/.history/
+_workspace/**/.log/
+
 # Cloned reference sources (analysis only, not our code)
 reference/
 

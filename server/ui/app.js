@@ -20,6 +20,7 @@ import { createDrag } from './drag.js';
 import { createHistory } from './history.js';
 import { createStructure } from './structure.js';
 import { createOpaque } from './opaque.js';
+import { createAdopt } from './adopt.js';
 
 const views = {
   decks: document.getElementById('view-decks'),
@@ -37,6 +38,8 @@ const notice = document.getElementById('notice');
 const undoButton = document.getElementById('undo');
 const redoButton = document.getElementById('redo');
 const overlay = document.getElementById('overlay');
+const lock = document.getElementById('lock');
+const findings = document.getElementById('findings');
 
 /** 목록을 화면 사이에서 재사용한다 — 편집 화면의 머리글도 여기서 이름을 얻는다. */
 let decksCache = null;
@@ -52,6 +55,9 @@ const open = { deckId: null, docHash: null };
 
 /** 지금 보이는 장. 화면을 다시 받을 때 보던 자리로 돌아오려고 들고 있다. */
 let currentSlide = 0;
+
+/** 마지막으로 받은 목차. 장을 넘길 때마다 "이 장이 잠겼는가" 를 여기서 본다. */
+let currentOutline = null;
 
 /**
  * 선택 계층과 글자 편집기. 화면 하나에 하나씩이고 리포트를 옮겨 다녀도 살아 있다 —
@@ -110,6 +116,19 @@ const structure = createStructure({
   // 다시 받고, 서버가 준 새 id 를 골라 둔다.
   onInserted: (nodeId) => showEditor(open.deckId, currentSlide, nodeId),
   onRemoved: () => selection.clear(),
+});
+
+const adopt = createAdopt({
+  lock,
+  findings,
+  commit: committer,
+  onNotice: showNotice,
+  // 이름표가 붙으면 그 장은 고를 수 있는 장이 된다. 목차·지문·트리가 전부 달라지므로
+  // 델타로 따라가지 않고 다시 받는다 (재조정 정책의 외부 편집과 같은 등급이다).
+  //
+  // 리포트 목록도 같이 버린다 — 첫 장을 고치는 순간 덱은 "문법 선언 있음" 이 되고,
+  // 캐시를 두면 목록으로 나갔을 때 아직 "편집 불가" 라고 적혀 있다.
+  onDone: () => { decksCache = null; showEditor(open.deckId, currentSlide); },
 });
 
 const drag = createDrag({
@@ -179,6 +198,9 @@ async function showDeckList() {
   views.editor.hidden = true;
   stage.removeAttribute('src');       // 목록으로 나오면 슬라이드를 내려놓는다
   selection.clear();
+  adopt.hide();
+  adopt.close();
+  currentOutline = null;
 
   const items = await decks();
   list.removeAttribute('aria-busy');
@@ -233,13 +255,17 @@ async function showEditor(deckId, startSlide = 0, selectId = null) {
   deckName.textContent = deckId;
   deckSub.textContent = info?.label ?? '';
 
-  // 문법을 선언하지 않은 덱은 열려도 고칠 수 없다 (결정 9). 열자마자 알린다 —
-  // 고치려다 막히는 것보다 못 고친다고 미리 말하는 편이 낫다. 실제 잠금 UI 는 M3-9.
+  // 열자마자 한 번 알린다 — 고치려다 막히는 것보다 못 고친다고 미리 말하는 편이 낫다.
+  // 목록이 아는 것은 덱 수준(문법 선언 여부)까지다. 장별 실상은 목차가 와야 알고,
+  // `mountStage` 가 그때 이 자리를 다시 쓴다.
   deckState.classList.toggle('locked', info ? !info.annotated : false);
   deckState.textContent = info && !info.annotated ? '편집 불가 — 문법 선언 없음' : '';
 
   rail.replaceChildren(note('여는 중…'));
   selection.clear();
+  // 막은 걷되 **남은 것 목록은 그대로 둔다.** "고치기" 뒤의 다시 받기가 바로 이 경로를
+  // 지나가고, 여기서 같이 지우면 사용자는 자기가 할 일을 못 본 채 화면만 깜빡인 게 된다.
+  adopt.hide();
   open.deckId = deckId;
   open.docHash = null;
 
@@ -301,11 +327,18 @@ function mountStage(outline, startSlide = 0, selectId = null) {
       || section.querySelector('h1, h2, h3')?.textContent.trim()
       || `${i + 1}장`;
 
+    // 잠긴 장은 레일에서 미리 보인다 — 열어 봐야 아는 것과, 목록에서 아는 것은 다르다.
+    if (outline && !outline.sections[i]?.annotated) b.classList.add('locked');
+
     b.append(n, t);
     b.draggable = true;
     b.addEventListener('click', () => goTo(el, sections, i));
     return b;
   });
+
+  // 목차를 먼저 세운다 — 아래 `select` 가 잠금 여부를 이것으로 판정한다.
+  currentOutline = outline;
+  showDeckLock(outline);
 
   rail.replaceChildren(...items);
   bindRailDrag();
@@ -443,6 +476,39 @@ function select(i) {
   for (const b of rail.children) {
     if (b.dataset) b.setAttribute('aria-current', String(Number(b.dataset.index) === i));
   }
+  syncLock(i);
+}
+
+/**
+ * 머리글의 잠금 표시 — **몇 장이** 아직 못 고치는가.
+ *
+ * "편집 불가" 하나로 말하지 않는 이유 — 이름표를 붙이기 시작한 덱은 고친 장과 안 고친
+ * 장이 섞여 있고, 그때 "편집 불가" 는 거짓이다. 사용자가 고치기를 누를 때마다 이 수가
+ * 줄어드는 것이 진행 상황 그 자체다.
+ */
+function showDeckLock(outline) {
+  if (!outline) {
+    deckState.classList.add('locked');
+    deckState.textContent = '목차를 받지 못했습니다';
+    return;
+  }
+  const locked = outline.sections.filter((s) => !s.annotated).length;
+  deckState.classList.toggle('locked', locked > 0);
+  deckState.textContent = locked ? `${locked}장이 아직 편집 불가` : '';
+}
+
+/**
+ * 이 장이 잠겼는가 — 막을 씌우거나 걷는다 (결정 9).
+ *
+ * 잠금은 **장마다** 다르다. 이름표를 갓 붙이기 시작한 덱은 고친 장과 안 고친 장이
+ * 섞여 있고, 덱 전체를 하나로 잠그면 이미 고친 장까지 못 쓰게 된다 (`outline.js` 가
+ * `annotated` 와 `blockers` 를 따로 재 둔 이유가 이것이다).
+ */
+function syncLock(i) {
+  if (!currentOutline) return void adopt.hide();
+  const section = currentOutline.sections[i];
+  if (section && !section.annotated) adopt.show(section, i);
+  else adopt.hide();
 }
 
 /* ------------------------------------------------------------------ 라우팅 */

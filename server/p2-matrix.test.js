@@ -53,6 +53,12 @@ const HTML = `<!DOCTYPE html>
   </div>
   <div data-box="region" data-region="foot" data-node-id="m4" class="slide-foot"><span class="page">08 / 09</span></div>
 </section>
+<!-- 이름표가 없는 장. adoptSlide 가 잴 것이 있으려면 붙일 것이 있어야 한다 —
+     이미 다 붙은 문서에 adopt 를 돌리면 편집이 0 건이고, 그 케이스는 P2 를 재지
+     못한 채 통과한다. 통과했는데 아무것도 재지 않은 테스트가 가장 나쁘다. -->
+<section class="slide">
+  <div class="slide-body"><p>이름표 없는 장</p></div>
+</section>
 </body>
 </html>
 `;
@@ -99,6 +105,9 @@ const MATRIX = [
   ['setChildContent', { target: 'nc', args: { index: 0, html: '고침' } }],
   ['moveSection', { target: 'n1', args: { index: 1 } }],
   ['renumberPages', {}],
+  // 이름표 붙이기도 명령이다 (M3-9). 이 픽스처는 이미 전부 이름표가 붙어 있으므로
+  // 붙일 것을 하나 만들어 준다 — 아래 `beforeEach` 가 `MATRIX_EXTRA` 를 본다.
+  ['adoptSlide', { args: { section: 3 } }],
 ];
 
 /* --------------------------------------------------------------- 기준 5 */
@@ -155,6 +164,10 @@ test('기준 5 — 문서 전체가 재파싱되고 게이트를 통과한다 (�
     { op: 'insertElement', args: { parentId: 'n3', index: 0, type: 'text' } },
     { op: 'duplicateElement', target: 'n6' },
     { op: 'removeElement', target: 'n5' },
+    // 마지막 장에는 이름표가 없다. 게이트는 문서의 **모든** 섹션을 보므로, 이 명령이
+    // 제 일을 못 하면 아래 단언이 깨진다 — "고치기" 버튼이 게이트를 통과하는 결과를
+    // 내놓는가가 M3-9 의 핵심이고, 그것을 여기서 재고 있다.
+    { op: 'adoptSlide', args: { section: 3 } },
   ];
   for (const [i, c] of sequence.entries()) {
     applyCommit(DECK, { commitId: `seq-${i}`, pre: { docHash: hashOf(onDisk()) }, commands: [c] });

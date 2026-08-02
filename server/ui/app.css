@@ -257,3 +257,77 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
 
 /* 아직 못 그린 상태를 빈 화면으로 두지 않는다 — 로딩과 고장이 구별되어야 한다. */
 .rail-note { color: var(--ui-dim); padding: 10px; font-size: 13px; }
+
+/* ------------------------------------------------ 잠긴 슬라이드 (M3-9 · 결정 9)
+ *
+ * 이름표가 없는 장은 명령이 지목할 수 없어 어떤 편집도 받지 못한다. 그런 장에서
+ * 클릭이 조용히 아무 일도 안 하면 사용자는 그것을 고장과 구별할 수 없다. 그래서
+ * **막을 덮어 못 고친다고 먼저 말하고**, 같은 자리에 나갈 문을 준다.
+ */
+.rail-item.locked .n::after { content: "🔒"; margin-left: 4px; font-size: 10px; }
+.rail-item.locked .t { color: var(--ui-dim); }
+
+#lock {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  /* 아래 슬라이드가 비쳐야 한다 — 무엇이 잠겼는지 보이지 않으면 고칠 마음이 안 선다. */
+  background: #0f1115cc;
+  backdrop-filter: grayscale(1) blur(1px);
+}
+#lock[hidden] { display: none; }
+
+.lock-card {
+  max-width: 420px;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 18px 20px;
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-line); border-radius: 8px;
+  box-shadow: 0 12px 32px #000a;
+}
+.lock-card h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.lock-card p { margin: 0; color: var(--ui-dim); font-size: 13px; }
+.lock-card .why { color: var(--ui-dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+.lock-card button {
+  align-self: flex-start;
+  padding: 6px 14px;
+  border: 1px solid var(--ui-accent); border-radius: 5px;
+  background: none; color: var(--ui-accent);
+  font: 13px/1.4 inherit; cursor: pointer;
+}
+.lock-card button:hover:not(:disabled) { background: var(--ui-accent); color: #fff; }
+.lock-card button:disabled { border-color: var(--ui-line); color: var(--ui-line); cursor: default; }
+
+/* 고치기 뒤에 남은 것들. 창을 덮지 않는다 — 이건 막는 벽이 아니라 할 일 목록이다. */
+#findings {
+  position: absolute; right: 16px; bottom: 16px;
+  max-width: 460px; max-height: 55%;
+  display: flex; flex-direction: column;
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-line); border-radius: 8px;
+  box-shadow: 0 12px 32px #000a;
+  z-index: 4;
+}
+#findings[hidden] { display: none; }
+.find-head {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 10px 12px; border-bottom: 1px solid var(--ui-line);
+}
+.find-head strong { font-size: 13px; font-weight: 600; }
+.find-head span { color: var(--ui-dim); font-size: 12px; }
+.find-head button {
+  margin-left: auto;
+  border: 0; background: none; color: var(--ui-dim);
+  font: 14px/1 inherit; cursor: pointer;
+}
+.find-head button:hover { color: var(--ui-text); }
+.find-list { margin: 0; padding: 8px 12px 12px; overflow-y: auto; list-style: none; }
+.find-list li { padding: 6px 0; border-top: 1px solid var(--ui-line); }
+.find-list li:first-child { border-top: 0; }
+.find-list .at { color: var(--ui-accent); font-size: 12px; font-variant-numeric: tabular-nums; }
+.find-list .subject {
+  display: block; margin: 2px 0;
+  color: var(--ui-text);
+  font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow-x: auto; white-space: pre;
+}
+.find-list .remedy { color: var(--ui-dim); font-size: 12px; }
