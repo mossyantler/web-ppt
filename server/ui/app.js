@@ -17,6 +17,7 @@ import { createEditor } from './edit.js';
 import { createCommitter } from './committer.js';
 import { createReorder } from './reorder.js';
 import { createDrag } from './drag.js';
+import { createHistory } from './history.js';
 
 const views = {
   decks: document.getElementById('view-decks'),
@@ -31,6 +32,8 @@ const deckSub = document.getElementById('deck-sub');
 const deckState = document.getElementById('deck-state');
 const selState = document.getElementById('sel-state');
 const notice = document.getElementById('notice');
+const undoButton = document.getElementById('undo');
+const redoButton = document.getElementById('redo');
 const overlay = document.getElementById('overlay');
 
 /** 목록을 화면 사이에서 재사용한다 — 편집 화면의 머리글도 여기서 이름을 얻는다. */
@@ -45,16 +48,29 @@ let decksCache = null;
  */
 const open = { deckId: null, docHash: null };
 
+/** 지금 보이는 장. 화면을 다시 받을 때 보던 자리로 돌아오려고 들고 있다. */
+let currentSlide = 0;
+
 /**
  * 선택 계층과 글자 편집기. 화면 하나에 하나씩이고 리포트를 옮겨 다녀도 살아 있다 —
  * 겹침 층과 이벤트 처리기를 리포트마다 새로 만들면 옛 iframe 에 붙은 처리기가 남는다.
  */
+const history = createHistory({
+  deckId: () => open.deckId,
+  buttons: { undo: undoButton, redo: redoButton },
+  onNotice: showNotice,
+  // 되돌리기는 파일 전체를 갈아 끼운다. 무엇이 달라졌는지 화면은 모르므로 다시 받는다.
+  onResync: () => showEditor(open.deckId, currentSlide),
+});
+
 const committer = createCommitter({
   deckId: () => open.deckId,
   docHash: { get: () => open.docHash, set: (h) => { open.docHash = h; } },
   onNotice: showNotice,
   // 근거를 잃은 미러는 되맞출 방법이 없다. 문서를 다시 받는다 (재조정 정책의 예외 경로).
-  onResync: () => showEditor(open.deckId),
+  onResync: () => showEditor(open.deckId, currentSlide),
+  // 커밋이 성공할 때마다 링 잔량이 바뀐다. 버튼이 그것을 그대로 보인다.
+  onRings: (rings) => history.update(rings),
 });
 
 const editor = createEditor({
@@ -267,10 +283,14 @@ function mountStage(outline, startSlide = 0) {
   if (outline) {
     // 저장의 근거가 되는 지문이다. 목차와 슬라이드를 같은 파일에서 받았으므로 맞는다.
     open.docHash = outline.docHash;
+    history.update(outline.rings);
     selection.load(outline);
     // 끌기가 선택보다 **먼저** 붙는다 — 끌기 뒤에 오는 click 을 삼켜야 하기 때문이다.
     drag.bind(doc);
     selection.bind(doc);
+    // 초점이 슬라이드 안에 있을 때의 Ctrl+Z. 부모 창에만 달면 슬라이드를 한 번 누른
+    // 뒤에는 단축키가 안 듣는다 — 사용자에게는 그것이 고장으로 보인다.
+    doc.addEventListener('keydown', (e) => history.onKey(e, !!editor.active()), true);
     selection.setSlide(0);
   } else {
     showSelectionState({ kind: 'locked', text: '목차를 받지 못했습니다 — 고르기가 꺼져 있습니다' });
@@ -383,6 +403,7 @@ function goTo(el, sections, i) {
 }
 
 function select(i) {
+  currentSlide = i;
   for (const b of rail.children) {
     if (b.dataset) b.setAttribute('aria-current', String(Number(b.dataset.index) === i));
   }
@@ -401,7 +422,9 @@ addEventListener('hashchange', route);
 // 초점이 iframe 밖(레일·머리글)에 있을 때도 Esc 는 같은 뜻이어야 한다. 안에서만 먹으면
 // 레일을 누른 직후에 Esc 가 안 듣고, 그건 사용자에게 고장으로 보인다.
 addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !views.editor.hidden) selection.escape();
+  if (views.editor.hidden) return;
+  if (e.key === 'Escape') return void selection.escape();
+  history.onKey(e, !!editor.active());
 });
 
 // 창 크기가 바뀌면 슬라이드 배율이 바뀌고 테두리가 어긋난다.

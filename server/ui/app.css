@@ -65,6 +65,17 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
 #topbar .back { color: var(--ui-dim); text-decoration: none; }
 #topbar .back:hover { color: var(--ui-text); }
 #deck-name { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* 되돌리기·다시하기 (결정 5). 꺼진 버튼이 "여기가 끝" 을 말한다. */
+#history { display: flex; gap: 4px; margin-left: 8px; }
+#history button {
+  width: 26px; height: 24px;
+  border: 1px solid var(--ui-line); border-radius: 4px;
+  background: none; color: var(--ui-text);
+  font-size: 13px; line-height: 1; cursor: pointer;
+}
+#history button:hover:not(:disabled) { border-color: var(--ui-accent); color: var(--ui-accent); }
+#history button:disabled { color: var(--ui-line); cursor: default; }
 #deck-sub { color: var(--ui-dim); }
 #deck-state { color: var(--ui-dim); font-size: 12px; }
 #deck-state.locked { color: var(--ui-danger); }

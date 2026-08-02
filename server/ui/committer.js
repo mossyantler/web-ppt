@@ -22,7 +22,7 @@ const REASONS = {
   'commit.cyclic-move': '자기 안으로는 옮길 수 없습니다',
 };
 
-export function createCommitter({ deckId, docHash, onNotice, onResync }) {
+export function createCommitter({ deckId, docHash, onNotice, onResync, onRings }) {
   /**
    * @param {Array} commands  명령 배열. 한 봉투는 원자 단위다 — 전부 되거나 전부 안 된다
    * @param {string} label    히스토리에 남길 이름 (되돌리기 목록에 보인다)
@@ -71,6 +71,8 @@ export function createCommitter({ deckId, docHash, onNotice, onResync }) {
 
     // 기본 경로 — 프리뷰를 다시 받지 않는다. 갈아 끼우는 것은 지문 하나뿐이다.
     docHash.set(body.currentHash);
+    // 되돌릴 것이 하나 늘었다. 그 사실이 버튼에 바로 보여야 한다 (결정 5).
+    onRings?.(body.rings);
     return { ok: true, body };
   }
 

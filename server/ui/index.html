@@ -23,6 +23,13 @@
     <a class="back" href="#/">← 목록</a>
     <span id="deck-name"></span>
     <span id="deck-sub"></span>
+
+    <!-- 되돌리기·다시하기 (결정 5). 버튼이 있으면 되돌릴 것이 남았는지 눈으로 보인다 —
+         꺼진 버튼은 "여기가 끝" 이라는 뜻이고, 그 정보는 단축키만으로는 얻을 수 없다. -->
+    <span id="history">
+      <button type="button" id="undo" title="되돌리기 (Ctrl+Z)" disabled>↶</button>
+      <button type="button" id="redo" title="다시하기 (Ctrl+Shift+Z)" disabled>↷</button>
+    </span>
     <!-- 저장 결과·거부 사유. 선택 상태(sel-state)와 자리를 나눈다 — 한 자리에 두면
          화면을 다시 받을 때 선택 표시가 사유를 덮어써서 왜 실패했는지 사라진다. -->
     <span id="notice"></span>

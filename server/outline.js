@@ -13,6 +13,7 @@
  */
 
 import { attrOf } from '../tools/harness/tree.js';
+import { ringsOf } from './commit.js';
 
 /** 고를 수 있는 노드의 종류. 나머지(인라인·구조 자식·불투명 자식)는 지목 대상이 아니다. */
 const SELECTABLE = new Set(['container', 'leaf-authored', 'leaf-opaque', 'leaf-void']);
@@ -24,6 +25,8 @@ export function outlineOf(deck) {
   return {
     deckId: deck.deckId,
     docHash: deck.docHash,
+    // 열 때의 되돌리기·다시하기 잔량 (M3-6). 이후로는 커밋 응답이 갱신해 준다.
+    rings: ringsOf(deck.deckId),
     sections: deck.sections.map((section) => sectionOutline(deck, section)),
   };
 }

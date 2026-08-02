@@ -52,6 +52,7 @@ export function applyCommit(deckId, envelope) {
       resultHash: replay.resultHash,
       currentHash: deck.docHash,
       nodeIds: {},
+      rings: ringsOf(deckId),
     });
   }
 
@@ -92,7 +93,7 @@ export function applyCommit(deckId, envelope) {
   // 명령이 아무 바이트도 바꾸지 않았다면 쓰지 않는다. 빈 커밋으로 history 링을
   // 소모하면 undo 100 회 기준(§11 M2)이 조용히 무너진다.
   if (edits.length === 0) {
-    return result({ applied: false, resultHash: deck.docHash, currentHash: deck.docHash, nodeIds });
+    return result({ applied: false, resultHash: deck.docHash, currentHash: deck.docHash, nodeIds, rings: ringsOf(deckId) });
   }
 
   let next = splicedMany(deck.raw, edits);
@@ -131,6 +132,7 @@ export function applyCommit(deckId, envelope) {
     nodeIds,
     spliceRanges: edits.map((e) => ({ start: e.start, end: e.end, text: e.text })),
     derivedRanges,
+    rings: ringsOf(deckId),
   });
 }
 
@@ -163,7 +165,12 @@ function shiftHistory(deckId, from, to, label) {
   atomicWrite(deck.path, snapshot.content);
 
   const resultHash = hashOf(snapshot.content);
-  return result({ applied: true, resultHash, currentHash: resultHash, nodeIds: {} });
+  return result({ applied: true, resultHash, currentHash: resultHash, nodeIds: {}, rings: ringsOf(deckId) });
+}
+
+/** 두 링에 남은 스냅샷 수 — 되돌리기·다시하기 버튼의 근거다. */
+export function ringsOf(deckId) {
+  return { undo: history.depth(deckId, 'edit'), redo: history.depth(deckId, 'redo') };
 }
 
 /** 섹션의 수나 순서를 바꾸는 명령. 이들이 있으면 페이지 번호가 틀어진다. */
@@ -214,11 +221,15 @@ function assertOutsideIdentical(before, after, edits) {
   }
 }
 
-function result({ applied, resultHash, currentHash, nodeIds, spliceRanges = [], derivedRanges = [] }) {
+function result({ applied, resultHash, currentHash, nodeIds, spliceRanges = [], derivedRanges = [], rings = null }) {
   return {
     applied,
     resultHash,
     currentHash,
+    // 되돌리기·다시하기가 **몇 번 남았는가** (M3-6). 화면의 두 버튼이 이것으로 켜지고
+    // 꺼진다. 응답에 실어 보내는 이유 — 커밋할 때마다 따로 물으면 왕복이 하나 늘고,
+    // 그 사이에 다른 편집이 끼면 화면이 잠깐 틀린 개수를 보인다.
+    rings,
     // 계획 §11 관측성 — 어느 구간이 splice 되었는가. 델타 경로가 틀렸을 때 어디를 봐야
     // 하는지가 이것에만 있다 (`docs/m2-reconcile-policy.md` "M2 가 지켜야 하는 것" 3항).
     // P2 매트릭스 테스트도 이 값을 쓴다 — 테스트가 구간을 다시 계산하면 같은 버그를 두 번 쓴다.
