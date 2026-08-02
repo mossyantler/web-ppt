@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html data-deck-grammar="v1" lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="{{description}}">
+<title>{{title}}</title>
+
+<!-- 저장소 공용 시트. 덱은 `_workspace/<덱>/index.html` 이므로 두 칸 위가 저장소 루트다.
+     서버의 `repo-assets.js` 허용 목록이 이 경로들을 받는다. -->
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../../slides/slides.css">
+
+<!-- 테마 시트. **이 줄이 빠지면 게이트는 통과하고 화면만 깨진다** — 문법 §2.4 결론 3 이
+     실측으로 확인한 실패다. 옛 덱들이 이 줄 없이 만들어져 있다. -->
+<link rel="stylesheet" href="../../themes/snu/theme.css">
+<link rel="stylesheet" href="../../assets/katex/katex.min.css">
+
+<!-- 이 리포트만의 토큰 재정의 (결정 2 — 색·글꼴·글자 크기).
+     설정 화면이 이 블록 하나만 다시 쓴다. 비어 있으면 테마 기본을 그대로 쓴다는 뜻이다.
+     **섹션 밖이라 규칙 4(섹션 안 `<style>` 금지)에 걸리지 않는다.** -->
+<style id="deck-tokens">{{tokens}}</style>
+
+<style>
+  html, body { margin: 0; background: var(--navy-900); }
+  a { color: var(--accent); } a:hover { color: var(--accent-hover); }
+  deck-stage .slide { width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+
+<deck-stage width="1280" height="720">
+{{sections}}
+</deck-stage>
+
+<script src="../../templates/weekly-report/deck-stage.js"></script>
+<script src="../../assets/katex/katex.min.js"></script>
+<script>
+  document.querySelectorAll('[data-tex]').forEach((element) => {
+    katex.render(element.dataset.tex, element, {
+      displayMode: element.dataset.display === 'true',
+      throwOnError: false
+    });
+  });
+</script>
+</body>
+</html>

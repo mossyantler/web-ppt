@@ -24,6 +24,7 @@ import { listDecks, deckAssetPath } from './decks.js';
 import { repoAssetPath } from './repo-assets.js';
 import { outlineOf } from './outline.js';
 import { vocabulary } from './vocabulary.js';
+import { createDeck } from './create-deck.js';
 
 /** 커밋 본문 상한. 슬라이드 하나의 재직렬화가 이보다 크면 명령이 잘못된 것이다. */
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
@@ -69,6 +70,13 @@ async function route(req, res) {
 
   if (url.pathname === '/decks' && req.method === 'GET') {
     return sendJson(res, 200, { decks: listDecks() });
+  }
+
+  // 새 리포트 만들기. **명령이 아니다** — 고칠 문서가 아직 없으므로 낙관적 락도 없다.
+  // 경로 봉쇄와 `atomicWrite` 는 그대로 지난다 (`create-deck.js`).
+  if (url.pathname === '/decks' && req.method === 'POST') {
+    const setup = JSON.parse(await readBody(req) || '{}');
+    return sendJson(res, 201, createDeck(setup));
   }
 
   // 넣을 수 있는 종류 목록 (M3-7). 테마 매핑에서 나오므로 덱과 무관하다.
