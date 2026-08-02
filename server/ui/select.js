@@ -34,7 +34,7 @@ const LABELS = {
   sequence: '흐름', canvas: '자유 배치', region: '영역',
 };
 
-export function createSelection({ stage, layer, onStatus, onActivate, editing, actions }) {
+export function createSelection({ stage, layer, onStatus, onActivate, editing, actions, isBlocked }) {
   /** nodeId → { kind, value, edit, parentId, sectionIndex } */
   const index = new Map();
   /**
@@ -112,6 +112,9 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
     const active = editing?.active();
     if (active?.contains(e.target)) return;
     if (active) editing.end();
+
+    // 문법이 모르는 자리다 — 고를 수 없고, 왜인지만 말한다 (결정 13).
+    if (isBlocked?.(e.target)) return clear();
 
     const hit = resolve(e.target);
     if (!hit) return clear();

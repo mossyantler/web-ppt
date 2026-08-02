@@ -20,6 +20,7 @@ import { createDrag } from './drag.js';
 import { createHistory } from './history.js';
 import { createStructure } from './structure.js';
 import { createOpaque } from './opaque.js';
+import { createBlocked } from './blocked.js';
 import { createAdopt } from './adopt.js';
 
 const views = {
@@ -86,7 +87,7 @@ const editor = createEditor({
   commit: committer,
   onStatus: showSelectionState,
   onNotice: showNotice,
-  onReflow: () => selection.place(),
+  onReflow: () => { selection.place(); blocked.place(); },
 });
 
 const reorder = createReorder({
@@ -97,6 +98,12 @@ const reorder = createReorder({
   onMoved: () => selection.place(),
   // 슬라이드 순서가 바뀌면 페이지 번호가 문서 전체에서 다시 매겨진다. 델타로 못 따라간다.
   onResync: (slide) => showEditor(open.deckId, slide),
+});
+
+const blocked = createBlocked({
+  stage,
+  layer: overlay,
+  onNotice: showNotice,
 });
 
 const opaque = createOpaque({
@@ -151,6 +158,8 @@ const selection = createSelection({
     else opaque.begin(nodeId, info);
   },
   editing: editor,
+  // 잠긴 자리를 눌렀는가. 그렇다면 선택을 만들지 않고 이유만 말한다 (결정 13).
+  isBlocked: (target) => blocked.claim(target),
   // 버튼바가 부르는 것들 — 옮기기·넣기·지우기가 한 자리에 모인다.
   actions: {
     canMove: reorder.canMove,
@@ -351,6 +360,7 @@ function mountStage(outline, startSlide = 0, selectId = null) {
     // 저장의 근거가 되는 지문이다. 목차와 슬라이드를 같은 파일에서 받았으므로 맞는다.
     open.docHash = outline.docHash;
     history.update(outline.rings);
+    blocked.load(outline);
     selection.load(outline);
     // 끌기가 선택보다 **먼저** 붙는다 — 끌기 뒤에 오는 click 을 삼켜야 하기 때문이다.
     drag.bind(doc);
@@ -359,6 +369,7 @@ function mountStage(outline, startSlide = 0, selectId = null) {
     // 뒤에는 단축키가 안 듣는다 — 사용자에게는 그것이 고장으로 보인다.
     doc.addEventListener('keydown', (e) => history.onKey(e, !!editor.active()), true);
     selection.setSlide(startSlide);
+    blocked.setSlide(startSlide);
     // 방금 넣은 요소를 골라 둔다. 눈으로 찾게 하지 않는 것이 목적이다.
     if (selectId) selection.pick(selectId);
   } else {
@@ -369,7 +380,10 @@ function mountStage(outline, startSlide = 0, selectId = null) {
   el?.addEventListener('slidechange', (e) => {
     select(e.detail.index);
     // 안 보이는 요소를 고른 채로 두면 다음 명령이 엉뚱한 장으로 간다.
-    if (outline) selection.setSlide(e.detail.index);
+    if (outline) {
+      selection.setSlide(e.detail.index);
+      blocked.setSlide(e.detail.index);
+    }
   });
 }
 
@@ -469,6 +483,7 @@ function goTo(el, sections, i) {
   select(i);
   // `slidechange` 를 내지 않는 덱도 있다. 두 번 불려도 하는 일은 같다(선택 해제).
   selection.setSlide(i);
+  blocked.setSlide(i);
 }
 
 function select(i) {
@@ -530,6 +545,6 @@ addEventListener('keydown', (e) => {
 });
 
 // 창 크기가 바뀌면 슬라이드 배율이 바뀌고 테두리가 어긋난다.
-addEventListener('resize', () => selection.place());
+addEventListener('resize', () => { selection.place(); blocked.place(); });
 
 route();

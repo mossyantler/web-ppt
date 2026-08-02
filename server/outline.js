@@ -113,6 +113,23 @@ function editCommandFor(deck, node) {
  */
 function blockersIn(root) {
   const out = [];
+
+  /**
+   * 화면이 이 노드를 DOM 에서 다시 찾는 방법.
+   *
+   * 이름표가 없으니 id 로는 못 찾는다. 줄 번호는 사람에게는 쓸모 있지만 DOM 에는 없다.
+   * 그래서 **섹션 루트부터의 요소 자식 순번**을 준다 — 화면은 `children[i].children[j]`
+   * 로 따라 내려가면 되고, 그 셈은 서버 트리와 DOM 이 같다.
+   */
+  const pathOf = (node) => {
+    const path = [];
+    for (let n = node; n && n !== root; n = n.parent) {
+      const siblings = (n.parent?.children ?? []).filter((c) => c.isElement || c.kind === 'synthesized');
+      path.unshift(siblings.indexOf(n));
+    }
+    return path;
+  };
+
   root.walk((node) => {
     if (node.kind === 'unknown-element') {
       out.push({
@@ -123,6 +140,7 @@ function blockersIn(root) {
         classes: node.classes ?? [],
         declared: node.declared?.el ?? node.declared?.box ?? null,
         line: node.loc?.line ?? null,
+        path: pathOf(node),
       });
       return;
     }
@@ -134,6 +152,7 @@ function blockersIn(root) {
         classes: node.classes ?? [],
         declared: node.value ?? null,
         line: node.loc?.line ?? null,
+        path: pathOf(node),
       });
     }
   });
