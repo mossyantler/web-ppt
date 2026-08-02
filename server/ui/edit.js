@@ -32,10 +32,8 @@ export function createEditor({ stage, commit, onStatus, onNotice, onReflow }) {
 
     // 불투명 리프(수식·진행바)는 보이는 것이 기계가 그린 결과다. 커서를 넣으면
     // 사용자가 그 결과를 고치게 되고, 그건 저장할 수 없는 편집이다 (§3.2 L2).
-    if (info.edit !== 'setContent') {
-      onNotice?.({ kind: 'blocked', text: '이 요소는 전용 편집기가 필요합니다 (수식·진행바는 M3-8)' });
-      return;
-    }
+    // 그 둘은 `opaque.js` 의 전용 편집기가 받는다 (결정 8).
+    if (info.edit !== 'setContent') return;
 
     current = { nodeId, el, payload: payloadOf(el), dom: el.innerHTML };
 

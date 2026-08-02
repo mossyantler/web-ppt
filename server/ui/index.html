@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <title>주간 리포트 편집기</title>
 <link rel="stylesheet" href="/app.css">
+
+<!-- 수식 미리보기용. 슬라이드 안에도 KaTeX 가 있지만 그건 iframe 안이고, 미리보기는
+     편집기 쪽(부모 문서)에 그려야 입력칸 바로 아래에 붙는다 (결정 8). 같은 파일을
+     두 문서가 각자 받는다 — 저장소 공용 자산이라 서버가 이미 내주고 있다. -->
+<link rel="stylesheet" href="/assets/katex/katex.min.css">
+<script defer src="/assets/katex/katex.min.js"></script>
 </head>
 <body>
 

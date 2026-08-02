@@ -19,6 +19,7 @@ import { createReorder } from './reorder.js';
 import { createDrag } from './drag.js';
 import { createHistory } from './history.js';
 import { createStructure } from './structure.js';
+import { createOpaque } from './opaque.js';
 
 const views = {
   decks: document.getElementById('view-decks'),
@@ -92,6 +93,14 @@ const reorder = createReorder({
   onResync: (slide) => showEditor(open.deckId, slide),
 });
 
+const opaque = createOpaque({
+  stage,
+  layer: overlay,
+  commit: committer,
+  onNotice: showNotice,
+  onDone: () => selection.refresh(),
+});
+
 const structure = createStructure({
   stage,
   commit: committer,
@@ -116,8 +125,12 @@ const selection = createSelection({
   stage,
   layer: overlay,
   onStatus: showSelectionState,
-  // 리프를 또 누른 것 = 글자를 고치겠다는 뜻이다 (결정 2).
-  onActivate: (nodeId, info, point) => editor.begin(nodeId, info, point),
+  // 리프를 또 누른 것 = 고치겠다는 뜻이다 (결정 2). 무엇으로 고치는지는 종류가 정한다 —
+  // 수식·진행바는 전용 편집기가 열리고(결정 8), 나머지는 커서가 들어간다.
+  onActivate: (nodeId, info, point) => {
+    if (info.edit === 'setContent') editor.begin(nodeId, info, point);
+    else opaque.begin(nodeId, info);
+  },
   editing: editor,
   // 버튼바가 부르는 것들 — 옮기기·넣기·지우기가 한 자리에 모인다.
   actions: {
