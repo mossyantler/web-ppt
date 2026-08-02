@@ -104,9 +104,16 @@ test('색·글꼴·글자 크기가 이 리포트만의 토큰으로 들어간�
   });
 
   const raw = read(deckId);
-  assert.match(raw, /<style id="deck-tokens">[\s\S]*--brand-main: #003876;[\s\S]*<\/style>/);
-  assert.match(raw, /--brand-sub: #0f9d8f;/);
+  // **이름을 지어내지 않는다** — 여기 있는 것은 `tokens/*.css` 가 정의하고
+  // `slides/slides.css` 가 실제로 읽는 이름들이다. 아무도 안 읽는 이름을 쓰면
+  // 색을 골라도 화면이 그대로다.
+  assert.match(raw, /<style id="deck-tokens">[\s\S]*--accent: #003876;[\s\S]*<\/style>/);
+  assert.match(raw, /--text-accent: #003876;/);
+  assert.match(raw, /--accent-2: #0f9d8f;/);
+  assert.match(raw, /--font-sans: 'Pretendard', sans-serif;/);
   assert.match(raw, /--text-body: 21px;/);
+  // 흐리게·눌림은 고르게 하지 않고 섞어 만든다.
+  assert.match(raw, /--accent-hover: color-mix\(in srgb, #003876 82%, black\);/);
 });
 
 test('설정을 안 주면 빈 토큰 블록이 남는다 — 나중에 다시 쓸 자리다', async () => {

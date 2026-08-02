@@ -26,7 +26,10 @@ const mapping = loadMapping();
 
 const HTML = `<!DOCTYPE html>
 <html data-deck-grammar="v1" lang="ko">
-<head><meta charset="utf-8"></head>
+<head><meta charset="utf-8">
+<!-- 리포트별 토큰 자리 — setDeckTokens 가 이 안쪽만 바꾼다 (결정 2) -->
+<style id="deck-tokens"></style>
+</head>
 <body>
 <section data-slide data-variant="default" data-slide-kind="content" data-node-id="n1" class="slide">
   <!-- 구간 밖 주석 -->
@@ -105,6 +108,8 @@ const MATRIX = [
   ['setChildContent', { target: 'nc', args: { index: 0, html: '고침' } }],
   ['moveSection', { target: 'n1', args: { index: 1 } }],
   ['renumberPages', {}],
+  // 문서 명령 — 노드가 아니라 `<head>` 의 토큰 블록 한 구간을 바꾼다 (결정 2).
+  ['setDeckTokens', { args: { mainColor: '#0f766e' } }],
   // 이름표 붙이기도 명령이다 (M3-9). 이 픽스처는 이미 전부 이름표가 붙어 있으므로
   // 붙일 것을 하나 만들어 준다 — 아래 `beforeEach` 가 `MATRIX_EXTRA` 를 본다.
   ['adoptSlide', { args: { section: 3 } }],

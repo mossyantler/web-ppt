@@ -28,6 +28,7 @@ import { loadMapping } from '../tools/harness/mapping.js';
 import { atomicWrite } from './atomic.js';
 import { DocError } from './doc.js';
 import { workspaceRoot, deckPath, assertInsideWorkspace } from './paths.js';
+import { tokensBlock } from './deck-tokens.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const themeRoot = (theme) => join(HERE, '..', 'themes', theme);
@@ -176,36 +177,6 @@ function fillCover(section, setup) {
 
 function escapeText(value) {
   return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-/**
- * 이 리포트만의 토큰 재정의 (결정 2).
- *
- * **비어 있으면 빈 블록을 남긴다.** 설정 화면이 나중에 여기를 다시 쓰려면 자리가 있어야
- * 하고, 자리가 없으면 `<head>` 를 파싱해 끼워 넣어야 한다 — 그건 문서 구조를 건드리는 일이다.
- */
-function tokensBlock(setup) {
-  const rules = [];
-  if (setup.mainColor) rules.push(`  --brand-main: ${cssValue(setup.mainColor)};`);
-  if (setup.subColor) rules.push(`  --brand-sub: ${cssValue(setup.subColor)};`);
-  if (setup.font) rules.push(`  --font-sans: ${cssValue(setup.font)};`);
-  if (setup.bodySize) rules.push(`  --text-body: ${cssValue(setup.bodySize)};`);
-
-  return rules.length ? `\n:root {\n${rules.join('\n')}\n}\n` : '';
-}
-
-/**
- * 토큰 값에 들어갈 수 없는 문자를 막는다.
- *
- * 이 값은 `<style>` 안으로 그대로 들어간다. `}` 하나면 규칙을 닫고 새 규칙을 여는 것이
- * 되고, 그 순간 설정 화면이 문서 전체의 스타일을 쓰는 통로가 된다.
- */
-function cssValue(value) {
-  const text = String(value).trim();
-  if (/[{}<>;@]/.test(text) || text.length > 120) {
-    throw new DocError(422, `토큰 값에 쓸 수 없는 문자가 있다: ${text}`, { code: 'create.bad-token' });
-  }
-  return text;
 }
 
 /** `{{이름}}` 을 값으로 바꾼다. 값에 `{{` 가 있어도 두 번 치환되지 않게 한 번에 훑는다. */

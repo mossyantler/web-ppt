@@ -33,6 +33,7 @@ import './structure-commands.js';
 import './content-commands.js';
 import './child-commands.js';
 import './section-commands.js';
+import './token-commands.js';
 import './adopt-command.js';
 
 /**

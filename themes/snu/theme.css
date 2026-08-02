@@ -81,3 +81,14 @@
   align-self: center;
   margin-right: var(--space-3);
 }
+
+/* --- 서브 색 `--accent-2` — 결정 2 (2026-08-03 신설) -------------------
+ *
+ * 설정에서 고른 두 번째 색이 **읽히는 자리**다. 역할이 없으면 색을 골라도 화면이 그대로이고,
+ * 그건 설정이 먹은 것처럼 보이는데 아무 일도 안 하는 실패다.
+ *
+ * 두 자리에 준다 — 표지의 밑줄과 머리말(kicker). 둘 다 강조의 두 번째 층이고, 본문 색을
+ * 건드리지 않아 대비가 무너지지 않는다. 안 고르면 `--accent`(메인 색)로 되돌아간다.
+ */
+.title-rule { background: var(--accent-2, var(--accent)); }
+.kicker { color: var(--accent-2, var(--accent)); }
