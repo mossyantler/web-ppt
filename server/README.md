@@ -25,6 +25,14 @@ npm test
 
 구조 명령은 슬라이드 전체를 재직렬화하므로 섹션 **안**의 주석이 splice 구간 **안**에 들어온다. P2 의 보호를 받지 못하고 G1 이 유일한 방어선이다 (계획 3판 F-5ⓐ). `server/g1-adversarial.test.js` 가 `fixtures/adversarial/*` 로 이를 직접 잰다.
 
+## 목차 — 화면이 어휘를 다시 구현하지 않게 하는 장치
+
+`GET /deck/:id/outline` 은 섹션마다 **지목 가능한 노드**를 트리로 준다. 노드마다 종류(`kind`)·어휘 값(`value`)·내용 편집 명령(`edit`)이 붙는다.
+
+편집 화면은 iframe 안 DOM 에서 `data-node-id` 하나만 읽고, 그 id 가 카드인지 진행바인지·고칠 수 있는지는 전부 이 응답에서 얻는다. **클래스 이름으로 종류를 알아내는 코드가 브라우저에 생기면 그것이 두 번째 어휘 구현**이고, `doc.js` 가 파서에 대해 막아 둔 실패(게이트가 재는 트리와 화면이 고르는 트리가 갈라진다)가 그대로 재현된다.
+
+`annotated` 와 `blockers` 는 다른 것을 잰다 — 앞은 "섹션 자신을 명령이 지목할 수 있는가", 뒤는 "그 안에 어휘 밖 노드가 있는가"다. 둘을 하나의 `editable` 로 합치지 않는다: **어디까지 잠글지는 UX 정책(M3-9)**이고, 합치면 정책이 바뀔 때마다 응답의 뜻이 바뀐다. (이름표를 갓 붙인 W31 은 13 개 섹션 전부가 이름표를 갖고 그중 12 개가 어휘 밖 노드를 갖는다. "하나라도 있으면 잠근다" 로 합치면 편집 가능한 슬라이드가 1 장이 된다.)
+
 ## 신뢰 경계
 
 | 경계 | 파일 | 규칙 |
@@ -84,7 +92,8 @@ _workspace/<deck>/.history/redo/   undo 가 되돌리기 전 (200)
 
 | 파일 | 역할 |
 |---|---|
-| `index.js` | HTTP. `POST /deck/:id/commit`·`/undo`·`/redo`, `GET /deck/:id` |
+| `index.js` | HTTP. `POST /deck/:id/commit`·`/undo`·`/redo`, `GET /deck/:id`·`/outline`·`/page`, `GET /decks`, 편집기 화면 |
+| `outline.js` | `GET /deck/:id/outline` — 화면이 "무엇을 고를 수 있는가" 를 묻는 읽기 전용 목차 |
 | `commit.js` | 파이프라인. 순서가 계약이다 |
 | `commands.js` | 레지스트리. 미등록 op 는 422 — 조용한 무시 없음 |
 | `doc.js` | 저작 트리 적재 + `nodeId` 인덱스 |

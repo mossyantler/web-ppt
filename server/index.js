@@ -22,6 +22,7 @@ import { loadDeck, DocError } from './doc.js';
 import { PathError } from './paths.js';
 import { listDecks, deckAssetPath } from './decks.js';
 import { repoAssetPath } from './repo-assets.js';
+import { outlineOf } from './outline.js';
 
 /** 커밋 본문 상한. 슬라이드 하나의 재직렬화가 이보다 크면 명령이 잘못된 것이다. */
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
@@ -82,6 +83,16 @@ async function route(req, res) {
   if (page && req.method === 'GET') {
     const deck = loadDeck(decodeURIComponent(page[1]));
     return sendHtml(res, deck.raw);
+  }
+
+  // 캔버스가 "무엇을 고를 수 있는가" 를 묻는 자리 (M3-3). 읽기 전용이다.
+  //
+  // 화면은 iframe 안 DOM 에서 `data-node-id` 만 읽고 그 id 의 뜻은 여기서 받는다.
+  // 어휘 판정이 브라우저로 복제되면 게이트가 재는 트리와 화면이 고르는 트리가 갈라진다.
+  const outline = url.pathname.match(/^\/deck\/([^/]+)\/outline$/);
+  if (outline && req.method === 'GET') {
+    const deck = loadDeck(decodeURIComponent(outline[1]));
+    return sendJson(res, 200, outlineOf(deck));
   }
 
   // 슬라이드가 참조하는 그림·글꼴. 덱 안의 파일만 나가고 봉쇄는 `deckAssetPath` 가 한다.

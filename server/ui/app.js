@@ -12,6 +12,8 @@
  * 둘 다 화면 상태이지 문서 상태가 아니다. 저장 경로와 만나지 않는다.
  */
 
+import { createSelection } from './select.js';
+
 const views = {
   decks: document.getElementById('view-decks'),
   editor: document.getElementById('view-editor'),
@@ -23,9 +25,28 @@ const stage = document.getElementById('stage');
 const deckName = document.getElementById('deck-name');
 const deckSub = document.getElementById('deck-sub');
 const deckState = document.getElementById('deck-state');
+const selState = document.getElementById('sel-state');
+const overlay = document.getElementById('overlay');
 
 /** 목록을 화면 사이에서 재사용한다 — 편집 화면의 머리글도 여기서 이름을 얻는다. */
 let decksCache = null;
+
+/**
+ * 선택 계층. 화면 하나에 하나뿐이고 리포트를 옮겨 다녀도 살아 있다 — 겹침 층과
+ * 이벤트 처리기를 리포트마다 새로 만들면 옛 iframe 에 붙은 처리기가 남는다.
+ */
+const selection = createSelection({
+  stage,
+  layer: overlay,
+  onStatus: showSelectionState,
+  // 리프를 또 누른 것 = 글자를 고치겠다는 뜻이다. 실제 편집은 M3-4 에서 여기 붙는다.
+  onActivate: () => {},
+});
+
+function showSelectionState(state) {
+  selState.textContent = state.text;
+  selState.classList.toggle('locked', state.kind === 'locked');
+}
 
 async function decks() {
   if (!decksCache) decksCache = (await (await fetch('/decks')).json()).decks;
@@ -38,6 +59,7 @@ async function showDeckList() {
   views.decks.hidden = false;
   views.editor.hidden = true;
   stage.removeAttribute('src');       // 목록으로 나오면 슬라이드를 내려놓는다
+  selection.clear();
 
   const items = await decks();
   list.removeAttribute('aria-busy');
@@ -98,10 +120,17 @@ async function showEditor(deckId) {
   deckState.textContent = info && !info.annotated ? '편집 불가 — 문법 선언 없음' : '';
 
   rail.replaceChildren(note('여는 중…'));
+  selection.clear();
+
+  // 목차를 슬라이드와 **함께** 받는다. 목차 없이 뜬 화면은 클릭이 먹지 않는 화면이고,
+  // 사용자에게는 그것이 고장과 구별되지 않는다.
+  const outline = fetch(`/deck/${encodeURIComponent(deckId)}/outline`)
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null);
 
   // 슬라이드는 원본 그대로 띄운다. 편집 표시는 이 바깥(부모 문서)이 얹는다.
   stage.src = `/deck/${encodeURIComponent(deckId)}/page`;
-  stage.onload = () => mountStage(deckId);
+  stage.onload = async () => mountStage(await outline);
 }
 
 function note(text) {
@@ -119,7 +148,7 @@ function note(text) {
  * 순서 바꾸기·추가·삭제가 앞으로 이 레일에 붙고, 그 조작들은 전부 서버 명령이라
  * 덱이 내장한 레일과 규칙이 다르다. 둘이 같이 뜨면 어느 쪽이 진짜인지 알 수 없다.
  */
-function mountStage(deckId) {
+function mountStage(outline) {
   const doc = stage.contentDocument;
   const sections = [...doc.querySelectorAll('section')];
 
@@ -158,8 +187,22 @@ function mountStage(deckId) {
   rail.replaceChildren(...items);
   select(0);
 
+  // 클릭으로 요소를 고를 수 있게 만드는 자리. 목차를 못 받았으면 붙이지 않는다 —
+  // 붙여 두면 클릭이 아무 일도 하지 않고, 사용자는 왜인지 알 방법이 없다.
+  if (outline) {
+    selection.load(outline);
+    selection.bind(doc);
+    selection.setSlide(0);
+  } else {
+    showSelectionState({ kind: 'locked', text: '목차를 받지 못했습니다 — 고르기가 꺼져 있습니다' });
+  }
+
   // 캔버스 쪽에서 장이 바뀌어도(키보드 ←/→) 레일 표시가 따라간다.
-  el?.addEventListener('slidechange', (e) => select(e.detail.index));
+  el?.addEventListener('slidechange', (e) => {
+    select(e.detail.index);
+    // 안 보이는 요소를 고른 채로 두면 다음 명령이 엉뚱한 장으로 간다.
+    if (outline) selection.setSlide(e.detail.index);
+  });
 }
 
 /**
@@ -191,6 +234,8 @@ function goTo(el, sections, i) {
   if (el?.goTo) el.goTo(i);
   else sections[i].scrollIntoView({ block: 'start' });
   select(i);
+  // `slidechange` 를 내지 않는 덱도 있다. 두 번 불려도 하는 일은 같다(선택 해제).
+  selection.setSlide(i);
 }
 
 function select(i) {
@@ -208,4 +253,14 @@ function route() {
 }
 
 addEventListener('hashchange', route);
+
+// 초점이 iframe 밖(레일·머리글)에 있을 때도 Esc 는 같은 뜻이어야 한다. 안에서만 먹으면
+// 레일을 누른 직후에 Esc 가 안 듣고, 그건 사용자에게 고장으로 보인다.
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !views.editor.hidden) selection.escape();
+});
+
+// 창 크기가 바뀌면 슬라이드 배율이 바뀌고 테두리가 어긋난다.
+addEventListener('resize', () => selection.place());
+
 route();

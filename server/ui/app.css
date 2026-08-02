@@ -66,7 +66,7 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
 #topbar .back:hover { color: var(--ui-text); }
 #deck-name { font-weight: 600; font-variant-numeric: tabular-nums; }
 #deck-sub { color: var(--ui-dim); }
-#deck-state { margin-left: auto; color: var(--ui-dim); font-size: 12px; }
+#deck-state { color: var(--ui-dim); font-size: 12px; }
 #deck-state.locked { color: var(--ui-danger); }
 
 #editor-body { flex: 1; min-height: 0; display: flex; }
@@ -93,8 +93,47 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
                 font-size: 12px; min-width: 1.6em; text-align: right; flex: none; }
 .rail-item .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-#canvas { flex: 1; min-width: 0; display: flex; }
+#canvas { flex: 1; min-width: 0; display: flex; position: relative; }
 #stage { flex: 1; border: 0; background: #0f1115; }
+
+/* ----------------------------------------------------------- 선택 표시 (M3-3)
+ *
+ * 테두리·이름표는 슬라이드 **위에 겹친 층**에 그린다. 슬라이드 DOM 에 클래스를
+ * 넣으면 편집기 표시가 문서의 일부가 되고, 그 문서가 저장 대상이다.
+ *
+ * 층 전체가 클릭을 통과시킨다 — 통과하지 않으면 슬라이드를 아예 누를 수 없다.
+ */
+#overlay { position: absolute; inset: 0; pointer-events: none; }
+#overlay > * { position: absolute; top: 0; left: 0; }
+#overlay > [hidden] { display: none; }
+
+.sel-ring {
+  border: 2px solid var(--ui-accent);
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px #0008;
+}
+
+/* 들어가 있는 묶음. 파선으로 "여기 안을 고르는 중" 을 보인다. */
+.sel-group {
+  border: 1px dashed var(--ui-accent);
+  border-radius: 4px;
+  opacity: 0.55;
+}
+
+.sel-tag {
+  padding: 1px 7px;
+  border-radius: 3px 3px 0 0;
+  background: var(--ui-accent);
+  color: #fff;
+  font-size: 11px; line-height: 18px;
+  white-space: nowrap;
+}
+/* 불투명 리프(수식·진행바)는 고치는 방법이 다르다. 고르는 순간부터 달라 보여야 한다. */
+.sel-tag.opaque { background: #a855f7; }
+
+/* 선택 표시가 오른쪽 끝을 잡고, 잠금 표시가 그 뒤에 붙는다. */
+#sel-state { margin-left: auto; color: var(--ui-text); font-size: 12px; }
+#sel-state.locked { color: var(--ui-danger); }
 
 /* 아직 못 그린 상태를 빈 화면으로 두지 않는다 — 로딩과 고장이 구별되어야 한다. */
 .rail-note { color: var(--ui-dim); padding: 10px; font-size: 13px; }

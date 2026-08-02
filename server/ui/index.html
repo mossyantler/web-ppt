@@ -23,6 +23,7 @@
     <a class="back" href="#/">← 목록</a>
     <span id="deck-name"></span>
     <span id="deck-sub"></span>
+    <span id="sel-state"></span>
     <span id="deck-state"></span>
   </header>
   <div id="editor-body">
@@ -31,6 +32,11 @@
       <!-- 슬라이드 원본을 그대로 띄운다. 편집기 CSS 와 덱 테마가 한 문서에서 섞이면
            테마를 갈았을 때 편집기가 같이 깨지므로, 경계를 iframe 으로 못 박는다. -->
       <iframe id="stage" title="슬라이드"></iframe>
+
+      <!-- 선택 테두리와 이름표가 그려지는 층. iframe **위**에 겹친다 —
+           슬라이드 DOM 에 표시를 넣지 않겠다는 약속이 이 한 겹으로 지켜진다.
+           클릭은 이 층을 그대로 통과해 슬라이드로 간다 (pointer-events: none). -->
+      <div id="overlay" aria-hidden="true"></div>
     </div>
   </div>
 </section>
