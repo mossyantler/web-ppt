@@ -1,0 +1,106 @@
+/* 이 파일은 만들어진 것이다. 손으로 고치지 마세요.
+ * 원본: themes/snu/DESIGN.md
+ * 다시 만들기: node tools/design/index.js snu
+ */
+:root {
+  --font-sans: 'Pretendard', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;  /* 본문·제목 */
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', 'D2Coding', ui-monospace, monospace;  /* 숫자·단위·날짜·코드 */
+  --text-hero: 64px;  /* 표지 제목 */
+  --text-display: 44px;  /* 슬라이드 제목 */
+  --text-title: 30px;  /* 구역·블록 제목 */
+  --text-lead: 22px;  /* 도입 문단 */
+  --text-body: 19px;  /* 본문 */
+  --text-small: 16px;  /* 보조 */
+  --text-caption: 14px;  /* 캡션·각주 */
+  --text-kicker: 13px;  /* 머리말 */
+  --text-metric: 52px;  /* 큰 수치 (KPI) */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;  /* 표지 제목 */
+  --leading-tight: 1.12;  /* 큰 제목 */
+  --leading-snug: 1.28;  /* 제목 */
+  --leading-normal: 1.5;  /* 본문 */
+  --leading-relaxed: 1.65;  /* 긴 문단·코드 */
+  --tracking-kicker: 0.14em;  /* 머리말은 벌려 쓴다 */
+  --tracking-tight: -0.01em;  /* 큰 글자는 좁혀야 뭉치지 않는다 */
+  --tracking-normal: 0;
+  --navy-900: #001b3a;  /* 가장 어두운 바탕 */
+  --navy-800: #002a5c;  /* 어두운 바탕 위 카드 */
+  --navy-700: #003876;  /* 브랜드 앵커 */
+  --navy-600: #0a4a8f;
+  --navy-500: #1f63ad;
+  --navy-400: #4d84c4;
+  --navy-300: #8bb0dc;  /* 어두운 바탕의 흐린 글자 */
+  --navy-200: #c2d8ee;
+  --navy-100: #e6eff8;  /* 연한 강조 배경 */
+  --navy-50: #f4f8fc;
+  --slate-900: #14181f;  /* 가장 진한 글자 */
+  --slate-800: #1f2530;
+  --slate-700: #333b48;  /* 본문 글자 */
+  --slate-600: #4b5563;
+  --slate-500: #6b7280;  /* 흐린 글자 */
+  --slate-400: #9aa3b0;  /* 더 흐린 글자 */
+  --slate-300: #c9cfd8;  /* 기본 선 */
+  --slate-200: #e2e6ec;  /* 옅은 선 */
+  --slate-100: #eef1f5;
+  --slate-50: #f7f8fa;  /* 옅은 바탕 */
+  --white: #ffffff;
+  --green: #1f8a5b;  /* 완료 · on track */
+  --green-soft: #e4f4ec;
+  --amber: #b5791a;  /* 진행 중 · at risk */
+  --amber-soft: #fbf1dc;
+  --red: #c0392b;  /* 블로커 · delayed */
+  --red-soft: #fbe7e4;
+  --teal: #0f7b8a;  /* 정보 */
+  --teal-soft: #e2f2f4;
+  --text-strong: var(--slate-900);  /* 제목 */
+  --text-default: var(--slate-700);  /* 본문 */
+  --text-muted: var(--slate-500);  /* 보조 */
+  --text-faint: var(--slate-400);  /* 더 흐리게 */
+  --text-inverse: var(--white);  /* 어두운 바탕 위 */
+  --text-accent: var(--navy-700);  /* 강조 글자 */
+  --surface-page: var(--white);  /* 슬라이드 바탕 */
+  --surface-subtle: var(--slate-50);  /* 옅은 바탕 */
+  --surface-card: var(--white);  /* 카드 바탕 */
+  --surface-accent: var(--navy-700);  /* 강조 바탕 */
+  --surface-accent-soft: var(--navy-100);  /* 연한 강조 바탕 */
+  --border-subtle: var(--slate-200);  /* 옅은 선 */
+  --border-default: var(--slate-300);  /* 기본 선 */
+  --border-accent: var(--navy-700);  /* 강조 선 */
+  --accent: var(--navy-700);  /* 강조 */
+  --accent-soft: var(--navy-100);  /* 연한 강조 */
+  --accent-hover: var(--navy-800);  /* 눌렀을 때 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-5: 20px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --slide-w: 1280px;
+  --slide-h: 720px;
+  --slide-pad-x: 72px;  /* 좌우 여백 */
+  --slide-pad-y: 56px;  /* 상하 여백 */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;  /* 막대·알약 */
+  --shadow-card: 0 2px 8px rgba(20, 24, 31, 0.07), 0 1px 2px rgba(20, 24, 31, 0.05);  /* 카드 */
+  --border-hairline: 1px solid var(--border-subtle);  /* 머리·꼬리 구분선 */
+  --border-line: 1px solid var(--border-default);  /* 기본 선 */
+  --rule-accent: 3px solid var(--accent);  /* 표지 밑줄 */
+  --shadow-sm: 0 1px 2px rgba(20, 24, 31, 0.06);
+  --shadow-md: 0 2px 8px rgba(20, 24, 31, 0.07), 0 1px 2px rgba(20, 24, 31, 0.05);
+  --shadow-lg: 0 8px 28px rgba(20, 24, 31, 0.10);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 140ms;
+  --dur-base: 240ms;
+}

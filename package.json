@@ -8,7 +8,8 @@
     "harness": "node tools/harness/index.js",
     "adopt": "node tools/adopt/index.js",
     "serve": "node server/index.js",
-    "test": "node --test tools/**/*.test.js server/*.test.js"
+    "test": "node --test tools/**/*.test.js server/*.test.js",
+    "design": "node tools/design/index.js"
   },
   "dependencies": {
     "parse5": "^7.2.1"

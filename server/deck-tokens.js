@@ -44,9 +44,10 @@ export function tokensBlock(setup = {}) {
       `  --text-accent: ${main};`,
       `  --surface-accent: ${main};`,
       `  --border-accent: ${main};`,
-      // 검정·흰색과 섞어 만든다 — 고를 것을 늘리지 않고도 눌림·연한 배경이 따라온다.
+      // 눌렀을 때 색은 고르게 하지 않고 섞어 만든다 — 색을 다섯 개 고르게 하면
+      // 그중 하나는 반드시 어긋난다. `--accent-soft` 는 넣지 않는다: 지금 테마에서
+      // **아무도 읽지 않는 이름**이고, 안 읽히는 값을 쓰는 것은 먹은 척하는 설정이다.
       `  --accent-hover: color-mix(in srgb, ${main} 82%, black);`,
-      `  --accent-soft: color-mix(in srgb, ${main} 12%, white);`,
     );
   }
   if (setup.subColor) rules.push(`  --accent-2: ${cssValue(setup.subColor)};`);
