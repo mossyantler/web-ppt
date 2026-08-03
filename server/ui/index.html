@@ -19,8 +19,54 @@
 <section id="view-decks" class="view">
   <div class="pad">
     <h1>주간 리포트 편집기</h1>
-    <p class="hint">리포트를 고르세요.</p>
+    <p class="hint">리포트를 고르거나 새로 만드세요.</p>
+    <button type="button" id="new-deck">＋ 새 리포트</button>
     <ul id="deck-list" aria-busy="true"></ul>
+  </div>
+</section>
+
+<!-- 새 리포트 설정 = 프레젠테이션 마스터 (명세 결정 3).
+     내용 슬라이드를 고르는 화면이 아니다 — 틀을 먼저 잡고 시작한다. -->
+<section id="view-setup" class="view" hidden>
+  <div class="pad">
+    <h1>새 리포트</h1>
+    <p class="hint">틀을 먼저 정합니다. 나중에 편집기에서 다 바꿀 수 있습니다.</p>
+
+    <form id="setup-form">
+      <fieldset>
+        <legend>머리글 · 꼬리글</legend>
+        <label>랩 이름 <input name="lab" placeholder="Flow Physics & Informatics Lab"></label>
+        <label>소속 <input name="department" placeholder="건설환경도시공학부"></label>
+        <label>주차 <input name="week" placeholder="2026 · W32"></label>
+        <label>날짜 <input name="date" type="date"></label>
+        <label>발표자 <input name="presenter" placeholder="장민엽"></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>표지</legend>
+        <label>제목 <input name="title" placeholder="2026 W32 주간 보고"></label>
+        <label>부제 <input name="subtitle" placeholder="지난주 요약 · 진행 상황 · 다음 계획"></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>디자인</legend>
+        <label>메인 색 <input name="mainColor" type="color" value="#003876"></label>
+        <label>서브 색 <input name="subColor" type="color" value="#0f766e"></label>
+        <label>본문 글자 크기 <input name="bodySize" type="number" min="14" max="32" value="19"></label>
+        <label>배경
+          <select name="bg">
+            <option value="light">밝은 바탕</option>
+            <option value="dark">어두운 바탕</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <div class="setup-actions">
+        <button type="submit" id="setup-make">만들기</button>
+        <a class="back" href="#/">취소</a>
+      </div>
+      <p id="setup-error"></p>
+    </form>
   </div>
 </section>
 

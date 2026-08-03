@@ -21,10 +21,12 @@ import { createHistory } from './history.js';
 import { createStructure } from './structure.js';
 import { createOpaque } from './opaque.js';
 import { createBlocked } from './blocked.js';
+import { createSetup } from './setup.js';
 import { createAdopt } from './adopt.js';
 
 const views = {
   decks: document.getElementById('view-decks'),
+  setup: document.getElementById('view-setup'),
   editor: document.getElementById('view-editor'),
 };
 
@@ -44,6 +46,22 @@ const findings = document.getElementById('findings');
 
 /** 목록을 화면 사이에서 재사용한다 — 편집 화면의 머리글도 여기서 이름을 얻는다. */
 let decksCache = null;
+
+/**
+ * 새 리포트 설정 화면 (명세 `docs/specs/새-리포트-만들기.md`).
+ *
+ * 만든 뒤에는 **목록 캐시를 버린다** — 방금 만든 리포트가 목록에 없으면 편집 화면의
+ * 머리글이 이름을 찾지 못한다.
+ */
+const setup = createSetup({
+  view: document.getElementById('view-setup'),
+  form: document.getElementById('setup-form'),
+  error: document.getElementById('setup-error'),
+  onCreated: (deckId) => {
+    decksCache = null;
+    location.hash = `#/deck/${encodeURIComponent(deckId)}`;
+  },
+});
 
 /**
  * 지금 열어 둔 리포트와 그 문서 지문.
@@ -205,6 +223,7 @@ async function decks() {
 async function showDeckList() {
   views.decks.hidden = false;
   views.editor.hidden = true;
+  setup.close();
   stage.removeAttribute('src');       // 목록으로 나오면 슬라이드를 내려놓는다
   selection.clear();
   adopt.hide();
@@ -259,6 +278,7 @@ function deckRow(deck) {
 async function showEditor(deckId, startSlide = 0, selectId = null) {
   views.decks.hidden = true;
   views.editor.hidden = false;
+  setup.close();
 
   const info = (await decks()).find((d) => d.deckId === deckId);
   deckName.textContent = deckId;
@@ -530,9 +550,21 @@ function syncLock(i) {
 
 function route() {
   const m = location.hash.match(/^#\/deck\/(.+)$/);
-  if (m) showEditor(decodeURIComponent(m[1]));
-  else showDeckList();
+  if (m) return showEditor(decodeURIComponent(m[1]));
+  if (location.hash === '#/new') return showSetup();
+  showDeckList();
 }
+
+/** 새 리포트 설정 화면. 목록·편집기와 같은 자리(주소)를 쓰므로 뒤로 가기가 그대로 먹는다. */
+function showSetup() {
+  views.decks.hidden = true;
+  views.editor.hidden = true;
+  stage.removeAttribute('src');
+  selection.clear();
+  setup.open();
+}
+
+document.getElementById('new-deck').addEventListener('click', () => { location.hash = '#/new'; });
 
 addEventListener('hashchange', route);
 
