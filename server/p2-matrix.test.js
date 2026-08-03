@@ -107,6 +107,8 @@ const MATRIX = [
   ['removeChild', { target: 'nc', args: { index: 1 } }],
   ['setChildContent', { target: 'nc', args: { index: 0, html: '고침' } }],
   ['moveSection', { target: 'n1', args: { index: 1 } }],
+  ['duplicateSection', { target: 'm1' }],
+  ['removeSection', { target: 'm1' }],
   ['renumberPages', {}],
   // 문서 명령 — 노드가 아니라 `<head>` 의 토큰 블록 한 구간을 바꾼다 (결정 2).
   ['setDeckTokens', { args: { mainColor: '#0f766e' } }],

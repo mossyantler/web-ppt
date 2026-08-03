@@ -166,3 +166,72 @@ function extractSection(html, templateId) {
   }
   return html.slice(start, end + '</section>'.length);
 }
+
+/* -------------------------------------------------------- removeSection */
+
+/**
+ * 슬라이드 한 장 지우기.
+ *
+ * `moveSection` 과 같은 발상이다 — **자리를 고정하고 바이트만 덜어낸다.** 트리를 고쳐
+ * 재직렬화하지 않으므로 남는 장들은 바이트가 그대로고, 섹션 사이의 공백·주석도 제자리다.
+ *
+ * 지운 장의 **앞 공백을 함께** 가져간다. 안 그러면 지울 때마다 빈 줄이 하나씩 자라난다 —
+ * `structure.js` 의 `detach` 가 요소에 대해 하는 일과 같은 이유다.
+ *
+ * **마지막 한 장은 지우지 못한다.** 장이 없는 덱은 열 수 없고, 되돌리기 링도 그 덱 안에
+ * 있으므로 되살릴 길이 남지 않는다.
+ */
+registerCommand('removeSection', (deck, command) => {
+  const secs = deck.sections.map((s) => s.root);
+  const at = secs.findIndex((s) => s.nodeId === command.target);
+
+  if (at < 0) {
+    throw new DocError(404, `섹션을 찾을 수 없다: ${command.target}`, { code: 'commit.unknown-target' });
+  }
+  if (secs.length === 1) {
+    throw new DocError(422, '마지막 한 장은 지울 수 없다 — 장이 없는 덱은 열 수 없다', {
+      code: 'commit.last-section',
+    });
+  }
+
+  // 앞 장의 끝부터 지운다(= 그 사이 공백을 함께). 첫 장이면 자기 시작부터 다음 장 시작까지.
+  const start = at > 0 ? secs[at - 1].end : secs[at].start;
+  const end = at > 0 ? secs[at].end : secs[at + 1].start;
+
+  return { edits: [{ start, end, text: '' }] };
+});
+
+/* ----------------------------------------------------- duplicateSection */
+
+/**
+ * 슬라이드 한 장 복제. 바로 뒤에 놓는다.
+ *
+ * §4.1 "서브트리 복제 시 재발급" — 원본 바이트를 그대로 베끼되 **모든 `data-node-id` 를
+ * 새로 발급**한다. 그대로 두면 문서 안에 같은 id 가 둘이 되고, `doc.js` 가 문서 전체를
+ * 409 로 거부한다. `data-track-id` 는 손대지 않는다 (§4.2 — 주차 간 안정 id 는 복제를
+ * 따라가는 것이 목적이다).
+ */
+registerCommand('duplicateSection', (deck, command) => {
+  const secs = deck.sections.map((s) => s.root);
+  const at = secs.findIndex((s) => s.nodeId === command.target);
+
+  if (at < 0) {
+    throw new DocError(404, `섹션을 찾을 수 없다: ${command.target}`, { code: 'commit.unknown-target' });
+  }
+
+  const raw = deck.raw;
+  const ids = new IdAllocator(raw);
+  const nodeIds = {};
+
+  const copy = raw.slice(secs[at].start, secs[at].end)
+    .replace(/(\bdata-node-id\s*=\s*")([^"]*)(")/g, (_m, a, old, z) => {
+      const fresh = ids.next();
+      nodeIds[old] = fresh;
+      return `${a}${fresh}${z}`;
+    });
+
+  // 앞 장과의 사이 공백을 그대로 베껴 새 장 앞에 둔다 — 들여쓰기를 지어내지 않는다.
+  const gap = at > 0 ? raw.slice(secs[at - 1].end, secs[at].start) : '\n';
+
+  return { edits: [{ start: secs[at].end, end: secs[at].end, text: `${gap}${copy}` }], nodeIds };
+});

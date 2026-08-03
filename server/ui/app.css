@@ -144,6 +144,20 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
                 font-size: 12px; min-width: 1.6em; text-align: right; flex: none; }
 .rail-item .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* 장 조작 — 마우스를 올렸을 때만 보인다. 늘 보이면 열세 줄이 버튼 쉰두 개가 되고
+ * 정작 장 이름이 안 읽힌다. 키보드로 들어와도(`focus-within`) 보여야 한다. */
+.rail-ops { display: none; gap: 1px; margin-left: auto; flex: none; }
+.rail-item:hover .rail-ops,
+.rail-item:focus-within .rail-ops { display: flex; }
+.rail-ops button {
+  width: 20px; height: 18px;
+  border: 0; border-radius: 3px;
+  background: none; color: var(--ui-dim);
+  font-size: 11px; line-height: 1; cursor: pointer;
+}
+.rail-ops button:hover:not(:disabled) { background: var(--ui-accent); color: #fff; }
+.rail-ops button:disabled { color: var(--ui-line); cursor: default; }
+
 /* 끌어서 놓을 자리 — 흐름 배치에서는 "몇 번째에 끼우는가" 가 결과의 전부다.
  * 선이 안 보이면 사용자는 놓기 전에 결과를 알 수 없다. */
 .rail-item.drop-before { box-shadow: inset 0 2px 0 var(--ui-accent); }

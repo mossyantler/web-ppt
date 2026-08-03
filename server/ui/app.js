@@ -25,6 +25,7 @@ import { createSetup } from './setup.js';
 import { createLogo } from './logo.js';
 import { createBackground } from './background.js';
 import { createPresent } from './present.js';
+import { createSlides } from './slides.js';
 import { createAdopt } from './adopt.js';
 
 const views = {
@@ -181,6 +182,14 @@ const present = createPresent({
   overlay,
   onEnter: () => selection.clear(),
   onExit: () => { selection.place(); blocked.place(); },
+});
+
+const slides = createSlides({
+  commit: committer,
+  sections: () => currentOutline?.sections ?? [],
+  onNotice: showNotice,
+  // 장이 늘거나 줄거나 옮겨지면 페이지 번호가 문서 전체에서 다시 매겨진다.
+  onResync: (slide) => showEditor(open.deckId, slide),
 });
 
 const logo = createLogo({
@@ -376,8 +385,9 @@ function mountStage(outline, startSlide = 0, selectId = null) {
   hideDeckChrome(el);
 
   const items = sections.map((section, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
+    const b = document.createElement('div');
+    b.setAttribute('role', 'button');
+    b.tabIndex = 0;
     b.className = 'rail-item';
     b.dataset.index = String(i);
 
@@ -395,9 +405,16 @@ function mountStage(outline, startSlide = 0, selectId = null) {
     // 잠긴 장은 레일에서 미리 보인다 — 열어 봐야 아는 것과, 목록에서 아는 것은 다르다.
     if (outline && !outline.sections[i]?.annotated) b.classList.add('locked');
 
-    b.append(n, t);
+    b.append(n, t, railControls(i, sections.length));
     b.draggable = true;
     b.addEventListener('click', () => goTo(el, sections, i));
+    // `<button>` 안에 `<button>` 을 넣을 수 없어 항목을 div 로 바꿨다. 키보드로 고르는
+    // 길은 버튼이 공짜로 주던 것이므로 여기서 돌려준다.
+    b.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      goTo(el, sections, i);
+    });
     return b;
   });
 
@@ -441,6 +458,39 @@ function mountStage(outline, startSlide = 0, selectId = null) {
       blocked.setSlide(e.detail.index);
     }
   });
+}
+
+/**
+ * 레일 항목의 조작 버튼 — 위·아래·복제·지우기.
+ *
+ * 마우스를 올렸을 때만 보인다. 늘 보이면 열세 줄짜리 목록이 버튼 쉰두 개가 되고, 그러면
+ * 정작 장 이름이 안 읽힌다. 클릭이 항목 전체로 번지지 않게 막는다 — 지우려다 그 장으로
+ * 이동하는 것은 되돌리기로도 못 고치는 종류의 놀람이다.
+ */
+function railControls(index, total) {
+  const box = document.createElement('span');
+  box.className = 'rail-ops';
+
+  const ops = [
+    ['↑', '위로', () => slides.move(index, -1), index > 0],
+    ['↓', '아래로', () => slides.move(index, +1), index < total - 1],
+    ['⧉', '복제', () => slides.duplicate(index), true],
+    ['🗑', '지우기 (되돌리기로 돌아옵니다)', () => slides.remove(index), total > 1],
+  ];
+
+  for (const [glyph, title, run, on] of ops) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = glyph;
+    b.title = title;
+    b.disabled = !on;
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      run();
+    });
+    box.append(b);
+  }
+  return box;
 }
 
 /**

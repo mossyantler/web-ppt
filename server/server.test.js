@@ -154,9 +154,10 @@ test('미등록 명령 → 422 이고 파일은 바뀌지 않는다 (조용한 �
 
 test('아직 만들지 않은 명령은 등록되지 않았다 — 경계의 기록', async () => {
   const { registeredOps } = await server();
-  // `moveSection`·`renumberPages` 는 M3 결정 6(왼쪽 목록에서 슬라이드 순서 바꾸기)이
-  // 요구해서 M3-1 에서 만들었다. 아래는 아직 필요해진 적이 없는 것들이다.
-  const notYet = ['adoptSection', 'insertSection', 'removeSection', 'duplicateSection', 'setTheme'];
+  // 필요해질 때마다 하나씩 나갔다. `moveSection`·`renumberPages` 는 M3 결정 6(레일에서
+  // 순서 바꾸기), `removeSection`·`duplicateSection` 은 레일 조작 버튼이 요구했다.
+  // 아래는 아직 필요해진 적이 없는 것들이다.
+  const notYet = ['adoptSection', 'insertSection', 'setTheme'];
   const registered = new Set(registeredOps());
   assert.deepEqual(notYet.filter((op) => registered.has(op)), []);
 });
