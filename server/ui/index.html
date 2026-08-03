@@ -76,7 +76,14 @@
     <span id="deck-name"></span>
     <span id="deck-sub"></span>
 
-    <!-- 되돌리기·다시하기 (결정 5). 버튼이 있으면 되돌릴 것이 남았는지 눈으로 보인다 —
+    <!-- 로고 넣기. 파일을 고르면 모든 장의 머리 맨 앞에 끼어들고 기존 내용이 밀린다
+         (새 리포트 명세 결정 5). -->
+    <label id="logo-pick" title="모든 장의 머리에 로고를 넣습니다">
+      로고
+      <input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp" hidden>
+    </label>
+
+    <!-- 되돌리기·다시하기 (M3 결정 5). 버튼이 있으면 되돌릴 것이 남았는지 눈으로 보인다 —
          꺼진 버튼은 "여기가 끝" 이라는 뜻이고, 그 정보는 단축키만으로는 얻을 수 없다. -->
     <span id="history">
       <button type="button" id="undo" title="되돌리기 (Ctrl+Z)" disabled>↶</button>

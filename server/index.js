@@ -25,6 +25,7 @@ import { repoAssetPath } from './repo-assets.js';
 import { outlineOf } from './outline.js';
 import { vocabulary } from './vocabulary.js';
 import { createDeck } from './create-deck.js';
+import { saveAsset, MAX_ASSET_BYTES } from './upload.js';
 
 /** 커밋 본문 상한. 슬라이드 하나의 재직렬화가 이보다 크면 명령이 잘못된 것이다. */
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
@@ -49,6 +50,15 @@ async function route(req, res) {
     const deckId = decodeURIComponent(commit[1]);
     const envelope = JSON.parse(await readBody(req));
     return sendJson(res, 200, applyCommit(deckId, envelope));
+  }
+
+  // 덱 폴더에 그림 넣기 (결정 5). 문서가 아니라 옆에 놓는 파일이라 명령이 아니다.
+  const upload = url.pathname.match(/^\/deck\/([^/]+)\/asset$/);
+  if (upload && req.method === 'POST') {
+    const deckId = decodeURIComponent(upload[1]);
+    const name = url.searchParams.get('name');
+    const bytes = await readBinaryBody(req, MAX_ASSET_BYTES);
+    return sendJson(res, 201, saveAsset(deckId, name, bytes));
   }
 
   if (undo && req.method === 'POST') {
@@ -110,7 +120,11 @@ async function route(req, res) {
   }
 
   // 슬라이드가 참조하는 그림·글꼴. 덱 안의 파일만 나가고 봉쇄는 `deckAssetPath` 가 한다.
-  const asset = url.pathname.match(/^\/deck\/([^/]+)\/asset\/(.+)$/);
+  //
+  // **덱 안의 상대 경로를 그대로 받는다.** 문서가 `asset/logo.png` 라고 쓰면 브라우저는
+  // `/deck/<id>/asset/logo.png` 를 부르고, 그 경로가 디스크의 같은 자리를 가리켜야 한다 —
+  // 그래야 서버로 열든 파일을 직접 열든 같은 문서가 같은 그림을 찾는다.
+  const asset = url.pathname.match(/^\/deck\/([^/]+)\/(.+)$/);
   if (asset && req.method === 'GET') {
     const path = deckAssetPath(decodeURIComponent(asset[1]), decodeURIComponent(asset[2]));
     if (!path) return sendJson(res, 404, { error: '그런 파일이 없다' });
@@ -175,6 +189,39 @@ function sendHtml(res, text) {
     'cache-control': 'no-store',
   });
   res.end(body);
+}
+
+/**
+ * 그림처럼 텍스트가 아닌 본문. `readBody` 와 달리 문자열로 바꾸지 않는다.
+ *
+ * 상한을 넘으면 **모으기를 멈추되 소켓은 끊지 않는다.** 끊으면 413 응답이 나가기 전에
+ * 연결이 사라져서 사용자에게는 "네트워크 오류" 로 보인다 — 파일이 크다는 사실을
+ * 알려주지 못하면 사용자는 무엇을 고쳐야 하는지 알 수 없다.
+ *
+ * 버리면서 계속 읽는 것이 무한할 수는 없으므로, 상한의 열 배에서는 끊는다.
+ */
+function readBinaryBody(req, limit) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let size = 0;
+    let over = false;
+
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > limit) {
+        over = true;
+        chunks.length = 0;                 // 넘은 순간 들고 있던 것도 버린다
+        if (size > limit * 10) req.destroy();
+        return;
+      }
+      chunks.push(c);
+    });
+    req.on('end', () => {
+      if (over) reject(new DocError(413, `요청 본문이 상한(${limit} bytes)을 넘었다`));
+      else resolve(Buffer.concat(chunks));
+    });
+    req.on('error', reject);
+  });
 }
 
 function readBody(req) {

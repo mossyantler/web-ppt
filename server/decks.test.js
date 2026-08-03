@@ -188,12 +188,16 @@ test('편집기 화면 파일이 저장소 파일보다 먼저다', async () => 
 /* ------------------------------------------------------------- 덱 자산 */
 
 test('덱 안의 파일을 내주고 덱 밖은 404 다', async () => {
-  const ok = await get('/deck/2026-08-01-001/asset/figure.svg');
+  // **덱 id 뒤는 문서가 쓰는 상대 경로 그대로다.** 예전에는 `asset/` 이라는 접두사가
+  // 하나 더 있었는데, 그건 문서 어디에도 없는 이름이었다 — 문서가 `asset/logo.png` 라고
+  // 쓰면 브라우저는 `/deck/<id>/asset/logo.png` 를 부르고, 그 경로가 디스크의 같은 자리를
+  // 가리켜야 서버로 열든 파일을 직접 열든 같은 그림을 찾는다.
+  const ok = await get('/deck/2026-08-01-001/figure.svg');
   assert.equal(ok.status, 200);
   assert.match(ok.type, /svg/);
 
   for (const rel of ['../../package.json', '../2026-07-27-001/index.html']) {
-    const { status } = await get(`/deck/2026-08-01-001/asset/${encodeURIComponent(rel)}`);
+    const { status } = await get(`/deck/2026-08-01-001/${encodeURIComponent(rel)}`);
     assert.equal(status, 404, rel);
   }
 });

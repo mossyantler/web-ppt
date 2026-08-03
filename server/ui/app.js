@@ -22,6 +22,7 @@ import { createStructure } from './structure.js';
 import { createOpaque } from './opaque.js';
 import { createBlocked } from './blocked.js';
 import { createSetup } from './setup.js';
+import { createLogo } from './logo.js';
 import { createAdopt } from './adopt.js';
 
 const views = {
@@ -154,6 +155,15 @@ const adopt = createAdopt({
   // 리포트 목록도 같이 버린다 — 첫 장을 고치는 순간 덱은 "문법 선언 있음" 이 되고,
   // 캐시를 두면 목록으로 나갔을 때 아직 "편집 불가" 라고 적혀 있다.
   onDone: () => { decksCache = null; showEditor(open.deckId, currentSlide); },
+});
+
+const logo = createLogo({
+  stage,
+  commit: committer,
+  deckId: () => open.deckId,
+  onNotice: showNotice,
+  // 장마다 노드가 하나씩 늘었다. 목차가 통째로 달라지므로 다시 받는다.
+  onResync: () => showEditor(open.deckId, currentSlide),
 });
 
 const drag = createDrag({
@@ -565,6 +575,13 @@ function showSetup() {
 }
 
 document.getElementById('new-deck').addEventListener('click', () => { location.hash = '#/new'; });
+
+document.getElementById('logo-file').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  // 같은 파일을 다시 골라도 `change` 가 나도록 비워 둔다.
+  e.target.value = '';
+  if (file) await logo.apply(file);
+});
 
 addEventListener('hashchange', route);
 

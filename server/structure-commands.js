@@ -18,6 +18,7 @@ import { synthesize } from '../tools/harness/probes.js';
 import { IdAllocator } from '../tools/adopt/ids.js';
 import { DocError, resolveNode } from './doc.js';
 import { registerCommand } from './commands.js';
+import { assertPropsAllowed } from './props.js';
 import { detach, detachRange, insertAtElementIndex, elementChildrenOf, isAncestorOf, markMutated, syntheticNode } from './structure.js';
 
 /**
@@ -109,7 +110,7 @@ registerCommand('moveElement', (deck, command) => {
 /* -------------------------------------------------------------- insertElement */
 
 registerCommand('insertElement', (deck, command) => {
-  const { parentId, index, type, variant = 'default', regionSlot = null } = command.args ?? {};
+  const { parentId, index, type, variant = 'default', regionSlot = null, props = null } = command.args ?? {};
   const { node: parent, section } = resolveNode(deck, parentId);
 
   assertContainer(parent, 'insertElement 의 parent');
@@ -136,9 +137,37 @@ registerCommand('insertElement', (deck, command) => {
   const kind = kindOf(deck.mapping, key, type);
   const markup = synthesize(deck.mapping, { key, variant, kind, value: type, id, regionSlot }).trimStart();
 
-  insertAtElementIndex(parent, index, [syntheticNode(markup)], deck.raw);
+  // 넣으면서 속성까지 정한다. 두 명령으로 나누면 **같은 봉투 안에서 뒤 명령이 앞 명령이 만든
+  // 노드를 지목할 수 없다** — 새 노드는 재직렬화 뒤에야 트리에 나타나기 때문이다. 나눠서 두
+  // 커밋으로 보내면 되돌리기가 두 번 걸린다. 허용 목록은 `setProps` 와 같은 것을 쓴다.
+  const withProps = props ? applyProps(markup, props, type) : markup;
+
+  insertAtElementIndex(parent, index, [syntheticNode(withProps)], deck.raw);
   return { edits: editsFor(deck), nodeIds: { [command.args.slot ?? id]: id } };
 });
+
+/**
+ * 합성된 조각의 여는 태그에 속성을 얹는다.
+ *
+ * 조각은 방금 우리가 만든 것이므로 여는 태그가 어디까지인지 알고 있다 — 문서를 파싱하지
+ * 않는다. 같은 이름이 이미 있으면(무자식 리프의 `src=""`) 그 값을 갈아 끼운다.
+ */
+function applyProps(markup, props, value) {
+  if (typeof props !== 'object' || Array.isArray(props)) {
+    throw new DocError(400, 'insertElement 의 args.props 가 객체여야 한다');
+  }
+  assertPropsAllowed(props, { value });
+
+  let out = markup;
+  for (const [rawName, raw] of Object.entries(props)) {
+    const name = rawName.toLowerCase();
+    if (raw === null) continue;
+    const text = `${name}="${String(raw).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}"`;
+    const existing = new RegExp(`\\s${name}="[^"]*"`);
+    out = existing.test(out) ? out.replace(existing, ` ${text}`) : out.replace(/(<\w+)/, `$1 ${text}`);
+  }
+  return out;
+}
 
 /** 어휘 값의 리프 범주 — `synthesize` 가 삽입 조각의 모양을 정할 때 쓴다 (§3.1 L1). */
 function kindOf(mapping, key, value) {
