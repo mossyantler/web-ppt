@@ -23,6 +23,8 @@ import { createOpaque } from './opaque.js';
 import { createBlocked } from './blocked.js';
 import { createSetup } from './setup.js';
 import { createLogo } from './logo.js';
+import { createBackground } from './background.js';
+import { createPresent } from './present.js';
 import { createAdopt } from './adopt.js';
 
 const views = {
@@ -76,7 +78,10 @@ const open = { deckId: null, docHash: null };
 /** 지금 보이는 장. 화면을 다시 받을 때 보던 자리로 돌아오려고 들고 있다. */
 let currentSlide = 0;
 
-/** 마지막으로 받은 목차. 장을 넘길 때마다 "이 장이 잠겼는가" 를 여기서 본다. */
+/**
+ * 마지막으로 받은 목차. 장을 넘길 때마다 "이 장이 잠겼는가"(M3-9) 와
+ * "이 장에 이름표가 있어 배경을 바꿀 수 있는가"(결정 4) 를 여기서 본다.
+ */
 let currentOutline = null;
 
 /**
@@ -155,6 +160,27 @@ const adopt = createAdopt({
   // 리포트 목록도 같이 버린다 — 첫 장을 고치는 순간 덱은 "문법 선언 있음" 이 되고,
   // 캐시를 두면 목록으로 나갔을 때 아직 "편집 불가" 라고 적혀 있다.
   onDone: () => { decksCache = null; showEditor(open.deckId, currentSlide); },
+});
+
+const background = createBackground({
+  stage,
+  commit: committer,
+  buttons: {
+    light: document.getElementById('bg-light'),
+    dark: document.getElementById('bg-dark'),
+    all: document.getElementById('bg-all'),
+  },
+  sections: () => currentOutline?.sections ?? [],
+  currentSlide: () => currentSlide,
+  onNotice: showNotice,
+});
+
+const present = createPresent({
+  stage,
+  canvas: document.getElementById('canvas'),
+  overlay,
+  onEnter: () => selection.clear(),
+  onExit: () => { selection.place(); blocked.place(); },
 });
 
 const logo = createLogo({
@@ -518,6 +544,7 @@ function goTo(el, sections, i) {
 
 function select(i) {
   currentSlide = i;
+  background.refresh();
   for (const b of rail.children) {
     if (b.dataset) b.setAttribute('aria-current', String(Number(b.dataset.index) === i));
   }
@@ -575,6 +602,8 @@ function showSetup() {
 }
 
 document.getElementById('new-deck').addEventListener('click', () => { location.hash = '#/new'; });
+
+document.getElementById('present').addEventListener('click', () => present.start());
 
 document.getElementById('logo-file').addEventListener('change', async (e) => {
   const file = e.target.files?.[0];

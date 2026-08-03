@@ -65,6 +65,18 @@
   --text-default: var(--navy-100);
   --text-muted: var(--navy-300);
   --border-default: var(--navy-600);
+  --border-subtle: var(--navy-800);
+
+  /* **강조색도 함께 뒤집어야 한다.** 밝은 바탕용 강조(네이비 700)는 어두운 바탕에서
+   * 배경과 붙어 안 읽힌다 — 실측: 진행 상황 장의 KPI 숫자(`.num` 이 `--accent` 를 읽는다)가
+   * 어두운 바탕에서 사라졌다. 배경만 뒤집고 강조를 두면 화면은 "그려지는데 안 보인다". */
+  --accent: var(--navy-300);
+  --accent-2: var(--navy-200);
+  --text-accent: var(--navy-200);
+  --surface-accent: var(--navy-600);
+  --surface-accent-soft: var(--navy-800);
+  --border-accent: var(--navy-400);
+
   background: var(--surface-page);
   color: var(--text-default);
 }

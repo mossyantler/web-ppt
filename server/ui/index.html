@@ -76,6 +76,16 @@
     <span id="deck-name"></span>
     <span id="deck-sub"></span>
 
+    <!-- 배경 (결정 4·9). 이 장만 바꾸는 것이 기본이고, 전체 적용이 탈출구다. -->
+    <span id="bg-pick">
+      <button type="button" id="bg-light" aria-pressed="true" title="이 장을 밝은 바탕으로">밝게</button>
+      <button type="button" id="bg-dark" aria-pressed="false" title="이 장을 어두운 바탕으로">어둡게</button>
+      <button type="button" id="bg-all" title="지금 배경을 모든 장에 적용">전체</button>
+    </span>
+
+    <!-- 발표 (결정 9). 덱에 이미 있는 발표 모드를 되살린다. -->
+    <button type="button" id="present" title="전체화면으로 발표 (Esc 로 나감)">▶ 발표</button>
+
     <!-- 로고 넣기. 파일을 고르면 모든 장의 머리 맨 앞에 끼어들고 기존 내용이 밀린다
          (새 리포트 명세 결정 5). -->
     <label id="logo-pick" title="모든 장의 머리에 로고를 넣습니다">
