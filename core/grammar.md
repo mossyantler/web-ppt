@@ -148,7 +148,13 @@
 
 **투명 컨테이너 (`canvas`, `region`)** — 사용자가 선택·이동·삭제할 수 없다. `removeElement`는 `region`을 거부하고, `unwrapElement`는 `region`·`canvas`를 거부한다. 자식은 정상 편집된다.
 
-**`canvas` 규칙** — `setPosition(id, {x,y,w,h})`은 `parent[data-box] === "canvas"`일 때만 유효하다. 아니면 명령이 거부된다(422). 흐름→자유 전환은 `[moveElement(id, canvasId, 0), setPosition(id, ...)]`의 원자적 배치이며, `canvas`가 없으면 `insertElement(sectionId, -1, 'canvas')`가 앞에 붙는다.
+**`canvas` 규칙** — `setPosition(id, {x,y,w,h})`은 `parent[data-box] === "canvas"`일 때만 유효하다. 아니면 명령이 거부된다(422). `canvas`가 없으면 `insertElement(sectionId, -1, 'canvas')`가 앞에 붙는다 — **장 직속으로 들어가는 유일한 요소**이고, 그래야 층이 장 전체를 덮어 여백 밖에도 놓을 수 있다.
+
+**전환은 `moveElement` 하나다** *(2026-08-25 개정)*. 2판은 `[moveElement(id, canvasId, 0), setPosition(id, ...)]`의 원자적 배치라고 적었는데, **그 둘은 한 커밋에 들어갈 수 없다.** `moveElement`는 장을 통째로 재직렬화해 `[section.start, section.end)`를 splice하고 `setPosition`의 여는 태그 편집은 **그 구간 안**이라, 겹치는 splice로 죽는다(실측: `splice 구간이 겹친다: [48336,51624) / [49292,49292)`). 그래서 자리를 `moveElement`의 인자로 받는다 — `moveElement(id, canvasId, index, position?)`.
+
+같은 명령이 **나가는 쪽에서 기하를 지운다.** 기능이 아니라 불변식이다: 규칙 5는 인라인 기하를 `canvas`의 자식에게만 허용하므로, 좌표를 단 채 흐름 자리로 나간 문서는 게이트를 통과하지 못한다. 화면이 명령 둘로 치우게 두면 그중 하나가 실패했을 때 문법 밖 상태가 남는다.
+
+> **재직렬화는 여는 태그를 원문 바이트로 복사한다** (`serialize.js`의 `raw.slice(openStart, openEnd)`). 그래서 트리의 `attrs`만 고치면 파일에는 아무 일도 일어나지 않는다 — 실측에서 좌표가 그렇게 조용히 사라졌다. 구조 명령이 속성을 바꾸려면 재직렬화 override로 등록해야 한다.
 
 ### 2.3 섹션
 

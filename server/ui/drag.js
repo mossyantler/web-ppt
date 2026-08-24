@@ -15,12 +15,19 @@
  *
  * HTML5 끌기(`draggable`)를 쓰지 않는 이유 — iframe 경계를 넘는 드래그 이미지와
  * `dragover` 좌표가 브라우저마다 다르게 흔들린다. 포인터 이벤트는 좌표가 하나뿐이다.
+ *
+ * ## 자유 배치 안에서는 자리를 고르지 않는다 (2026-08-25)
+ *
+ * 부모가 `data-box="canvas"` 면 형제 사이의 **틈**이 아니라 **좌표**를 고른다. 끄는 방식은
+ * 같고(그림자만 움직인다) 놓을 때 나가는 명령이 `moveElement` 대신 `setPosition` 이다.
+ * 두 벌로 만들지 않은 이유 — 임계값·클릭 삼키기·미리 안 옮기기가 둘 다 똑같고, 그 셋이
+ * 이 파일이 존재하는 이유의 전부다.
  */
 
 /** 이만큼 움직이기 전에는 끌기가 아니라 클릭이다. 클릭이 끌기로 오인되면 선택이 안 된다. */
 const THRESHOLD = 4;
 
-export function createDrag({ stage, layer, actions, onPick, onDrop }) {
+export function createDrag({ stage, layer, actions, free, onPick, onDrop }) {
   const ghost = make('drag-ghost');
   const line = make('drag-line');
   layer.append(ghost, line);
@@ -56,8 +63,26 @@ export function createDrag({ stage, layer, actions, onPick, onDrop }) {
     if (onPick?.(el) === false) return;
 
     const parent = el.parentElement;
-    if (!parent?.dataset?.nodeId || !actions.canMove(el.dataset.nodeId, -1)
-      && !actions.canMove(el.dataset.nodeId, +1)) return;
+    if (!parent?.dataset?.nodeId) return;
+
+    // 자유 배치 안이면 자리가 아니라 좌표를 고른다. 형제와 무관하므로 `canMove` 도 묻지
+    // 않는다 — 층에 하나뿐인 요소도 옮길 수 있어야 한다.
+    if (free?.isFree(el.dataset.nodeId)) {
+      const section = el.closest('section');
+      drag = {
+        el,
+        parent,
+        free: true,
+        section,
+        origin: free.boxIn(section, el),
+        scale: free.scaleOf(section),
+        start: { x: e.clientX, y: e.clientY },
+        live: false,
+      };
+      return;
+    }
+
+    if (!actions.canMove(el.dataset.nodeId, -1) && !actions.canMove(el.dataset.nodeId, +1)) return;
 
     const siblings = [...parent.children];
     drag = {
@@ -84,8 +109,27 @@ export function createDrag({ stage, layer, actions, onPick, onDrop }) {
     // 끌기가 시작되면 글자 선택(파란 칠)이 따라붙는다. 그것부터 막는다.
     e.preventDefault();
 
+    if (drag.free) {
+      // 그림자만 움직인다. 슬라이드는 놓는 순간 서버가 준 결과로만 바뀐다.
+      drag.moved = {
+        x: drag.origin.x + (e.clientX - drag.start.x) / drag.scale,
+        y: drag.origin.y + (e.clientY - drag.start.y) / drag.scale,
+      };
+      ghost.style.transform = ghostAt(drag);
+      return;
+    }
+
     drag.to = slotAt(drag.axis === 'x' ? e.clientX : e.clientY);
     showLine(drag);
+  }
+
+  /** 끄는 동안의 그림자 자리 — 원래 자리에 화면 위 이동량을 더한 값이다. */
+  function ghostAt(d) {
+    const host = layer.getBoundingClientRect();
+    const r = d.el.getBoundingClientRect();
+    const f = stage.getBoundingClientRect();
+    return `translate(${f.left + r.left - host.left + (d.moved.x - d.origin.x) * d.scale}px, `
+      + `${f.top + r.top - host.top + (d.moved.y - d.origin.y) * d.scale}px)`;
   }
 
   async function onUp() {
@@ -94,6 +138,15 @@ export function createDrag({ stage, layer, actions, onPick, onDrop }) {
     if (!d?.live) return;
     hide();
     swallow = true;
+
+    if (d.free) {
+      // 제자리에 도로 놓았다. 명령을 보내면 빈 커밋이 되고 되돌리기 한 칸만 먹는다.
+      if (!d.moved || (Math.round(d.moved.x) === d.origin.x && Math.round(d.moved.y) === d.origin.y)) {
+        return void onDrop?.(false);
+      }
+      const placed = await free.place(d.el.dataset.nodeId, { x: d.moved.x, y: d.moved.y });
+      return void onDrop?.(placed);
+    }
 
     // 자기 자리에 도로 놓았다. 명령을 보내면 빈 커밋이 되고 되돌리기 한 칸만 먹는다.
     if (d.to === null || d.to === d.from || d.to === d.from + 1) return void onDrop?.(false);

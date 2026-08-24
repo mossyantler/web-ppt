@@ -30,6 +30,7 @@ import { createAdopt } from './adopt.js';
 import { createViewport } from './viewport.js';
 import { createPicture } from './picture.js';
 import { createTable } from './table.js';
+import { createFree } from './free.js';
 import { setIcon, setIconText } from './icons.js';
 
 const views = {
@@ -168,6 +169,15 @@ const picture = createPicture({
   onResync: () => showEditor(open.deckId, currentSlide),
 });
 
+const free = createFree({
+  stage,
+  commit: committer,
+  index: { get: (nodeId) => selection.infoOf(nodeId) },
+  onNotice: showNotice,
+  // 층이 생기거나 부모가 바뀌면 목차가 통째로 달라진다. 델타로 못 따라간다.
+  onResync: (nodeId) => showEditor(open.deckId, currentSlide, nodeId),
+});
+
 const table = createTable({
   stage,
   layer: overlay,
@@ -237,6 +247,8 @@ const drag = createDrag({
   stage,
   layer: overlay,
   actions: reorder,
+  // 자유 배치 안에서는 형제 사이의 틈이 아니라 좌표를 고른다.
+  free,
   // 글자를 고치는 중인 상자 안에서 누른 것은 끌기가 아니라 커서 옮기기다.
   onPick: (el) => !editor.active()?.contains(el),
   onDrop: () => selection.place(),
@@ -270,6 +282,10 @@ const selection = createSelection({
     vocabulary: structure.vocabulary,
     insert: structure.insert,
     remove: structure.remove,
+    // 자유 배치 (로드맵 5단계 · §2.2 canvas 규칙).
+    isFree: free.isFree,
+    canFree: free.canFree,
+    toggleFree: (nodeId) => (free.isFree(nodeId) ? free.toFlow(nodeId) : free.toFree(nodeId)),
   },
 });
 

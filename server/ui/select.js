@@ -259,18 +259,28 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
     const down = actions.canMove(selected, +1);
     // 옮길 수 없는 요소(영역처럼 자리가 정해진 것)에는 아예 바를 띄우지 않는다.
     // 언제나 회색 버튼만 떠 있으면 사용자는 그것이 고장인지 규칙인지 알 수 없다.
-    if (!up && !down) return void (bar.hidden = true);
 
     const add = actions.canInsert?.(selected) ?? false;
     const del = actions.canRemove?.(selected) ?? false;
+    // 자유 배치는 옮길 수 없는 요소에도 열려 있다 — 층에 하나뿐인 것도 옮겨야 한다.
+    const isFree = actions.isFree?.(selected) ?? false;
+    const free = isFree || (actions.canFree?.(selected) ?? false);
     // 아무것도 할 수 없는 요소(영역처럼 자리가 정해진 것)에는 바를 띄우지 않는다.
     // 언제나 회색 버튼만 떠 있으면 사용자는 그것이 고장인지 규칙인지 알 수 없다.
-    if (!up && !down && !add && !del) return void (bar.hidden = true);
+    //
+    // **넷을 다 본다.** 예전에는 위 줄에서 `!up && !down` 이면 바로 돌아갔고, 그래서 이
+    // 검사는 영영 닿지 않는 줄이었다 — 형제가 없어 옮길 데는 없지만 **지울 수는 있는**
+    // 요소가 버튼바를 아예 못 받았다(실측 — 리포트당 1~11 군데).
+    if (!up && !down && !add && !del && !free) return void (bar.hidden = true);
 
     bar.hidden = false;
-    for (const [act, on] of [['up', up], ['down', down], ['add', add], ['remove', del]]) {
+    for (const [act, on] of [['up', up], ['down', down], ['add', add], ['free', free], ['remove', del]]) {
       bar.querySelector(`[data-act="${act}"]`).disabled = !on;
     }
+    // 이미 자유 배치인 것은 되돌리는 버튼이다. 같은 자리에서 뜻만 뒤집는다.
+    const freeButton = bar.querySelector('[data-act="free"]');
+    setIcon(freeButton, isFree ? 'flow' : 'free',
+      isFree ? '흐름 배치로 되돌리기 — 다시 위에서 아래로 쌓입니다' : '자유 배치 — 아무 데나 끌어다 놓기');
 
     const r = ring.getBoundingClientRect();
     const host = layer.getBoundingClientRect();
@@ -287,6 +297,7 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
       ['up', 'up', '위로', () => actions?.moveElement(selected, -1)],
       ['down', 'down', '아래로', () => actions?.moveElement(selected, +1)],
       ['add', 'add', '아래에 넣기', () => openMenu()],
+      ['free', 'free', '자유 배치 — 아무 데나 끌어다 놓기', () => actions?.toggleFree?.(selected)],
       ['remove', 'remove', '지우기 (되돌리기로 돌아옵니다)', () => actions?.remove(selected)],
     ];
 

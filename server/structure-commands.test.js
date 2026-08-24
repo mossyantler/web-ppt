@@ -66,6 +66,74 @@ function run(applyCommit, commands) {
 
 const comments = (s) => [...s.matchAll(/<!--[\s\S]*?-->/g)].map((m) => m[0]);
 
+/* ------------------------------------------------- 자유 배치 (§2.2 canvas) */
+
+// 이 절이 지키는 명제 하나 — **인라인 기하는 canvas 안에서만 존재한다.**
+//
+// 규칙 5 는 인라인 `left`/`top`/`width`/`height` 를 canvas 의 자식으로 제한한다(§5).
+// 그러면 층을 드나드는 일이 곧 기하를 쓰고 지우는 일이 되고, 그 둘은 **같은 명령**이어야
+// 한다. 나누면 그중 하나가 실패했을 때 문법 밖 문서가 남는다. 게다가 나눌 수도 없다 —
+// `moveElement` 는 장을 통째로 재직렬화해 한 구간을 splice 하고 `setPosition` 의 편집은
+// 그 구간 **안**이라, 한 커밋에 같이 넣으면 "splice 구간이 겹친다" 로 죽는다.
+
+test('canvas 는 장 직속으로 들어간다 — 층은 장 전체를 덮어야 한다 (§2.2)', async () => {
+  const { applyCommit } = await api();
+  reset();
+  const r = run(applyCommit, [{
+    op: 'insertElement',
+    args: { parentId: 'n1', index: 1, type: 'canvas', variant: 'default', slot: 'canvas' },
+  }]);
+  assert.equal(r.applied, true);
+  assert.match(onDisk(), /<div data-box="canvas"[^>]*class="free-layer"/);
+
+  // 그 문은 canvas 에만 열려 있다. 아무 요소나 장 직속으로 들어가면 짜임이 무너진다.
+  assert.throws(() => run(applyCommit, [{
+    op: 'insertElement', args: { parentId: 'n1', index: 1, type: 'text', variant: 'default', slot: 'x' },
+  }]), (e) => e.status === 422 && e.code === 'commit.not-a-container');
+});
+
+test('층으로 들어가면 자리를 받고, 나오면 자리를 잃는다 — 명령 하나로', async () => {
+  const { applyCommit } = await api();
+  reset();
+  run(applyCommit, [{ op: 'insertElement', args: { parentId: 'n1', index: 1, type: 'canvas', variant: 'default', slot: 'canvas' } }]);
+  const canvasId = /<div data-box="canvas" data-node-id="([^"]+)"/.exec(onDisk())[1];
+
+  // 들어갈 때 — 자리를 함께 받는다. 안 받으면 (0,0) 으로 튄다.
+  run(applyCommit, [{ op: 'moveElement', target: 'n4', args: { newParentId: canvasId, index: 0, position: { x: 120, y: 64, w: 300, h: 40 } } }]);
+  assert.match(onDisk(), /<p style="left:120px;top:64px;width:300px;height:40px" data-el="text" data-node-id="n4">첫째<\/p>/);
+
+  // 나올 때 — 서버가 지운다. 남기면 규칙 5 위반이라 게이트를 통과하지 못한다.
+  run(applyCommit, [{ op: 'moveElement', target: 'n4', args: { newParentId: 'n3', index: 0 } }]);
+  assert.match(onDisk(), /<p data-el="text" data-node-id="n4">첫째<\/p>/);
+  assert.doesNotMatch(onDisk(), /left:120px/);
+});
+
+test('기하만 지우고 저자의 다른 선언은 남긴다', async () => {
+  const { applyCommit } = await api();
+  reset();
+  run(applyCommit, [{ op: 'insertElement', args: { parentId: 'n1', index: 1, type: 'canvas', variant: 'default', slot: 'canvas' } }]);
+  const canvasId = /<div data-box="canvas" data-node-id="([^"]+)"/.exec(onDisk())[1];
+
+  run(applyCommit, [{ op: 'moveElement', target: 'n5', args: { newParentId: canvasId, index: 0, position: { x: 10, y: 20 } } }]);
+  run(applyCommit, [{ op: 'setProps', target: 'n5', args: { patch: { class: 'note' } } }]);
+  run(applyCommit, [{ op: 'moveElement', target: 'n5', args: { newParentId: 'n3', index: 0 } }]);
+
+  const html = onDisk();
+  assert.doesNotMatch(html, /left:10px/, '기하가 남았다');
+  assert.match(html, /class="note"/, '저자의 다른 속성까지 지웠다');
+});
+
+test('자리는 유한한 수만 받는다', async () => {
+  const { applyCommit } = await api();
+  reset();
+  run(applyCommit, [{ op: 'insertElement', args: { parentId: 'n1', index: 1, type: 'canvas', variant: 'default', slot: 'canvas' } }]);
+  const canvasId = /<div data-box="canvas" data-node-id="([^"]+)"/.exec(onDisk())[1];
+  for (const bad of [{ x: 'a' }, { y: NaN }, { w: Infinity }]) {
+    assert.throws(() => run(applyCommit, [{ op: 'moveElement', target: 'n6', args: { newParentId: canvasId, index: 0, position: bad } }]),
+      (e) => e.status === 400, JSON.stringify(bad));
+  }
+});
+
 /* ------------------------------------------------------- 규약 G1 (최우선) */
 
 test('G1 — 슬라이드 재직렬화 뒤에도 섹션 안 주석이 개수·순서·바이트 그대로다', async () => {

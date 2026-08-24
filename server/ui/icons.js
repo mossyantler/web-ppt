@@ -13,6 +13,8 @@
  */
 
 const PATHS = {
+  free: '<path d="M12 2v20" /><path d="m15 19-3 3-3-3" /><path d="m19 9 3 3-3 3" /><path d="M2 12h20" /><path d="m5 9-3 3 3 3" /><path d="m9 5 3-3 3 3" />',
+  flow: '<rect width="14" height="6" x="5" y="16" rx="2" /><rect width="10" height="6" x="7" y="6" rx="2" /><path d="M2 2h20" />',
   back: '<path d="m12 19-7-7 7-7" /><path d="M19 12H5" />',
   undo: '<path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />',
   redo: '<path d="m15 14 5-5-5-5" /><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13" />',

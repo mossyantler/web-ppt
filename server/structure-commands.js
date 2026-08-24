@@ -18,6 +18,8 @@ import { synthesize } from '../tools/harness/probes.js';
 import { IdAllocator } from '../tools/adopt/ids.js';
 import { DocError, resolveNode } from './doc.js';
 import { registerCommand } from './commands.js';
+import { GEOMETRY_PROPS } from './attr-commands.js';
+import { patchStyle } from './attrs.js';
 import { assertPropsAllowed } from './props.js';
 import { detach, detachRange, insertAtElementIndex, elementChildrenOf, isAncestorOf, markMutated, syntheticNode } from './structure.js';
 
@@ -29,7 +31,15 @@ import { detach, detachRange, insertAtElementIndex, elementChildrenOf, isAncesto
  */
 function scopeOf(deck) {
   if (!deck._scope) {
-    deck._scope = { mutated: new Set(), sections: new Set(), ids: new IdAllocator(deck.raw) };
+    deck._scope = {
+      mutated: new Set(),
+      sections: new Set(),
+      ids: new IdAllocator(deck.raw),
+      // 여는 태그를 갈아 끼운 노드들. **재직렬화는 여는 태그를 원문 바이트로 복사하므로**
+      // (`serialize.js`) 트리의 `attrs` 를 고쳐도 파일에는 아무 일도 일어나지 않는다.
+      // 그 사실을 모르고 `attrs` 만 고쳤다가 좌표가 조용히 사라졌다(실측).
+      overrides: new Map(),
+    };
   }
   return deck._scope;
 }
@@ -40,7 +50,7 @@ function editsFor(deck) {
   return [...scope.sections].map((section) => ({
     start: section.root.start,
     end: section.root.end,
-    text: serialize(section.root, deck.raw, new Map(), scope.mutated),
+    text: serialize(section.root, deck.raw, scope.overrides, scope.mutated),
   }));
 }
 
@@ -52,7 +62,18 @@ function touch(deck, node, section) {
   return scope;
 }
 
-function assertContainer(node, what) {
+/**
+ * 장 자신을 부모로 받을 수 있는 유일한 경우 — 자유 배치 층.
+ *
+ * §2.2 의 canvas 규칙이 `insertElement(sectionId, -1, 'canvas')` 라고 못박는다. 층은
+ * 장 전체를 덮어야 하므로 본문 영역 **안**에 들어가면 안 된다 — 영역의 여백 안쪽으로
+ * 좌표계가 갇히고, 영역 밖에는 아무것도 놓을 수 없게 된다.
+ *
+ * 이 문을 `canvas` 에만 열어 둔다. 아무 요소나 장 직속으로 들어가면 머리글·본문·바닥글의
+ * 짜임이 무너지고, 그 짜임은 테마가 정하는 것이다.
+ */
+function assertContainer(node, what, allowSectionFor = null) {
+  if (node.kind === 'section' && allowSectionFor === 'canvas') return;
   if (node.kind !== 'container') {
     throw new DocError(422, `${what} 는 컨테이너여야 한다 (현재: ${node.value ?? node.kind})`, {
       code: 'commit.not-a-container',
@@ -102,10 +123,80 @@ registerCommand('moveElement', (deck, command) => {
   touch(deck, oldParent, section);
   touch(deck, newParent, targetSection);
 
+  // 자유 배치 층을 드나들 때 인라인 기하를 여기서 함께 처리한다.
+  //
+  // 기능이 아니라 불변식이다. 규칙 5 는 인라인 `left`/`top`/`width`/`height` 를 canvas 의
+  // 자식에서만 허용한다(§5). 나가면서 좌표를 달고 있으면 그 문서는 게이트를 통과하지
+  // 못하고, 들어가면서 좌표가 없으면 요소가 (0,0) 으로 튄다.
+  //
+  // **명령 둘로 나눌 수 없다.** 이 명령은 장을 통째로 재직렬화해 한 구간을 splice 하는데,
+  // `setPosition` 이 내는 여는 태그 편집은 **그 구간 안**이다. 한 커밋에 같이 넣으면
+  // "splice 구간이 겹친다" 로 죽는다(실측). 그래서 자리를 이 명령의 인자로 받는다.
+  if (newParent.value === 'canvas') applyGeometry(node, command.args?.position, deck);
+  else if (oldParent?.value === 'canvas') clearGeometry(node, deck);
+
   detach(node);
   insertAtElementIndex(newParent, index, [node], deck.raw);
   return { edits: editsFor(deck) };
 });
+
+/**
+ * 자유 배치 층으로 들어가는 요소에 자리를 준다.
+ *
+ * `setPosition` 과 같은 검사를 지난다 — 유한한 수만 받고, px 로 적는다. 자리를 안 주면
+ * 좌표 없이 절대 배치되어 층의 왼쪽 위로 튄다.
+ */
+function applyGeometry(node, position, deck) {
+  if (position === undefined || position === null) return;
+  if (typeof position !== 'object' || Array.isArray(position)) {
+    throw new DocError(400, 'moveElement 의 args.position 이 객체여야 한다');
+  }
+
+  const patch = {};
+  for (const [key, prop] of [['x', 'left'], ['y', 'top'], ['w', 'width'], ['h', 'height']]) {
+    if (position[key] === undefined) continue;
+    if (typeof position[key] !== 'number' || !Number.isFinite(position[key])) {
+      throw new DocError(400, `moveElement 의 args.position.${key} 가 유한한 수여야 한다`);
+    }
+    patch[prop] = `${position[key]}px`;
+  }
+  if (!Object.keys(patch).length) return;
+
+  restyle(node, deck, (style) => patchStyle(style, patch));
+}
+
+/** 인라인 기하만 떼어낸다. 나머지 선언은 저자의 것이므로 건드리지 않는다. */
+function clearGeometry(node, deck) {
+  restyle(node, deck, (style) => patchStyle(style, Object.fromEntries(GEOMETRY_PROPS.map((p) => [p, null]))));
+}
+
+/**
+ * 이 노드의 `style` 을 바꾼 결과를 재직렬화 override 로 등록한다.
+ *
+ * **트리의 `attrs` 를 고치는 것으로는 안 된다.** `serialize.js` 는 여는 태그를 원문
+ * 바이트로 그대로 복사한다(`raw.slice(openStart, openEnd)`) — 그래서 `attrs` 만 고치면
+ * 파일에는 아무 일도 일어나지 않고, 좌표가 조용히 사라진다(실측으로 그랬다).
+ *
+ * 여는 태그는 직렬화 결과의 **앞부분 그대로**이므로(`open + 자식 + close`), 한 번
+ * 직렬화한 뒤 그 앞을 새 여는 태그로 갈아 끼우면 된다. 자식은 손대지 않는다.
+ */
+function restyle(node, deck, next) {
+  const attr = node.attrs?.find((a) => a.name === 'style');
+  const style = next(attr?.value ?? '');
+  if ((attr?.value ?? '') === style) return;
+
+  const open = deck.raw.slice(node.openStart, node.openEnd);
+  const rebuilt = style
+    ? (attr
+      ? open.replace(/\sstyle="[^"]*"/, ` style="${style}"`)
+      : open.replace(/^(<\s*[^\s/>]+)/, `$1 style="${style}"`))
+    : open.replace(/\sstyle="[^"]*"/, '');
+
+  const scope = scopeOf(deck);
+  const full = serialize(node, deck.raw, scope.overrides, scope.mutated);
+  scope.overrides.set(node, rebuilt + full.slice(open.length));
+  if (attr) attr.value = style;
+}
 
 /* -------------------------------------------------------------- insertElement */
 
@@ -113,7 +204,7 @@ registerCommand('insertElement', (deck, command) => {
   const { parentId, index, type, variant = 'default', regionSlot = null, props = null } = command.args ?? {};
   const { node: parent, section } = resolveNode(deck, parentId);
 
-  assertContainer(parent, 'insertElement 의 parent');
+  assertContainer(parent, 'insertElement 의 parent', type);
   if (typeof type !== 'string') throw new DocError(400, 'insertElement 의 args.type 이 필요하다');
   if (!Number.isInteger(index) || index < 0) {
     throw new DocError(400, 'insertElement 의 args.index 가 0 이상의 정수여야 한다');

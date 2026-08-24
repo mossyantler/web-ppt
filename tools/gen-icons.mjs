@@ -2,6 +2,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 // 편집기가 실제로 쓰는 것만. 2035개를 다 들이면 그중 스무 개만 화면에 뜬다.
 const WANT = {
+  // 자유 배치 토글 (로드맵 5단계) — 격자 밖으로 꺼내기 / 흐름으로 되돌리기
+  free: 'move',
+  flow: 'align-vertical-justify-start',
   back:      'arrow-left',
   undo:      'undo-2',
   redo:      'redo-2',
