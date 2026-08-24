@@ -236,6 +236,85 @@ test('order 가 순열이 아니면 422 이고 파일은 바뀌지 않는다', a
 
 /* --------------------------------------------------------- 재파싱·게이트 */
 
+/* ------------------------------------------------ 열(column) — 행 여럿을 한 커밋에 */
+
+// 열은 행 하나에 사는 것이 아니라 **모든 행에 걸쳐 있다.** 그래서 열 하나를 넣으려면
+// `<tr>` 마다 `insertChild` 를 하나씩 내야 하고, 그것이 **한 커밋**이어야 한다 — 나누면
+// 표가 잠깐 들쭉날쭉한 상태로 저장되고 되돌리기가 행 수만큼 걸린다.
+//
+// 한 커밋 안의 명령들은 전부 같은 스냅샷을 보므로 뒤 명령이 앞 명령의 결과를 못 본다
+// (`commit.js` 의 주). 여기서는 그것이 문제가 아니다 — 각 `<tr>` 의 내부 구간은 서로
+// 겹치지 않으므로 편집이 서로를 밀지 않는다. **그 사실을 재는 것이 이 테스트다.**
+
+test('열 넣기 — 행마다 insertChild 를 내고 한 커밋으로 묶는다', async () => {
+  const { applyCommit } = await api();
+  const out = await run(applyCommit, [
+    { op: 'insertChild', target: 'n4', args: { parentPath: [0, 0], index: 2, tag: 'th', html: '단위' } },
+    { op: 'insertChild', target: 'n4', args: { parentPath: [1, 0], index: 2, tag: 'td', html: '—' } },
+    { op: 'insertChild', target: 'n4', args: { parentPath: [1, 1], index: 2, tag: 'td', html: 'm/s' } },
+  ]);
+  assert.equal(out.applied, true);
+
+  const html = onDisk();
+  assert.match(html, /<th>구분<\/th><th>값<\/th><th>단위<\/th>/);
+  assert.match(html, /<td>압축지수<\/td><td class="num">0\.42<\/td><td>—<\/td>/);
+  assert.match(html, /<td>투수계수<\/td><td class="num">2\.1e-8<\/td><td>m\/s<\/td>/);
+  // 표 밖은 그대로다.
+  assert.match(html, /<li>PTM 구현 <span class="mono">v2\.1<\/span><span class="wrf">주1<\/span><\/li>/);
+});
+
+test('빈 요소는 닫는 태그 없이 만든다 — 파일이 유효한 HTML 로 남는다', async () => {
+  const { applyCommit } = await api();
+  // `<col>` 은 표에만 있으므로 표 픽스처에 colgroup 을 먼저 만들 수 없다. 대신 거부 경로와
+  // 생성 형태를 figure 의 선언으로 재는 대신, table 의 선언에 있는 col 을 직접 쓴다.
+  run(applyCommit, [{ op: 'insertChild', target: 'n4', args: { index: 0, tag: 'colgroup' } }]);
+  run(applyCommit, [{ op: 'insertChild', target: 'n4', args: { parentPath: [0], index: 0, tag: 'col' } }]);
+
+  const html = onDisk();
+  assert.match(html, /<colgroup><col><\/colgroup>/, '<col></col> 처럼 닫는 태그를 냈다');
+  assert.doesNotMatch(html, /<\/col>/);
+
+  // 내용을 주면 거부한다 — 담을 자리가 없기 때문이다.
+  assert.throws(() => run(applyCommit, [{ op: 'insertChild', target: 'n4', args: { parentPath: [0], index: 0, tag: 'col', html: 'x' } }]),
+    (e) => e.status === 422 && e.code === 'commit.void-child-content');
+});
+
+test('열 지분 — <col> 에는 width 만, 그 밖의 style 은 전부 거부한다 (§5 규칙 5 예외)', async () => {
+  const { applyCommit } = await api();
+  run(applyCommit, [{ op: 'insertChild', target: 'n4', args: { index: 0, tag: 'colgroup' } }]);
+  run(applyCommit, [{ op: 'insertChild', target: 'n4', args: { parentPath: [0], index: 0, tag: 'col', style: 'width:25%' } }]);
+  // 원문 코퍼스가 `style="width:34%"` 처럼 공백 없이 쓴다. 그 손버릇에 맞춘다.
+  assert.match(onDisk(), /<col style="width:25%">/);
+
+  // 지분 밖의 기하는 규칙 5 가 canvas 의 자식으로 제한한다. 명령으로 우회되면 안 된다.
+  for (const bad of ['left:10px', 'width:120px', 'width:25%; height:3px', 'color:red']) {
+    assert.throws(() => run(applyCommit, [{ op: 'insertChild', target: 'n4', args: { parentPath: [0], index: 0, tag: 'col', style: bad } }]),
+      (e) => e.status === 422 && e.code === 'commit.illegal-style', bad);
+  }
+  // 표·행·칸에는 애초에 style 을 줄 수 없다 — 조판은 클래스가 정한다.
+  assert.throws(() => run(applyCommit, [{ op: 'insertChild', target: 'n4', args: { parentPath: [2], index: 0, tag: 'tr', style: 'width:10%' } }]),
+    (e) => e.status === 422 && e.code === 'commit.illegal-style');
+});
+
+test('열 지우기 — 되돌리기 한 번에 열 전체가 돌아온다', async () => {
+  const { applyCommit, applyUndo } = await api();
+  const before = onDisk();
+
+  const out = await run(applyCommit, [
+    { op: 'removeChild', target: 'n4', args: { parentPath: [0, 0], index: 1 } },
+    { op: 'removeChild', target: 'n4', args: { parentPath: [1, 0], index: 1 } },
+    { op: 'removeChild', target: 'n4', args: { parentPath: [1, 1], index: 1 } },
+  ]);
+  assert.equal(out.applied, true);
+
+  const html = onDisk();
+  assert.doesNotMatch(html, /class="num"/, '둘째 열이 남았다');
+  assert.match(html, /<th>구분<\/th><\/tr>/);
+
+  applyUndo(DECK);
+  assert.equal(onDisk(), before, '되돌리기 한 번으로 원래 표가 돌아오지 않았다');
+});
+
 test('네 명령을 이어 적용해도 게이트를 통과한다', async () => {
   const { applyCommit, buildDeck } = await api();
   for (const [i, c] of [

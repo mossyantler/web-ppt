@@ -19,23 +19,38 @@
  *
  * 수식 **자체**를 고치는 것은 이 파일의 일이 아니다 — 두 번 클릭하면 입력칸이 열리고
  * 아래에 실시간 미리보기가 뜨는 전용 편집기가 결정 8 이고 M3-8 이다.
+ *
+ * ## 표의 칸 (2026-08-24)
+ *
+ * `begin` 에 **칸 주소**를 함께 넘기면 고치는 대상이 리프가 아니라 그 안의 구조 자식
+ * 하나가 된다. `<td>` 는 이름표가 없으므로(L6 면제) 주소는 `(부모 순번 경로, 순번)` 이고,
+ * 저장은 `setContent` 대신 `setChildContent` 로 나간다 (§3.6 L6.1).
+ *
+ * **이 파일을 복제하지 않은 이유** — 커서·붙여넣기·Enter·수식 자리표 처리는 문단이든
+ * 표의 칸이든 똑같다. 두 벌로 두면 한쪽만 고치는 날이 온다. 달라지는 것은 **무엇을
+ * contenteditable 로 만드는가**와 **어떤 명령으로 보내는가** 둘뿐이라, 그 둘만 갈랐다.
  */
 
 export function createEditor({ stage, commit, onStatus, onNotice, onReflow }) {
-  /** { nodeId, el, payload, dom } — 편집 중인 리프 하나. 동시에 둘은 없다. */
+  /** { nodeId, el, payload, dom, cell } — 편집 중인 자리 하나. 동시에 둘은 없다. */
   let current = null;
 
-  function begin(nodeId, info, point) {
+  /**
+   * @param cell 표의 칸처럼 이름표 없는 구조 자식을 고칠 때의 주소
+   *             `{ el, parentPath, index }`. 없으면 리프 자신을 고친다.
+   */
+  function begin(nodeId, info, point, cell = null) {
     const doc = stage.contentDocument;
-    const el = doc.querySelector(`[data-node-id="${cssEscape(nodeId)}"]`);
-    if (!el || current) return;
+    const leaf = doc.querySelector(`[data-node-id="${cssEscape(nodeId)}"]`);
+    const el = cell?.el ?? leaf;
+    if (!leaf || !el || current) return;
 
     // 불투명 리프(수식·진행바)는 보이는 것이 기계가 그린 결과다. 커서를 넣으면
     // 사용자가 그 결과를 고치게 되고, 그건 저장할 수 없는 편집이다 (§3.2 L2).
     // 그 둘은 `opaque.js` 의 전용 편집기가 받는다 (결정 8).
     if (info.edit !== 'setContent') return;
 
-    current = { nodeId, el, payload: payloadOf(el), dom: el.innerHTML };
+    current = { nodeId, el, payload: payloadOf(el), dom: el.innerHTML, cell };
 
     for (const atom of atomsIn(el)) atom.setAttribute('contenteditable', 'false');
     el.setAttribute('contenteditable', 'true');
@@ -46,13 +61,16 @@ export function createEditor({ stage, commit, onStatus, onNotice, onReflow }) {
     el.focus({ preventScroll: true });
     putCaret(doc, point);
 
-    onStatus?.({ kind: 'editing', text: '고치는 중 — Enter 로 저장, Esc 로 나가기' });
+    onStatus?.({
+      kind: 'editing',
+      text: cell ? '칸을 고치는 중 — Enter 로 저장, Esc 로 나가기' : '고치는 중 — Enter 로 저장, Esc 로 나가기',
+    });
   }
 
   /** 편집을 끝내고, 바뀐 게 있을 때만 저장한다 (결정 4 — 자동 저장). */
   async function end() {
     if (!current) return;
-    const { nodeId, el, payload, dom } = current;
+    const { nodeId, el, payload, dom, cell } = current;
     current = null;
 
     el.removeEventListener('keydown', onKey);
@@ -64,7 +82,7 @@ export function createEditor({ stage, commit, onStatus, onNotice, onReflow }) {
     const html = payloadOf(el);
     try {
       // 커서만 들어갔다 나온 경우다. 빈 커밋은 undo 링만 먹는다 (§11 M2 100 회 기준).
-      if (html !== payload) await save(nodeId, html, el, dom);
+      if (html !== payload) await save(nodeId, html, el, dom, cell);
     } finally {
       // 저장이 어떻게 끝났든 "고치는 중" 표시는 지워야 한다. 남으면 커서가 없는데
       // 화면은 고치는 중이라고 말하고, 사용자는 자기가 어디 있는지 알 수 없다.
@@ -74,8 +92,15 @@ export function createEditor({ stage, commit, onStatus, onNotice, onReflow }) {
 
   /* -------------------------------------------------------------- 저장 보내기 */
 
-  async function save(nodeId, html, el, dom) {
-    const { ok } = await commit.send([{ op: 'setContent', target: nodeId, args: { html } }], '글자 고치기');
+  async function save(nodeId, html, el, dom, cell) {
+    // 칸 하나를 고쳤으면 리프 전체를 갈지 않는다. `setContent` 로 보내면 표 전체가
+    // 정화기를 지나고, 순서만 만졌는데 서식이 사라지는 그 실패가 그대로 재현된다
+    // (§3.6 L6.1 이 신설된 이유).
+    const command = cell
+      ? { op: 'setChildContent', target: nodeId, args: { parentPath: cell.parentPath, index: cell.index, html } }
+      : { op: 'setContent', target: nodeId, args: { html } };
+
+    const { ok } = await commit.send([command], cell ? '칸 고치기' : '글자 고치기');
 
     if (!ok) {
       // 되돌린다. 화면에 남겨 두면 파일에 없는 글이 보이고, 그게 가장 나쁜 상태다.
@@ -151,6 +176,8 @@ export function createEditor({ stage, commit, onStatus, onNotice, onReflow }) {
     end,
     /** 지금 편집 중인 요소 (없으면 null). 선택 계층이 클릭을 넘겨줄지 정하는 근거다. */
     active: () => current?.el ?? null,
+    /** 지금 고치는 것이 표의 칸인가 — 표 도구가 자기 상태를 아는 근거다. */
+    activeCell: () => current?.cell ?? null,
   };
 }
 

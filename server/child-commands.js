@@ -36,6 +36,39 @@ import { normalizeInline } from './normalize-inline.js';
 
 const isStruct = (n) => n.kind === 'structural-child' && n.isElement;
 
+/**
+ * 인라인 `style` 을 받을 수 있는 유일한 자리 — `<col>`·`<colgroup>` 의 **열 지분**.
+ *
+ * 게이트 규칙 5 는 인라인 기하(`left`·`top`·`width`·`height`)를 `data-box="canvas"` 의
+ * 자식으로 제한하고, 거기에 예외를 하나 둔다: `<col>`/`<colgroup>` 의 `width`. 이 둘은
+ * 박스를 만들지 않으므로 자기 기하를 정하는 것이 아니라 **표 안에서 열이 갖는 지분**을
+ * 선언할 뿐이고, 그 값은 표마다 다르므로 테마 CSS 가 알 수 없다 (§5 규칙 5 예외).
+ *
+ * 열을 넣을 때 이것이 필요한 이유 — 실측한 표 10 개가 전부 `table-layout: fixed` 이고
+ * `<col>` 들의 지분 합이 이미 100% 다. 지분 없는 열을 넣으면 **폭이 0 이 되어 보이지
+ * 않는다.** 넣었는데 아무 일도 안 일어난 것처럼 보이는 것이 가장 나쁘다.
+ *
+ * 그 예외 **밖은 전부 거부한다.** 여기가 넓어지면 규칙 5 가 명령 하나로 우회된다.
+ */
+function assertColumnShare(tag, style) {
+  if (tag !== 'col' && tag !== 'colgroup') {
+    throw new DocError(422, `<${tag}> 에는 style 을 줄 수 없다 — 조판은 클래스가 정한다 (§5 규칙 5)`, {
+      code: 'commit.illegal-style',
+    });
+  }
+  const decls = String(style).split(';').map((d) => d.trim()).filter(Boolean);
+  const ok = decls.every((d) => /^width\s*:\s*[0-9.]+%$/i.test(d));
+  if (!ok || !decls.length) {
+    throw new DocError(422, `<${tag}> 의 style 은 width 지분(예: "width:25%") 하나여야 한다: ${style}`, {
+      code: 'commit.illegal-style',
+    });
+  }
+  return decls.join('; ');
+}
+
+/** 닫는 태그가 없는 HTML 빈 요소. 구조 자식으로 올 수 있는 것은 `<col>` 뿐이지만 목록으로 둔다. */
+const VOID_TAGS = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
+
 /** 구조 자식 목록 (문서 순서). 명령의 `index` 가 세는 단위다. */
 const structChildren = (node) => node.children.filter(isStruct);
 
@@ -162,7 +195,7 @@ registerCommand('insertChild', (deck, command) => {
 
   const parent = resolveParent(leaf, command.args?.parentPath ?? []);
   const kids = structChildren(parent);
-  const { index, tag, html = '', className = null } = command.args ?? {};
+  const { index, tag, html = '', className = null, style = null } = command.args ?? {};
 
   if (!Number.isInteger(index) || index < 0 || index > kids.length) {
     throw new DocError(422, `index 가 범위를 벗어났다: ${index} ∉ [0, ${kids.length}]`, {
@@ -180,11 +213,23 @@ registerCommand('insertChild', (deck, command) => {
     });
   }
 
-  const inner = normalizeInline(html, deck.mapping, leaf.value);
-  if (!inner.ok) {
-    throw new DocError(422, `인라인 정화기가 거부했다: ${inner.reason}`, { code: 'commit.rejected-content' });
+  // 빈 요소(`<col>`·`<br>`)는 닫는 태그를 갖지 않는다. `<col></col>` 을 쓰면 파서가
+  // 남는 종료 태그를 버려서 왕복은 통과하지만, **파일은 유효하지 않은 HTML 이 된다.**
+  // 이 문서는 손으로도 고칠 수 있어야 하므로(P4 와 같은 취지) 그 형태를 내지 않는다.
+  const open = `<${tag}${className ? ` class="${className}"` : ''}${style ? ` style="${assertColumnShare(tag, style)}"` : ''}>`;
+  let newEl;
+  if (VOID_TAGS.has(tag)) {
+    if (html) {
+      throw new DocError(422, `<${tag}> 는 빈 요소다 — 내용을 가질 수 없다`, { code: 'commit.void-child-content' });
+    }
+    newEl = open;
+  } else {
+    const inner = normalizeInline(html, deck.mapping, leaf.value);
+    if (!inner.ok) {
+      throw new DocError(422, `인라인 정화기가 거부했다: ${inner.reason}`, { code: 'commit.rejected-content' });
+    }
+    newEl = `${open}${inner.html}</${tag}>`;
   }
-  const newEl = `<${tag}${className ? ` class="${className}"` : ''}>${inner.html}</${tag}>`;
 
   const raw = deck.raw;
   const [lo, hi] = innerRange(parent);

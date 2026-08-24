@@ -29,6 +29,7 @@ import { createSlides } from './slides.js';
 import { createAdopt } from './adopt.js';
 import { createViewport } from './viewport.js';
 import { createPicture } from './picture.js';
+import { createTable } from './table.js';
 import { setIcon, setIconText } from './icons.js';
 
 const views = {
@@ -167,6 +168,20 @@ const picture = createPicture({
   onResync: () => showEditor(open.deckId, currentSlide),
 });
 
+const table = createTable({
+  stage,
+  layer: overlay,
+  commit: committer,
+  editor,
+  onNotice: showNotice,
+  // 행·열을 바꾸면 표의 바이트가 통째로 달라진다. 화면이 마크업을 흉내내지 않고 다시
+  // 받은 뒤, **그 표를 다시 연다** — 행을 셋 넣는 사람이 매번 표를 다시 찾게 하지 않는다.
+  onResync: async (nodeId, info) => {
+    await showEditor(open.deckId, currentSlide, nodeId);
+    table.reopen(nodeId, info);
+  },
+});
+
 const adopt = createAdopt({
   lock,
   findings,
@@ -234,6 +249,9 @@ const selection = createSelection({
   // 리프를 또 누른 것 = 고치겠다는 뜻이다 (결정 2). 무엇으로 고치는지는 종류가 정한다 —
   // 수식·진행바는 전용 편집기가 열리고(결정 8), 나머지는 커서가 들어간다.
   onActivate: (nodeId, info, point) => {
+    // 표는 `edit` 가 `setContent` 라 그냥 두면 표 **전체**에 커서가 들어간다. 고칠 것은
+    // 칸 하나이므로 표 도구가 먼저 받는다 (§3.6 L6.1 의 명령 넷을 쓴다).
+    if (table.claims(info) && table.begin(nodeId, info, point)) return;
     if (info.edit === 'setContent') editor.begin(nodeId, info, point);
     // 그림도 `edit` 가 `setProps` 라 그냥 두면 수식 편집기로 샌다. 고칠 것이 파일이므로
     // 옆에 상자를 띄우는 대신 파일 고르개를 바로 연다.
@@ -372,7 +390,17 @@ async function showEditor(deckId, startSlide = 0, selectId = null) {
   // 슬라이드는 원본 그대로 띄운다. 편집 표시는 이 바깥(부모 문서)이 얹는다.
   // 캐시가 남으면 방금 저장한 것이 화면에 안 나온다. 다시 받을 때는 주소를 달리한다.
   stage.src = `/deck/${encodeURIComponent(deckId)}/page?t=${performance.now()}`;
-  stage.onload = async () => mountStage(await outline, startSlide, selectId);
+
+  // **화면이 실제로 선 뒤에** 끝난다. 예전에는 `onload` 를 걸어 두고 바로 돌아왔는데,
+  // 그러면 `await showEditor(...)` 로 기다린 쪽이 **옛 문서**를 붙잡고 일한다 — 표 도구가
+  // 행을 넣은 뒤 표를 다시 열려다 사라진 iframe 의 표를 잡았고, 칸 테두리가 폭 0 으로
+  // 남았다(실측). 기다린 쪽에 그 사실을 숨기지 않는다.
+  await new Promise((done) => {
+    stage.onload = async () => {
+      mountStage(await outline, startSlide, selectId);
+      done();
+    };
+  });
 }
 
 function note(text) {
@@ -716,8 +744,8 @@ addEventListener('keydown', (e) => {
 /**
  * 겹쳐 그린 것을 전부 제자리에 다시 놓는다.
  *
- * 슬라이드 위에 떠 있는 것이 둘이다 — 선택 테두리와 불투명 편집 패널. (셋이었다.
- * 잠금 빗금이 있었는데, 막힌 자리가 0 이 되면서 없앴다 — `blocked.js` 머리말.) 둘은
+ * 슬라이드 위에 떠 있는 것이 셋이다 — 선택 테두리·불투명 편집 패널·표의 칸 테두리.
+ * (잠금 빗금도 있었는데, 막힌 자리가 0 이 되면서 없앴다 — `blocked.js` 머리말.) 셋은
  * 열 때 좌표를 한 번 재고 그 자리에 머무르므로, 밑의 슬라이드가 움직이면(배율·창 크기·
  * 글이 늘어 줄바꿈이 바뀜) 따로 놀기 시작한다. **한 곳에서 같이 부르는 이유**가
  * 이것이다: 하나라도 빠뜨리면 그 하나만 엉뚱한 자리에 남고, 그 증상은 "가끔 어긋난다"
@@ -726,6 +754,7 @@ addEventListener('keydown', (e) => {
 function reflow() {
   selection.place();
   opaque.reposition();
+  table.place();
 }
 
 // 창 크기가 바뀌면 슬라이드 배율이 바뀌고 테두리가 어긋난다.
