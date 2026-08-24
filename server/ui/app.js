@@ -28,6 +28,7 @@ import { createPresent } from './present.js';
 import { createSlides } from './slides.js';
 import { createAdopt } from './adopt.js';
 import { createViewport } from './viewport.js';
+import { createPicture } from './picture.js';
 import { setIcon, setIconText } from './icons.js';
 
 const views = {
@@ -155,6 +156,18 @@ const structure = createStructure({
   onRemoved: () => selection.clear(),
 });
 
+const picture = createPicture({
+  stage,
+  commit: committer,
+  deckId: () => open.deckId,
+  structure,
+  index: { get: (nodeId) => selection.infoOf(nodeId) },
+  onNotice: showNotice,
+  // 새 그림의 마크업은 테마가 정한다 — 화면이 흉내내면 두 번째 어휘 구현이다.
+  onInserted: (nodeId) => showEditor(open.deckId, currentSlide, nodeId),
+  onResync: () => showEditor(open.deckId, currentSlide),
+});
+
 const adopt = createAdopt({
   lock,
   findings,
@@ -223,6 +236,9 @@ const selection = createSelection({
   // 수식·진행바는 전용 편집기가 열리고(결정 8), 나머지는 커서가 들어간다.
   onActivate: (nodeId, info, point) => {
     if (info.edit === 'setContent') editor.begin(nodeId, info, point);
+    // 그림도 `edit` 가 `setProps` 라 그냥 두면 수식 편집기로 샌다. 고칠 것이 파일이므로
+    // 옆에 상자를 띄우는 대신 파일 고르개를 바로 연다.
+    else if (info.value === 'image') picture.pick(nodeId);
     else opaque.begin(nodeId, info);
   },
   editing: editor,
@@ -447,6 +463,11 @@ function mountStage(outline, startSlide = 0, selectId = null) {
     // 끌기가 선택보다 **먼저** 붙는다 — 끌기 뒤에 오는 click 을 삼켜야 하기 때문이다.
     drag.bind(doc);
     selection.bind(doc);
+    // 슬라이드 위로 파일을 끌어다 놓기. 안 걸면 브라우저가 그 창에서 파일을 열어
+    // 슬라이드가 사진으로 바뀐다 — 되돌리기로도 못 고치는 종류의 사고다.
+    picture.bind(doc);
+    // 붙여넣기는 초점이 있는 문서만 받는다. 슬라이드를 누른 뒤의 Ctrl+V 가 여기로 온다.
+    doc.addEventListener('paste', onPaste);
     // 초점이 슬라이드 안에 있을 때의 Ctrl+Z. 부모 창에만 달면 슬라이드를 한 번 누른
     // 뒤에는 단축키가 안 듣는다 — 사용자에게는 그것이 고장으로 보인다.
     doc.addEventListener('keydown', (e) => history.onKey(e, !!editor.active()), true);
@@ -669,6 +690,19 @@ document.getElementById('logo-file').addEventListener('change', async (e) => {
   e.target.value = '';
   if (file) await logo.apply(file);
 });
+
+/**
+ * 붙여넣기로 그림 넣기.
+ *
+ * 두 군데에 건다. 초점이 슬라이드 안에 있을 때와 밖(레일·도구 모음)에 있을 때 Ctrl+V 는
+ * 같은 뜻이어야 하는데, iframe 은 자기 안의 붙여넣기만 받는다. 글자를 고치는 중이면
+ * 넘긴다 — 그때 Ctrl+V 는 "이 자리에 글자" 이지 "그림" 이 아니다.
+ */
+function onPaste(e) {
+  if (views.editor.hidden) return;
+  picture.paste(e, { selectedId: selection.selected, editing: !!editor.active() });
+}
+addEventListener('paste', onPaste);
 
 addEventListener('hashchange', route);
 

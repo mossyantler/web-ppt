@@ -35,13 +35,22 @@ export function createStructure({ stage, commit, index, onNotice, onInserted, on
     return types;
   }
 
-  /** 고른 요소 **바로 아래**에 새 요소를 넣는다. */
-  async function insert(nodeId, type, variant = 'default') {
+  /**
+   * 고른 요소 **바로 아래**에 새 요소를 넣는다.
+   *
+   * `props` 를 함께 넘기면 넣으면서 속성까지 정해진다 — 그림이 그렇다. 나눠서 두 커밋으로
+   * 보내면 **되돌리기가 두 번 걸리고**, 한 번만 누른 사용자에게는 가리키는 곳이 없는 빈
+   * 그림틀이 남는다. `insertElement` 가 `props` 를 받는 이유가 그것이다.
+   */
+  async function insert(nodeId, type, variant = 'default', props = null) {
     const spot = spotOf(nodeId);
     if (!spot) return false;
 
+    const args = { parentId: spot.parentId, index: spot.at + 1, type, variant, slot: 'new' };
+    if (props) args.props = props;
+
     const { ok, body } = await commit.send(
-      [{ op: 'insertElement', args: { parentId: spot.parentId, index: spot.at + 1, type, variant, slot: 'new' } }],
+      [{ op: 'insertElement', args }],
       `${type} 넣기`,
     );
     if (!ok) return false;
