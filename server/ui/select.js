@@ -33,7 +33,6 @@ const LABELS = {
   stack: '세로 묶음', row: '가로 묶음', grid: '격자', group: '묶음', card: '카드',
   sequence: '흐름', canvas: '자유 배치', region: '영역',
 };
-
 export function createSelection({ stage, layer, onStatus, onActivate, editing, actions, isBlocked }) {
   /** nodeId → { kind, value, edit, parentId, sectionIndex } */
   const index = new Map();
@@ -119,6 +118,13 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
     const hit = resolve(e.target);
     if (!hit) return clear();
 
+    const leaf = editableLeafAt(e.target);
+    if (leaf && leaf !== selected) {
+      scope = index.get(leaf).parentId;
+      select(leaf);
+      return;
+    }
+
     // 이미 고른 것을 또 눌렀다 — 더 안쪽이 있으면 들어가고, 없으면 편집 신호를 낸다.
     if (hit.nodeId === selected) {
       const inner = resolve(e.target, hit.nodeId);
@@ -179,6 +185,16 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
     for (let s = scope; s; s = isSectionScope(s) ? null : index.get(s).parentId) {
       const hit = chain.find((id) => index.get(id).parentId === s);
       if (hit) return { nodeId: hit, scope: s };
+    }
+    return null;
+  }
+
+  function editableLeafAt(target) {
+    for (let el = target; el && el !== doc.documentElement; el = el.parentElement) {
+      const nodeId = el.dataset?.nodeId;
+      const info = nodeId ? index.get(nodeId) : null;
+      if (info?.edit && info.edit !== 'setContent') return null;
+      if (info?.edit === 'setContent') return nodeId;
     }
     return null;
   }
