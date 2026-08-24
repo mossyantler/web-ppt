@@ -36,6 +36,15 @@ function startTagLoc(node) {
   return node.sourceCodeLocation?.startTag || null;
 }
 
+/** 자기 안에 공백 아닌 글자가 있는가 (자손 포함). */
+function hasOwnText(node) {
+  for (const c of node.childNodes || []) {
+    if (c.nodeName === '#text' && (c.value || '').trim()) return true;
+    if (c.tagName && hasOwnText(c)) return true;
+  }
+  return false;
+}
+
 function textOf(node) {
   let out = '';
   for (const child of node.childNodes || []) {
@@ -162,33 +171,54 @@ export function classify(node) {
     return { type: 'leaf', value: TAG_LEAF[tag].value, residual: classes, viaTag: true };
   }
   if (INLINE_TAGS.has(tag)) return { type: 'inline' };
-  if (classes.length === 0 && tag === 'div') return bareDiv(node);
-  return { type: 'unmapped' };
+
+  // 면제 ⓓ — SVG 는 다른 이름공간이다 (grammar §3.7). 이름표를 붙이지 않고, 안으로도
+  // 내려가지 않는다.
+  //
+  // 처음에는 `<svg>` 자신에게 `el:figure` 를 줬다. 게이트가 막았다 — `figure` 는 저작
+  // 리프라 `setContent` 로 고치는데 SVG 안에는 고칠 텍스트 노드가 없다. 인라인 태그와
+  // 같은 처지다: 어휘의 어느 값도 이것을 뜻하지 않는다. 그러면 값을 만들어 붙이는 대신
+  // 면제하는 것이 이 문법의 답이다. 그림을 옮기거나 지우는 일은 그것을 감싼 컨테이너로
+  // 한다.
+  if (tag === 'svg') return { type: 'exempt' };
+
+  return byStructure(node, classes);
 }
 
 /**
- * 클래스 없는 `<div>` — grammar.md §2.6 (구조 규칙).
+ * 클래스로 확정되지 않는 요소 — grammar.md §2.6 (구조 규칙).
  *
- * 클래스가 없으므로 클래스 역방향 조회로는 영원히 도달할 수 없다. 그렇다고 어휘 밖으로 두면
- * 실측 템플릿 6종이 게이트를 통과하지 못한다. 그래서 **클래스가 아니라 구조**로 가른다 —
- * 이것은 의미의 추측이 아니라, 문법이 이미 쓰는 컨테이너/리프 구분을 그대로 적용한 것이다.
+ * 원래 이 규칙은 **클래스 없는 `<div>`** 에만 걸려 있었다. 클래스가 없으면 역방향 조회로는
+ * 영원히 도달할 수 없으니 구조로 가른다는 뜻이었다. 그 이유는 클래스가 **있지만 어휘에
+ * 없는** 요소에도 똑같이 성립한다 — `.equation-grid` 는 조회로 도달할 수 없다는 점에서
+ * 클래스가 없는 것과 같다. 그래서 규칙을 좁게 걸어 둘 근거가 없다.
  *
- *   주석 대상 요소 자식이 있다  → 컨테이너.  인라인 flex 를 선언했으면 row, 아니면 group|plain
+ * 좁게 걸어 둔 대가는 실측으로 나온다. 어휘 밖으로 남은 요소는 편집기가 "고칠 수 없는
+ * 자리" 로 표시하는데, 리포트 한 장에 **479 개**가 나왔다. 그중 사람이 실제로 고치고 싶은
+ * 것은 하나도 없다 — 전부 격자·띠 같은 껍데기다. 껍데기를 컨테이너라고 부르는 데에는
+ * 사람 판단이 필요하지 않다.
+ *
+ *   주석 대상 요소 자식이 있다  → 컨테이너.  인라인 flex 를 선언했으면 row, 아니면 group
  *   없다(텍스트·면제 인라인뿐)  → 저작 리프 text
+ *
+ * **클래스는 그대로 둔다.** 부여하는 것은 `data-box`/`data-el` 뿐이고 조판은 여전히
+ * 클래스가 한다. 그래서 이 부여는 화면을 한 픽셀도 바꾸지 않는다.
  */
-function bareDiv(node) {
+function byStructure(node, residual = []) {
   const hasAnnotatableChild = (node.childNodes || []).some((c) => {
     if (!c.tagName) return false;
     if (!INLINE_TAGS.has(tagOf(c))) return true;
     const inner = classify(c);
     return inner.type === 'leaf' && INLINE_ANNOTATABLE.has(inner.value);
   });
-  if (!hasAnnotatableChild) return { type: 'leaf', value: 'text', residual: [], viaStructure: true };
+  if (!hasAnnotatableChild) return { type: 'leaf', value: 'text', residual, viaStructure: true };
   const style = getAttr(node, 'style') || '';
   const isFlexRow = /display\s*:\s*(inline-)?flex/i.test(style);
-  return isFlexRow
-    ? { type: 'box', value: 'row', residual: [], viaStructure: true }
-    : { type: 'box', value: 'group', variant: 'plain', residual: [], viaStructure: true };
+  if (isFlexRow) return { type: 'box', value: 'row', residual, viaStructure: true };
+  // variant 는 **클래스가 없을 때만** 붙인다. variant → 클래스 대응표는 새 요소를 지을 때
+  // 쓰는 것이라, 이미 자기 클래스를 가진 요소에 붙이면 없는 사실을 적는 셈이 된다.
+  const variant = residual.length ? undefined : 'plain';
+  return { type: 'box', value: 'group', variant, residual, viaStructure: true };
 }
 
 /** 선언된 구조 자식인가 (grammar §3.6 L6) */
@@ -342,8 +372,18 @@ function visit(node, ctx, mode, leafValue) {
 
   const result = classify(node);
 
+  if (result.type === 'exempt') return;   // 면제 ⓓ — SVG 서브트리 (§3.7)
+
   if (result.type === 'inline') {
-    // 면제 ⓐ — 허용 인라인 태그. 주석하지 않는다
+    // 면제 ⓐ 는 **리프 안의** 인라인을 위한 것이다 — `<b>` 나 `<span class="en">` 은 그
+    // 리프가 쓴 글의 일부이므로 따로 세지 않는다. 그런데 컨테이너 **바로 아래**의 인라인은
+    // 자기를 품을 리프가 없다. 그대로 두면 그 글자는 어느 리프에도 속하지 않아 영원히
+    // 고칠 수 없다 (실측 — 머리말의 랩 이름과 쪽번호가 그렇다). 품을 것이 없으면
+    // **그것이 리프다.**
+    if (mode === MODE.NORMAL && hasOwnText(node)) {
+      annotateLeaf(node, { type: 'leaf', value: 'text', residual: classListOf(node) }, ctx);
+      return;
+    }
     for (const c of node.childNodes || []) if (c.tagName) visit(c, ctx, MODE.NORMAL);
     return;
   }
@@ -375,9 +415,12 @@ function visit(node, ctx, mode, leafValue) {
 
   if (result.type === 'leaf') {
     if (INLINE_TAGS.has(tag) && !INLINE_ANNOTATABLE.has(result.value)) {
-      // 인라인 태그는 면제 ⓐ다. 클래스가 걸려도 어휘 값으로 승격하지 않는다
-      for (const c of node.childNodes || []) if (c.tagName) visit(c, ctx, MODE.NORMAL);
-      return;
+      // 리프 안에서는 면제 ⓐ다 — 클래스가 걸려도 어휘 값으로 승격하지 않는다.
+      // 컨테이너 바로 아래라면 얘기가 다르다 (위 인라인 분기와 같은 이유).
+      if (mode !== MODE.NORMAL || !hasOwnText(node)) {
+        for (const c of node.childNodes || []) if (c.tagName) visit(c, ctx, MODE.NORMAL);
+        return;
+      }
     }
     annotateLeaf(node, result, ctx);
     return;

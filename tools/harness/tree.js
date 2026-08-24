@@ -208,6 +208,26 @@ function classify(n, node, mapping, mode, parent) {
     return;
   }
 
+  // 면제 ⓓ — SVG (§3.7).
+  //
+  // `<svg>` 는 다른 이름공간이다. 거기의 `<g>`·`<path>`·`<defs>` 에는 HTML 블록/리프
+  // 어휘가 뜻을 갖지 않으므로, 어휘 밖으로 두면 **도해 한 장이 수백 개의 "고칠 수 없는
+  // 자리" 로 쪼개진다** (실측 — 2026-08-24 리포트의 도해 한 장이 159 개). 사용자에게
+  // 그림은 하나다.
+  //
+  // `<svg>` **자신도** 면제한다. 어휘의 어느 값도 이것을 뜻하지 않기 때문이다 — 저작
+  // 리프로 부르면 `setContent` 가 고칠 텍스트 노드를 못 찾고, 컨테이너로 부르면 그 안에
+  // 요소를 끼울 수 있다고 말하게 된다. 인라인 태그(면제 ⓐ)와 같은 처지이고, 답도 같다:
+  // 보존하고 세지 않는다. 그림을 옮기거나 지우는 일은 그것을 감싼 컨테이너로 한다.
+  if (parent && (parent.tag === 'svg' || parent.kind === 'svg-subtree')) {
+    n.kind = 'svg-subtree';
+    return;
+  }
+  if (n.tag === 'svg' && !n.declared.el && !n.declared.box) {
+    n.kind = 'svg-subtree';
+    return;
+  }
+
   const el = n.declared.el;
   const box = n.declared.box;
 

@@ -191,16 +191,48 @@ test('G-2 — 슬롯과 조판을 함께 진 요소는 region 의 두 축으로 
   assert.equal(findings.filter((f) => f.code === 'adopt.ambiguous-mapping').length, 0);
 });
 
-test('추측 금지 — 어휘에 걸리지 않는 요소는 보고한다 (remedy 비지 않음)', () => {
-  const src = '<html><body><section class="slide">'
+test('추측 금지 — 값이 여럿이면 보고한다. 하나도 안 걸리면 구조가 가른다', () => {
+  // 어휘에 **하나도** 안 걸리는 클래스는 클래스로 도달할 수 없다. 클래스 없는 요소와
+  // 같은 처지이므로 같은 규칙(§2.6 구조)으로 가른다 — 추측이 아니라 적용이다.
+  const plain = adoptSource('<html><body><section class="slide">'
     + '<p class="nosuchclass">x</p><span class="nope"><em class="alsonope">y</em></span>'
-    + '<article class="whatever">z</article></section></body></html>';
-  const { output, findings } = adoptSource(src);
-  assert.ok(output.includes('<article class="whatever">'), '알 수 없는 요소에 값을 부여했다');
-  const f = findings.find((x) => x.code === 'grammar.unknown-element');
+    + '<article class="whatever">z</article></section></body></html>');
+  assert.ok(plain.output.includes('<article data-el="text"'), '어휘 밖 요소를 잠긴 채로 남겼다');
+  assert.ok(plain.output.includes('class="whatever"'), 'class 를 건드렸다 — 조판은 클래스가 한다');
+  assert.equal(plain.findings.filter((f) => f.code === 'grammar.unknown-element').length, 0);
+
+  // 어휘 값 **여럿**에 걸리는 것은 다르다. 무엇인지는 사람이 정한다.
+  const both = adoptSource('<html><body><section class="slide">'
+    + '<div class="card meta">x</div></section></body></html>');
+  assert.ok(both.output.includes('<div class="card meta">'), '모호한 요소에 값을 부여했다');
+  const f = both.findings.find((x) => x.code === 'adopt.ambiguous-mapping');
   assert.ok(f && f.remedy.trim().length > 0, '§5.2 remedy 계약 위반');
-  assert.ok(f.subject.startsWith('<article'), '§5.2 subject는 원문 여는 태그다');
+  assert.ok(f.subject.startsWith('<div'), '§5.2 subject는 원문 여는 태그다');
   assert.ok(f.location.line > 0);
+});
+
+test('면제 ⓓ — SVG 는 통째로 면제한다. 이름표도 안 붙이고 보고도 안 한다 (§3.7)', () => {
+  const { output, findings } = adoptSource('<html><body><section class="slide">'
+    + '<div class="fig-band"><svg viewBox="0 0 10 10"><defs><g><path d="M0 0"/></g></defs></svg></div>'
+    + '</section></body></html>');
+  assert.ok(output.includes('<svg viewBox="0 0 10 10">'), 'svg 에 값을 부여했다');
+  assert.ok(output.includes('<path d="M0 0"/>'), 'svg 안쪽에 값을 부여했다');
+  assert.equal(findings.filter((f) => f.code === 'grammar.unknown-element').length, 0);
+  // 그림을 옮기거나 지우는 일은 그것을 감싼 컨테이너로 한다 — 그 컨테이너는 잡혀야 한다.
+  assert.ok(output.includes('<div data-box="group"'), '그림을 감싼 껍데기가 컨테이너로 안 잡혔다');
+});
+
+test('표·목록은 태그로 확정한다 — 구조 자식이 낱개로 쪼개지지 않는다', () => {
+  const { output } = adoptSource('<html><body><section class="slide">'
+    + '<table class="data-table"><colgroup><col style="width:30%"></colgroup>'
+    + '<tbody><tr><td>가</td></tr></tbody></table>'
+    + '<ul class="bullets"><li>하나</li></ul>'
+    + '</section></body></html>');
+  assert.ok(output.includes('<table data-el="table"'), '표가 컨테이너로 쪼개졌다');
+  assert.ok(output.includes('<col style="width:30%">'), '<col> 에 값을 부여했다 — 글자를 담을 수 없다');
+  assert.ok(output.includes('<td>가</td>'), '표 구조 자식에 값을 부여했다');
+  assert.ok(output.includes('<ul data-el="list"'), '목록이 컨테이너로 쪼개졌다');
+  assert.ok(output.includes('<li>하나</li>'), '<li> 에 값을 부여했다');
 });
 
 test('면제 ⓐⓑⓒ — 인라인·불투명 자식·구조 자식은 주석하지 않는다', () => {
@@ -265,7 +297,9 @@ test('classify — 태그 규칙은 어휘 클래스가 없을 때만 쓴다', (
   const els = [...walk(doc)].filter((n) => ['p', 'article'].includes((n.tagName || '')));
   assert.deepEqual(classify(els[0]).value, 'kicker');
   assert.deepEqual(classify(els[1]).value, 'text');
-  assert.equal(classify(els[2]).type, 'unmapped');
+  // 태그 규칙에도 없고 클래스도 안 걸린다 — 구조가 가른다 (§2.6). 글자뿐이므로 text.
+  assert.deepEqual(classify(els[2]).value, 'text');
+  assert.equal(classify(els[2]).viaStructure, true);
 });
 
 test('classify — 클래스 없는 <div> 는 구조로 갈린다 (G-1·G-3, grammar §2.6)', () => {

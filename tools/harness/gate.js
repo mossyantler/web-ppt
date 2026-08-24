@@ -27,7 +27,8 @@ function finding(rule, code, node, raw, file, remedy, extra = {}) {
 
 /** 규칙 2·3 의 면제 대상인가 (ⓐ 인라인 ⓑ 불투명 서브트리 ⓒ 선언된 구조 자식). */
 function isExempt(n) {
-  return n.kind === 'inline' || n.kind === 'opaque-subtree' || n.kind === 'structural-child' || n.kind === 'synthesized';
+  return n.kind === 'inline' || n.kind === 'opaque-subtree' || n.kind === 'svg-subtree'
+    || n.kind === 'structural-child' || n.kind === 'synthesized';
 }
 
 /** 인라인 style 선언을 (prop, value) 로 쪼갠다. 커스텀 프로퍼티도 그대로 나온다. */

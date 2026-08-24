@@ -79,6 +79,15 @@ export const BOX_ENTRIES = entriesFor('box:').map((e) => (
 export const TAG_LEAF = {
   p: { value: 'text' },
   img: { value: 'image' },
+  // 태그가 곧 뜻인 것들. 클래스가 어휘에 안 걸린다고 이것들까지 구조 규칙(§2.6)에
+  // 맡기면 `<table>` 이 컨테이너가 되고 그 안의 `<col>`·`<tr>` 이 하나씩 이름표를
+  // 받는다 — `<col>` 은 글자를 담을 수 없으므로 "고칠 텍스트가 없다" 로 게이트가
+  // 죽는다(실측). 어휘가 이미 `table`·`list` 를 갖고 있고, 둘 다 leafStructure 로
+  // 자기 구조 자식을 선언해 두었다. 태그로 확정하는 편이 맞다.
+  table: { value: 'table' },
+  ul: { value: 'list' },
+  ol: { value: 'list' },
+  hr: { value: 'rule' },
 };
 
 /** 저작 리프의 구조 자식 — grammar.md §3.6 L6. */
