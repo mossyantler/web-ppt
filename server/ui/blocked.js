@@ -41,9 +41,26 @@ export function createBlocked({ stage, layer, onNotice }) {
     sections = outline?.sections ?? [];
   }
 
+  /**
+   * 슬라이드가 다시 그려지는 것을 iframe **안에서** 지켜본다.
+   *
+   * 점선은 막힌 요소를 정확히 덮어야 뜻이 통한다 — 어느 자리가 막혔는지 말해 주는 것이
+   * 그 테두리뿐이기 때문이다. 그런데 밖에서 "배율이 바뀌었다" 는 신호를 받아 다시 그리면
+   * 그 순간 iframe 은 아직 새 크기를 반영하기 전이고, 잰 값은 **직전 배율의 것**이라
+   * 점선이 한 박자 뒤처진 크기로 남는다(실측: 103% 인데 120% 때의 폭 1420px).
+   * `select.js` 의 테두리와 `opaque.js` 의 패널이 같은 이유로 같은 장치를 쓴다.
+   */
+  let watched = null;
+  function watch(doc) {
+    if (!doc || watched === doc) return;
+    watched = doc;
+    new doc.defaultView.ResizeObserver(() => place()).observe(doc.documentElement);
+  }
+
   /** 장이 바뀔 때마다 그 장의 막힌 자리를 다시 찾는다. */
   function setSlide(i) {
     const doc = stage.contentDocument;
+    watch(doc);
     const section = sections[i];
     const root = doc?.querySelectorAll('section')[i];
 

@@ -24,6 +24,8 @@
  * 텍스트 편집은 `onActivate` 뒤에 붙는다 (M3-4). 이 파일은 **아무것도 저장하지 않는다.**
  */
 
+import { setIcon } from './icons.js';
+
 /** 어휘 값의 화면 이름. 여기 없는 값은 값 그대로 보인다 — 표시용이지 판정이 아니다. */
 const LABELS = {
   title: '제목', subtitle: '부제', kicker: '머리말', hero: '표지 제목', heading: '소제목',
@@ -277,18 +279,17 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
     el.hidden = true;
 
     const buttons = [
-      ['up', '↑', '위로', () => actions?.moveElement(selected, -1)],
-      ['down', '↓', '아래로', () => actions?.moveElement(selected, +1)],
-      ['add', '＋', '아래에 넣기', () => openMenu()],
-      ['remove', '🗑', '지우기 (되돌리기로 돌아옵니다)', () => actions?.remove(selected)],
+      ['up', 'up', '위로', () => actions?.moveElement(selected, -1)],
+      ['down', 'down', '아래로', () => actions?.moveElement(selected, +1)],
+      ['add', 'add', '아래에 넣기', () => openMenu()],
+      ['remove', 'remove', '지우기 (되돌리기로 돌아옵니다)', () => actions?.remove(selected)],
     ];
 
-    for (const [act, glyph, title, run] of buttons) {
+    for (const [act, iconName, title, run] of buttons) {
       const b = document.createElement('button');
       b.type = 'button';
       b.dataset.act = act;
-      b.textContent = glyph;
-      b.title = title;
+      setIcon(b, iconName, title);
       b.addEventListener('click', async () => {
         closeMenu();
         const done = await run();

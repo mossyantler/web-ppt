@@ -14,6 +14,8 @@
  * 어휘 판정을 브라우저로 복제하지 않는 것과 같은 이유다.
  */
 
+import { setIcon } from './icons.js';
+
 export function createAdopt({ lock, findings, commit, onNotice, onDone }) {
   let busy = false;
 
@@ -119,8 +121,7 @@ export function createAdopt({ lock, findings, commit, onNotice, onDone }) {
 
     const x = document.createElement('button');
     x.type = 'button';
-    x.title = '닫기';
-    x.textContent = '✕';
+    setIcon(x, 'close', '닫기');
     x.addEventListener('click', close);
 
     head.append(title, count, x);

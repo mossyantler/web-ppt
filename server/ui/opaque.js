@@ -38,12 +38,28 @@ export function createOpaque({ stage, layer, commit, onNotice, onDone }) {
    */
   let open = null;   // { nodeId, el, onCancel }
 
+  /**
+   * 슬라이드가 다시 그려지는 것을 iframe **안에서** 지켜본다.
+   *
+   * 밖에서 "배율을 바꿨다" 는 신호를 받아 옮기는 것으로는 부족하다 — 그 순간 iframe 은
+   * 아직 새 크기를 반영하기 전이고, 그때 잰 좌표는 한 박자 낡은 값이라 패널이 수식에서
+   * 수십 픽셀 떨어진 자리에 앉는다(실측: 배율을 오갈 때 59px). 안쪽이 실제로 다시
+   * 그려진 뒤에 옮겨야 맞는다. `select.js` 가 테두리에 대해 같은 일을 같은 방법으로 한다.
+   */
+  let watched = null;
+  function watch(doc) {
+    if (watched === doc) return;
+    watched = doc;
+    new doc.defaultView.ResizeObserver(() => reposition()).observe(doc.documentElement);
+  }
+
   /** 불투명 리프를 두 번 눌렀을 때 열린다. 그 판정은 목차의 `edit` 가 한다. */
   function begin(nodeId, info) {
     const doc = stage.contentDocument;
     const el = doc.querySelector(`[data-node-id="${cssEscape(nodeId)}"]`);
     if (!el) return false;
 
+    watch(doc);
     close();
     if (info.edit === 'setTex') open = openTex(nodeId, el);
     else if (info.edit === 'setValue') open = openValue(nodeId, el);
@@ -221,7 +237,18 @@ export function createOpaque({ stage, layer, commit, onNotice, onDone }) {
 
   const clamp = (v) => Math.min(MAX, Math.max(MIN, Math.round(Number(v) || 0)));
 
-  return { begin, close, active: () => open?.el ?? null };
+  /**
+   * 열려 있는 패널을 제자리에 다시 놓는다.
+   *
+   * 패널은 고른 요소 **바로 아래**에 붙어야 뜻이 통한다 — 어느 수식을 고치는 중인지
+   * 말해 주는 것이 그 위치뿐이기 때문이다. 그런데 자리는 열 때 한 번 계산되므로,
+   * 배율이나 창 크기가 바뀌면 요소만 움직이고 패널은 남는다. 그때 이것을 부른다.
+   */
+  function reposition() {
+    if (open?.el && !panel.hidden) place(open.el);
+  }
+
+  return { begin, close, reposition, active: () => open?.el ?? null };
 }
 
 function cssEscape(value) {

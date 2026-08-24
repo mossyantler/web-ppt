@@ -27,6 +27,8 @@ import { createBackground } from './background.js';
 import { createPresent } from './present.js';
 import { createSlides } from './slides.js';
 import { createAdopt } from './adopt.js';
+import { createViewport } from './viewport.js';
+import { setIcon, setIconText } from './icons.js';
 
 const views = {
   decks: document.getElementById('view-decks'),
@@ -47,6 +49,9 @@ const redoButton = document.getElementById('redo');
 const overlay = document.getElementById('overlay');
 const lock = document.getElementById('lock');
 const findings = document.getElementById('findings');
+const canvasEl = document.getElementById('canvas');
+const zoomVal = document.getElementById('zoom-val');
+const zoomFit = document.getElementById('zoom-fit');
 
 /** 목록을 화면 사이에서 재사용한다 — 편집 화면의 머리글도 여기서 이름을 얻는다. */
 let decksCache = null;
@@ -112,7 +117,7 @@ const editor = createEditor({
   commit: committer,
   onStatus: showSelectionState,
   onNotice: showNotice,
-  onReflow: () => { selection.place(); blocked.place(); },
+  onReflow: () => reflow(),
 });
 
 const reorder = createReorder({
@@ -178,10 +183,10 @@ const background = createBackground({
 
 const present = createPresent({
   stage,
-  canvas: document.getElementById('canvas'),
+  canvas: canvasEl,
   overlay,
   onEnter: () => selection.clear(),
-  onExit: () => { selection.place(); blocked.place(); },
+  onExit: () => reflow(),
 });
 
 const slides = createSlides({
@@ -374,6 +379,10 @@ function mountStage(outline, startSlide = 0, selectId = null) {
   const doc = stage.contentDocument;
   const sections = [...doc.querySelectorAll('section')];
 
+  // 덱이 자기 원래 크기를 적어 두었다(`<deck-stage width= height=>`). 배율은 그 값을
+  // 알아야 계산된다 — 1280×720 을 상수로 박으면 다른 크기의 덱에서 어긋난다.
+  viewport.adoptDesign(doc);
+
   if (!sections.length) {
     rail.replaceChildren(note('슬라이드를 찾지 못했습니다.'));
     return;
@@ -472,17 +481,16 @@ function railControls(index, total) {
   box.className = 'rail-ops';
 
   const ops = [
-    ['↑', '위로', () => slides.move(index, -1), index > 0],
-    ['↓', '아래로', () => slides.move(index, +1), index < total - 1],
-    ['⧉', '복제', () => slides.duplicate(index), true],
-    ['🗑', '지우기 (되돌리기로 돌아옵니다)', () => slides.remove(index), total > 1],
+    ['railUp', '위로', () => slides.move(index, -1), index > 0],
+    ['railDown', '아래로', () => slides.move(index, +1), index < total - 1],
+    ['duplicate', '복제', () => slides.duplicate(index), true],
+    ['remove', '지우기 (되돌리기로 돌아옵니다)', () => slides.remove(index), total > 1],
   ];
 
-  for (const [glyph, title, run, on] of ops) {
+  for (const [name, title, run, on] of ops) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.textContent = glyph;
-    b.title = title;
+    setIcon(b, name, title);
     b.disabled = !on;
     b.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -672,7 +680,85 @@ addEventListener('keydown', (e) => {
   history.onKey(e, !!editor.active());
 });
 
+/**
+ * 겹쳐 그린 것을 전부 제자리에 다시 놓는다.
+ *
+ * 슬라이드 위에 떠 있는 것이 셋이다 — 선택 테두리·잠금 표시·불투명 편집 패널. 셋은
+ * 열 때 좌표를 한 번 재고 그 자리에 머무르므로, 밑의 슬라이드가 움직이면(배율·창 크기·
+ * 글이 늘어 줄바꿈이 바뀜) 따로 놀기 시작한다. **한 곳에서 셋을 같이 부르는 이유**가
+ * 이것이다: 하나라도 빠뜨리면 그 하나만 엉뚱한 자리에 남고, 그 증상은 "가끔 어긋난다"
+ * 라서 원인을 찾기 어렵다.
+ */
+function reflow() {
+  selection.place();
+  blocked.place();
+  opaque.reposition();
+}
+
 // 창 크기가 바뀌면 슬라이드 배율이 바뀌고 테두리가 어긋난다.
-addEventListener('resize', () => { selection.place(); blocked.place(); });
+// (맞춤 배율의 재계산은 `viewport` 가 캔버스를 직접 지켜보며 한다 — 창은 그대로인데
+//  레일만 넓어지는 경우를 `resize` 는 알려주지 않는다.)
+addEventListener('resize', reflow);
+
+/* ------------------------------------------------------------------ 배율
+ *
+ * 슬라이드를 얼마나 크게 볼지. 배율이 바뀌면 겹쳐 그린 테두리가 어긋나므로
+ * 한 번의 변화가 언제나 **다시 그리기**로 이어져야 한다 — 그 연결이 여기다.
+ */
+const zoomIn = document.getElementById('zoom-in');
+const zoomOut = document.getElementById('zoom-out');
+
+const viewport = createViewport({
+  canvas: canvasEl,
+  stage,
+  onChange: ({ zoom, mode, atMin, atMax }) => {
+    zoomVal.textContent = `${Math.round(zoom * 100)}%`;
+    zoomFit.setAttribute('aria-pressed', String(mode === 'fit'));
+    zoomIn.disabled = !!atMax;
+    zoomOut.disabled = !!atMin;
+    reflow();
+  },
+});
+
+zoomIn.addEventListener('click', () => viewport.step(+1));
+zoomOut.addEventListener('click', () => viewport.step(-1));
+// 배율 숫자 자체가 "원래 크기로" 버튼이다. 파워포인트에서 백분율을 누르면 대화상자가
+// 뜨지만, 우리는 고를 것이 아홉 개뿐이라 상자를 띄울 값이 없다.
+zoomVal.addEventListener('click', () => viewport.actual());
+zoomFit.addEventListener('click', () => viewport.fit());
+
+paintIcons();
+
+/**
+ * 글자로 된 버튼을 아이콘으로 갈아 끼운다 (Lucide).
+ *
+ * HTML 에는 글자를 남겨 두고 여기서 바꾸는 이유 — 스크립트가 실패해도 버튼에 이름이
+ * 남는다. 아이콘만 박아 두면 그때 화면에 뜻 모를 빈 사각형만 줄지어 남는다.
+ * 바꾸면서 원래 글자는 `title` 로 옮겨 간다(`setIcon`).
+ */
+function paintIcons() {
+  setIcon(undoButton, 'undo');
+  setIcon(redoButton, 'redo');
+  setIcon(document.getElementById('bg-light'), 'light');
+  setIcon(document.getElementById('bg-dark'), 'dark');
+  setIcon(document.getElementById('bg-all'), 'all');
+  setIcon(zoomIn, 'zoomIn');
+  setIcon(zoomOut, 'zoomOut');
+  setIcon(zoomFit, 'fit');
+
+  // 이름이 같이 보여야 하는 것들. 아이콘만 두면 무엇을 여는 버튼인지 알 길이 없다 —
+  // 발표는 화면을 통째로 바꾸고, 로고는 파일 고르개를 연다. 둘 다 누른 뒤에야
+  // 무슨 일이 일어났는지 아는 종류라 이름값을 한다.
+  setIconText(document.getElementById('present'), 'present', '발표');
+  setIconText(document.getElementById('new-deck'), 'newDeck', '새 리포트');
+  setIconText(document.querySelector('#topbar .back'), 'back', '목록');
+
+  // 로고는 이름표(label) 안에 파일 고르개를 품고 있다. 안을 갈아 끼우면 그것까지
+  // 쓸려 나가고, 그러면 눌러도 파일 창이 안 열린다 — 빼 두었다가 도로 넣는다.
+  const logoPick = document.getElementById('logo-pick');
+  const logoInput = logoPick.querySelector('input');
+  setIconText(logoPick, 'logo', '로고');
+  logoPick.append(logoInput);
+}
 
 route();
