@@ -133,7 +133,6 @@ const reorder = createReorder({
 
 const blocked = createBlocked({
   stage,
-  layer: overlay,
   onNotice: showNotice,
 });
 
@@ -717,15 +716,15 @@ addEventListener('keydown', (e) => {
 /**
  * 겹쳐 그린 것을 전부 제자리에 다시 놓는다.
  *
- * 슬라이드 위에 떠 있는 것이 셋이다 — 선택 테두리·잠금 표시·불투명 편집 패널. 셋은
+ * 슬라이드 위에 떠 있는 것이 둘이다 — 선택 테두리와 불투명 편집 패널. (셋이었다.
+ * 잠금 빗금이 있었는데, 막힌 자리가 0 이 되면서 없앴다 — `blocked.js` 머리말.) 둘은
  * 열 때 좌표를 한 번 재고 그 자리에 머무르므로, 밑의 슬라이드가 움직이면(배율·창 크기·
- * 글이 늘어 줄바꿈이 바뀜) 따로 놀기 시작한다. **한 곳에서 셋을 같이 부르는 이유**가
+ * 글이 늘어 줄바꿈이 바뀜) 따로 놀기 시작한다. **한 곳에서 같이 부르는 이유**가
  * 이것이다: 하나라도 빠뜨리면 그 하나만 엉뚱한 자리에 남고, 그 증상은 "가끔 어긋난다"
  * 라서 원인을 찾기 어렵다.
  */
 function reflow() {
   selection.place();
-  blocked.place();
   opaque.reposition();
 }
 

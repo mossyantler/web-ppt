@@ -342,17 +342,14 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
 .op-buttons button:first-child { border-color: var(--ui-accent); color: var(--ui-accent); }
 .op-buttons button:hover { background: #23262e; }
 
-/* 아직 고칠 수 없는 **자리** (M3-9 · 결정 13).
+/* 아직 고칠 수 없는 **자리** (M3-9 · 결정 13) — 그리지 않는다.
  *
- * 장 전체를 덮는 막은 `#lock` 이 따로 맡는다(이름표가 아예 없는 장). 여기는 그 반대 —
- * 고칠 수 있는 장 **안에** 섞인, 문법이 모르는 요소 하나하나다. 회색 막을 씌우지 않는다:
- * "볼 수는 있지만 수정은 안 된다" 가 사용자가 정한 것이다. 누르면 이유와 줄 번호를 준다. */
-.lock-mark {
-  border: 1px dashed #8b6f2a;
-  border-radius: 3px;
-  background: repeating-linear-gradient(
-    45deg, transparent, transparent 6px, #ffb32210 6px, #ffb32210 12px);
-}
+ * 노란 빗금 테두리가 여기 있었다. 실측에서 리포트 한 장에 479 개가 나왔고, 겹침을 피하려
+ * 바깥쪽 하나에만 그리다 보니 그 하나가 본문 전체를 감싸는 격자였다 — **글자가 다 고쳐지는
+ * 슬라이드가 통째로 잠긴 것처럼** 보였다. 껍데기 쪽을 고쳐 막힌 자리를 0 으로 만들었고
+ * (`tools/adopt` §2.6·§3.7), 표시는 없앴다. 자세한 것은 `blocked.js` 머리말.
+ *
+ * 장 전체를 덮는 막(`#lock`, 이름표가 아예 없는 장)은 그대로다. */
 
 /* 무엇을 넣을지 고르는 목록 (M3-7 · 결정 7). */
 .sel-menu {

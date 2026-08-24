@@ -114,11 +114,16 @@ export function createSelection({ stage, layer, onStatus, onActivate, editing, a
     if (active?.contains(e.target)) return;
     if (active) editing.end();
 
-    // 문법이 모르는 자리다 — 고를 수 없고, 왜인지만 말한다 (결정 13).
-    if (isBlocked?.(e.target)) return clear();
-
     const hit = resolve(e.target);
-    if (!hit) return clear();
+    if (!hit) {
+      // 여기엔 고를 것이 하나도 없다. 문법이 모르는 자리라면 이유와 줄 번호를 준다
+      // (결정 13). **먼저 묻지 않는 이유** — 어휘 밖 껍데기(`.equation-grid` 같은 격자)
+      // 안에 고칠 수 있는 글이 사는 일이 흔하다. 껍데기를 먼저 물으면 그 격자의 여백을
+      // 누른 것만으로 "수정할 수 없습니다" 가 뜨고, 사용자는 **슬라이드가 잠겼다고**
+      // 읽는다. 고를 것이 있으면 골라 주고, 없을 때만 이유를 말한다.
+      isBlocked?.(e.target);
+      return clear();
+    }
 
     const leaf = editableLeafAt(e.target);
     if (leaf && leaf !== selected) {
