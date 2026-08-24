@@ -5,35 +5,76 @@
     "rule": "SNU 를 흉내 내지 않는다. 클래스 이름·조판·색을 전부 다르게 짓고, 그래도 **같은 저작 트리**가 렌더되는지를 본다. 이름만 바꾼 사본이면 아무것도 증명하지 못한다.",
     "grammarSource": "core/grammar.md",
     "version": "v1",
-    "updatedAt": "2026-08-01"
+    "updatedAt": "2026-08-24"
   },
-
   "blocks": {
-    "el:title": { "default": "m-h" },
-    "el:subtitle": { "default": "m-sub", "en": "m-sub-alt" },
-    "el:kicker": { "default": "m-eyebrow" },
-    "el:hero": { "default": "m-display" },
+    "el:title": {
+      "default": "m-h"
+    },
+    "el:subtitle": {
+      "default": "m-sub",
+      "en": "m-sub-alt",
+      "topic": "m-topicline"
+    },
+    "el:kicker": {
+      "default": "m-eyebrow",
+      "tag": "m-tagline",
+      "label": "m-labeltext",
+      "eyebrow": "m-brow"
+    },
+    "el:hero": {
+      "default": "m-display"
+    },
     "el:heading": {
       "default": "m-blockhead",
       "colTab": "m-tab",
-      "colTabMuted": "m-tab m-dim"
+      "colTabMuted": "m-tab m-dim",
+      "card": "m-cardtitle"
     },
     "el:meta": {
       "default": "m-meta",
       "lab": "m-meta m-org",
       "page": "m-meta m-pageno",
       "brand": "m-meta m-brand",
-      "titleLab": "m-org-lg"
+      "titleLab": "m-org-lg",
+      "number": "m-meta m-idx",
+      "status": "m-meta m-state"
     },
-    "el:text": { "default": "", "lead": "m-lead", "note": "m-note", "quote": "m-quote" },
-    "el:list": { "default": "m-list", "check": "m-list m-list-check" },
-    "el:step": { "default": "m-step" },
-    "el:citation": { "default": "m-ref" },
-    "el:caption": { "default": "m-caption" },
-    "el:table": { "default": "m-table" },
-    "el:image": { "default": "", "logo": "mk-mark" },
-    "el:figure": { "default": "m-figure" },
-    "el:metric": { "default": "m-stat" },
+    "el:text": {
+      "default": "",
+      "lead": "m-lead",
+      "note": "m-note",
+      "quote": "m-quote",
+      "resultNote": "m-endnote",
+      "resultNoteStrong": "m-endnote m-strong"
+    },
+    "el:list": {
+      "default": "m-list",
+      "check": "m-list m-list-check"
+    },
+    "el:step": {
+      "default": "m-step"
+    },
+    "el:citation": {
+      "default": "m-ref"
+    },
+    "el:caption": {
+      "default": "m-caption"
+    },
+    "el:table": {
+      "default": "m-table"
+    },
+    "el:image": {
+      "default": "",
+      "logo": "mk-mark"
+    },
+    "el:figure": {
+      "default": "m-figure"
+    },
+    "el:metric": {
+      "default": "m-stat",
+      "value": "m-stat-lg"
+    },
     "el:pill": {
       "default": "m-tag",
       "prog": "m-tag m-tag-run",
@@ -45,28 +86,60 @@
       "risk": "m-note-box m-risk",
       "warn": "m-note-box m-warn"
     },
-    "el:code": { "default": "m-code" },
-    "el:rule": { "default": "m-divider" },
-    "el:equation": { "default": "" },
-    "el:progress": { "default": "m-bar" },
-
+    "el:code": {
+      "default": "m-code"
+    },
+    "el:rule": {
+      "default": "m-divider"
+    },
+    "el:equation": {
+      "default": ""
+    },
+    "el:progress": {
+      "default": "m-bar"
+    },
     "box:stack": {
       "default": "m-col",
       "gap4": "m-col m-gap-s",
       "gap6": "m-col m-gap-l",
       "footMeta": "m-footbar"
     },
-    "box:row": { "default": "", "titleMeta": "m-titlebar" },
-    "box:grid": { "default": "m-grid-2", "cols3": "m-grid-3", "cols57": "m-grid-split" },
-    "box:group": { "default": "m-titlegroup", "plain": "" },
-    "box:card": { "default": "m-panel", "subtle": "m-panel m-panel-quiet" },
-    "box:sequence": { "default": "m-track", "refs": "m-reflist" },
-    "box:canvas": { "default": "m-layer" },
-    "box:region": { "default": "", "cols2": "m-grid-2", "cols57": "m-grid-split", "stackGap6": "m-col m-gap-l" },
-
-    "section": { "default": "m-slide", "split": "m-slide m-slide-split", "title": "m-slide m-slide-cover" }
+    "box:row": {
+      "default": "",
+      "titleMeta": "m-titlebar"
+    },
+    "box:grid": {
+      "default": "m-grid-2",
+      "cols3": "m-grid-3",
+      "cols57": "m-grid-split"
+    },
+    "box:group": {
+      "default": "m-titlegroup",
+      "plain": ""
+    },
+    "box:card": {
+      "default": "m-panel",
+      "subtle": "m-panel m-panel-quiet"
+    },
+    "box:sequence": {
+      "default": "m-track",
+      "refs": "m-reflist"
+    },
+    "box:canvas": {
+      "default": "m-layer"
+    },
+    "box:region": {
+      "default": "",
+      "cols2": "m-grid-2",
+      "cols57": "m-grid-split",
+      "stackGap6": "m-col m-gap-l"
+    },
+    "section": {
+      "default": "m-slide",
+      "split": "m-slide m-slide-split",
+      "title": "m-slide m-slide-cover"
+    }
   },
-
   "regionSlots": {
     "head": "m-zone-top",
     "body": "m-zone-mid",
@@ -74,7 +147,6 @@
     "side": "m-zone-aside",
     "main": "m-zone-main"
   },
-
   "defaultTag": {
     "el:title": "h2",
     "el:subtitle": "div",
@@ -106,7 +178,6 @@
     "box:canvas": "div",
     "box:region": "div"
   },
-
   "inlineClasses": {
     "titleAlt": "m-alt",
     "refIndex": "m-refno",
@@ -127,51 +198,106 @@
     "stepBody": "m-what",
     "muted": "m-dim"
   },
-
   "dataProps": {
     "progress": {
-      "--fill": { "from": "data-value", "type": "number", "min": 0, "max": 100 }
+      "--fill": {
+        "from": "data-value",
+        "type": "number",
+        "min": 0,
+        "max": 100
+      }
     }
   },
-
   "scaffolds": {
     "progress": "themes/minimal/templates/progress-row.html",
     "equation": null
   },
-
   "leafStructure": {
-    "list": [{ "tag": "li" }],
+    "list": [
+      {
+        "tag": "li"
+      }
+    ],
     "table": [
-      { "tag": "colgroup" },
-      { "tag": "col" },
-      { "tag": "thead" },
-      { "tag": "tbody" },
-      { "tag": "tr" },
-      { "tag": "th" },
-      { "tag": "td" },
-      { "tag": "caption" }
+      {
+        "tag": "colgroup"
+      },
+      {
+        "tag": "col"
+      },
+      {
+        "tag": "thead"
+      },
+      {
+        "tag": "tbody"
+      },
+      {
+        "tag": "tr"
+      },
+      {
+        "tag": "th"
+      },
+      {
+        "tag": "td"
+      },
+      {
+        "tag": "caption"
+      }
     ],
     "figure": [
-      { "tag": "div", "class": "m-fig-icon" },
-      { "tag": "div", "class": "m-fig-cap" }
+      {
+        "tag": "div",
+        "class": "m-fig-icon"
+      },
+      {
+        "tag": "div",
+        "class": "m-fig-cap"
+      }
     ],
     "callout": [
-      { "tag": "div", "class": "m-ask" },
-      { "tag": "div", "class": "m-ans" }
+      {
+        "tag": "div",
+        "class": "m-ask"
+      },
+      {
+        "tag": "div",
+        "class": "m-ans"
+      }
     ]
   },
-
   "opaqueLeaves": {
-    "equation": { "kind": "runtime-render", "sourceChildren": "empty", "command": "setTex" },
-    "progress": { "kind": "theme-scaffold", "sourceChildren": "present", "command": "setValue" }
+    "equation": {
+      "kind": "runtime-render",
+      "sourceChildren": "empty",
+      "command": "setTex"
+    },
+    "progress": {
+      "kind": "theme-scaffold",
+      "sourceChildren": "present",
+      "command": "setValue"
+    }
   },
-
-  "voidLeaves": ["image", "rule"],
-
-  "regionEnum": ["head", "body", "foot", "side", "main"],
-  "slideKindEnum": ["title", "content", "break", "closing"],
-  "bgEnum": ["light", "dark"],
-
+  "voidLeaves": [
+    "image",
+    "rule"
+  ],
+  "regionEnum": [
+    "head",
+    "body",
+    "foot",
+    "side",
+    "main"
+  ],
+  "slideKindEnum": [
+    "title",
+    "content",
+    "break",
+    "closing"
+  ],
+  "bgEnum": [
+    "light",
+    "dark"
+  ],
   "_findings": {
     "note": "이 테마를 지으면서 드러난 것. 어휘 보편성 논의의 근거다.",
     "el:meta|lab, el:meta|titleLab": "SNU 의 `.lab`/`.title-lab` 은 '연구실 이름' 이다. 일반 테마에는 그 개념이 없어 '조직 라벨' 로 넓혀야 했다. **어휘 값이 아니라 variant 이름이 장르에 묶여 있다.**",
