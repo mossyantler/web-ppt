@@ -25,6 +25,27 @@ const WANT = {
   zoomOut:   'zoom-out',
   fit:       'maximize',
   close:     'x',
+
+  // 리본·서식 창 (파워포인트식 UI). 탭 이름은 글자로 남고 아이콘은 버튼에만 붙는다.
+  format:    'sliders-horizontal',
+  palette:   'palette',
+  slide:     'rectangle-horizontal',
+  group:     'group',
+  ungroup:   'ungroup',
+  front:     'bring-to-front',
+  behind:    'send-to-back',
+  more:      'ellipsis-vertical',
+  panelOpen: 'panel-right-open',
+  panelShut: 'panel-right-close',
+
+  // 삽입 탭이 어휘에 붙이는 그림. 어휘에 없는 종류는 아이콘도 없이 글자만 뜬다 —
+  // 목록은 테마가 정하므로 여기서 종류를 늘리지 않는다.
+  text:      'type',
+  heading:   'heading',
+  list:      'list',
+  table:     'table',
+  image:     'image',
+  equation:  'sigma',
 };
 
 const out = [];

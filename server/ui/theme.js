@@ -47,7 +47,11 @@ export function createTheme({ stage, layer, commit, onNotice, button }) {
   const panel = document.createElement('div');
   panel.className = 'op-panel theme-panel';
   panel.hidden = true;
-  layer.append(panel);
+  // **겹침 층이 아니라 문서에 붙는다.** 저 층은 슬라이드 위에 그리는 자리이고 캔버스
+  // 안쪽에서 잘린다 — 리본이 생기면서 버튼이 캔버스 위쪽으로 올라가자 창의 머리가
+  // 캔버스 경계에 잘려 나갔다(실측). 이것은 슬라이드에 매달린 것이 아니라 **버튼에**
+  // 매달린 것이므로 화면 좌표를 그대로 쓴다.
+  (layer ?? document.body).append(panel);
 
   const inputs = new Map();
   /** 지금까지 고른 값들. 명령은 **매번 전부** 보낸다 — 블록을 통째로 다시 쓰기 때문이다. */
@@ -98,12 +102,18 @@ export function createTheme({ stage, layer, commit, onNotice, button }) {
     button?.setAttribute('aria-pressed', 'false');
   }
 
-  /** 도구 모음의 그 버튼 바로 아래에 붙는다. */
+  /**
+   * 리본의 그 버튼 바로 아래에 붙는다. 화면 좌표 그대로다(`position: fixed`).
+   *
+   * 오른쪽으로 넘치면 안으로 당긴다 — 버튼이 리본 오른쪽 끝에 있을 때 창 밖으로 나가면
+   * 고른 값을 볼 수가 없다.
+   */
   function place() {
     if (panel.hidden || !button) return;
     const b = button.getBoundingClientRect();
-    const host = layer.getBoundingClientRect();
-    panel.style.transform = `translate(${Math.max(8, b.left - host.left)}px, ${b.bottom - host.top + 6}px)`;
+    const w = panel.offsetWidth || 266;
+    panel.style.left = `${Math.max(8, Math.min(b.left, innerWidth - w - 8))}px`;
+    panel.style.top = `${b.bottom + 6}px`;
   }
 
   /* ----------------------------------------------------------------- 만들기 */

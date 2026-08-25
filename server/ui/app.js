@@ -33,6 +33,8 @@ import { createTable } from './table.js';
 import { createFree } from './free.js';
 import { createResize } from './resize.js';
 import { createTheme } from './theme.js';
+import { createGroup } from './group.js';
+import { createRibbon } from './ribbon.js';
 import { setIcon, setIconText } from './icons.js';
 
 const views = {
@@ -159,6 +161,19 @@ const structure = createStructure({
   onRemoved: () => selection.clear(),
 });
 
+/**
+ * 복제 · 묶기 · 풀기. 서버에는 M2 부터 있었고 화면에 자리가 없어 못 부르던 셋이다 —
+ * 리본이 생기면서 홈 탭과 배치 탭에 자리가 났다.
+ */
+const group = createGroup({
+  commit: committer,
+  index: { get: (nodeId) => selection.infoOf(nodeId) },
+  structure,
+  onNotice: showNotice,
+  // 셋 다 노드가 생기거나 사라진다. 서버가 발급한 새 id 를 골라 둔 채로 다시 받는다.
+  onResync: (nodeId) => showEditor(open.deckId, currentSlide, nodeId),
+});
+
 const picture = createPicture({
   stage,
   commit: committer,
@@ -210,7 +225,9 @@ const table = createTable({
  */
 const theme = createTheme({
   stage,
-  layer: overlay,
+  // 슬라이드가 아니라 **리본 버튼**에 매달린 창이다. 겹침 층에 넣으면 캔버스 경계에
+  // 잘린다 — 리본이 생기면서 실제로 머리가 잘려 나갔다.
+  layer: document.body,
   commit: committer,
   onNotice: showNotice,
   button: document.getElementById('theme'),
@@ -324,6 +341,7 @@ function showSelectionState(state) {
   selState.textContent = state.text;
   selState.classList.toggle('locked', state.kind === 'locked');
   selState.classList.toggle('editing', state.kind === 'editing');
+  syncRibbon();
 }
 
 /**
@@ -696,6 +714,7 @@ function goTo(el, sections, i) {
 function select(i) {
   currentSlide = i;
   background.refresh();
+  syncRibbon();
   for (const b of rail.children) {
     if (b.dataset) b.setAttribute('aria-current', String(Number(b.dataset.index) === i));
   }
@@ -836,6 +855,216 @@ zoomOut.addEventListener('click', () => viewport.step(-1));
 zoomVal.addEventListener('click', () => viewport.actual());
 zoomFit.addEventListener('click', () => viewport.fit());
 
+/* ------------------------------------------------------------------ 리본
+ *
+ * 탭 넷(홈·삽입·디자인·배치)에 도구를 나눠 담는다. 배경·되돌리기·로고·테마는 자리를
+ * 옮겼을 뿐 하는 일이 같아서 아래 배선이 손대지 않는다 — 그 버튼들은 `index.html` 에서
+ * id 를 그대로 들고 갔고, 각자의 모듈이 id 로 찾는다.
+ *
+ * 여기서 새로 배선하는 것은 **리본이 처음 자리를 준 것들**이다: 지금 보는 장의 조작,
+ * 고른 요소의 조작, 그리고 어휘에서 만들어 붙이는 삽입 목록.
+ */
+const ribbon = createRibbon({
+  tabs: document.getElementById('tabs'),
+  ribbon: document.getElementById('ribbon'),
+  // 삽입 탭은 어휘를 받아야 채워진다. 열 때 채우면 첫 클릭이 빈 칸을 본다.
+  onTab: (name) => { if (name === 'insert') fillInsertTypes(); },
+});
+
+/** 지금 보는 장에 걸리는 넷. 레일의 같은 넷과 달리 **보고 있는 장**이 대상이다. */
+for (const [id, run] of [
+  ['slide-up', () => slides.move(currentSlide, -1)],
+  ['slide-down', () => slides.move(currentSlide, +1)],
+  ['slide-dup', () => slides.duplicate(currentSlide)],
+  ['slide-del', () => slides.remove(currentSlide)],
+]) {
+  document.getElementById(id).addEventListener('click', run);
+}
+
+/**
+ * 고른 요소에 걸리는 것들.
+ *
+ * 고른 것이 없으면 **아무 일도 하지 않는다** — 버튼이 이미 꺼져 있으므로 여기 오지
+ * 않지만, 키보드나 경합으로 새어 들어올 수 있는 길을 막아 둔다.
+ */
+for (const [id, run] of [
+  ['el-up', (n) => reorder.moveElement(n, -1)],
+  ['el-down', (n) => reorder.moveElement(n, +1)],
+  ['el-dup', (n) => group.duplicate(n)],
+  ['el-del', (n) => structure.remove(n)],
+  ['el-free', (n) => (free.isFree(n) ? free.toFlow(n) : free.toFree(n))],
+  ['el-wrap', (n) => openWrapMenu(n)],
+  ['el-unwrap', (n) => group.unwrap(n)],
+]) {
+  document.getElementById(id).addEventListener('click', () => {
+    const nodeId = selection.selected;
+    if (nodeId) run(nodeId);
+  });
+}
+
+/** 그림 넣기. 로고와 같은 모양이지만 **고른 것 옆에** 들어간다는 점이 다르다. */
+document.getElementById('pic-file').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  e.target.value = '';
+  if (!file) return;
+  if (!selection.selected) {
+    return showNotice({ kind: 'blocked', text: '먼저 그림을 넣을 자리 옆의 요소를 고르세요' });
+  }
+  await picture.insert(file, selection.selected);
+});
+
+/**
+ * 삽입 탭의 종류 목록 — **테마 매핑이 정한다** (`GET /vocabulary`).
+ *
+ * 한 번 채우고 그대로 둔다. 어휘는 덱이 아니라 테마에서 오므로 리포트를 옮겨 다녀도
+ * 같다 (`structure.vocabulary` 가 이미 한 번만 받는다).
+ */
+let insertFilled = false;
+async function fillInsertTypes() {
+  if (insertFilled) return;
+  const types = await structure.vocabulary();
+  const leaf = document.getElementById('insert-leaf');
+  const box = document.getElementById('insert-box');
+  if (!types.length) {
+    leaf.textContent = '넣을 수 있는 종류를 받지 못했습니다';
+    return;
+  }
+  insertFilled = true;
+
+  leaf.replaceChildren(...types.filter((t) => t.group !== 'container').map(chip));
+  box.replaceChildren(...types.filter((t) => t.group === 'container').map(chip));
+  syncRibbon();
+
+  function chip(t) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    const name = LABELS[t.type] ?? t.type;
+    // 아이콘이 있는 종류만 그림이 붙는다. 어휘는 테마가 늘리므로 여기서 이름을
+    // 지어내지 않는다 — 그림이 없으면 글자만 뜬다.
+    setIconText(b, t.type, name);
+    b.title = `${name} 넣기`;
+    b.addEventListener('click', () => {
+      const nodeId = selection.selected;
+      if (!nodeId) return showNotice({ kind: 'blocked', text: '먼저 어느 것 아래에 넣을지 고르세요' });
+      structure.insert(nodeId, t.type, t.variants?.[0] ?? 'default');
+    });
+    return b;
+  }
+}
+
+/** 어휘 값의 화면 이름. `select.js` 의 같은 표와 짝이다 — 사용자가 보는 말은 하나여야 한다. */
+const LABELS = {
+  title: '제목', subtitle: '부제', kicker: '머리말', hero: '표지 제목', heading: '소제목',
+  meta: '정보', text: '문단', list: '목록', step: '단계', citation: '인용', caption: '설명',
+  table: '표', image: '그림', figure: '그림틀', metric: '지표', pill: '꼬리표',
+  callout: '강조', code: '코드', rule: '구분선', equation: '수식', progress: '진행바',
+  stack: '세로 묶음', row: '가로 묶음', grid: '격자', group: '묶음', card: '카드',
+  sequence: '흐름', canvas: '자유 배치', region: '영역',
+};
+
+/**
+ * 묶기 — 어떤 상자에 넣을지 고른다.
+ *
+ * 하나를 박아 두지 않는 이유는 `group.js` 에 적혀 있다: 어휘에 없는 종류를 보내면 422 고,
+ * 어휘는 테마가 정한다. 목록이 하나뿐이면 묻지 않고 바로 씌운다 — 고를 것이 없는 물음은
+ * 물음이 아니다.
+ */
+async function openWrapMenu(nodeId) {
+  const boxes = await group.boxes();
+  if (!boxes.length) {
+    return showNotice({ kind: 'blocked', text: '이 테마에는 씌울 수 있는 상자가 없습니다' });
+  }
+  if (boxes.length === 1) return void group.wrap(nodeId, boxes[0].type, boxes[0].variants?.[0] ?? 'default');
+
+  const anchor = document.getElementById('el-wrap');
+  popup(anchor, boxes.map((t) => [
+    LABELS[t.type] ?? t.type,
+    () => group.wrap(nodeId, t.type, t.variants?.[0] ?? 'default'),
+  ]));
+}
+
+/**
+ * 버튼 아래에 붙는 작은 목록.
+ *
+ * 바깥을 누르거나 Esc 면 닫힌다. 리본 안에 살기 때문에 겹침 층(`overlay`)을 쓰지
+ * 않는다 — 저기는 슬라이드 위에 그리는 자리이고, 이것은 버튼에 매달린 것이다.
+ */
+function popup(anchor, rows) {
+  document.querySelector('.rb-popup')?.remove();
+  const el = document.createElement('div');
+  el.className = 'op-panel rb-popup';
+  for (const [text, run] of rows) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = text;
+    b.addEventListener('click', () => { el.remove(); run(); });
+    el.append(b);
+  }
+  document.body.append(el);
+
+  const r = anchor.getBoundingClientRect();
+  el.style.left = `${r.left}px`;
+  el.style.top = `${r.bottom + 4}px`;
+
+  const shut = (e) => {
+    if (e.type === 'keydown' && e.key !== 'Escape') return;
+    if (e.type === 'pointerdown' && el.contains(e.target)) return;
+    el.remove();
+    removeEventListener('pointerdown', shut, true);
+    removeEventListener('keydown', shut, true);
+  };
+  // 이 클릭이 그대로 닫기로 이어지지 않게 한 박자 뒤에 건다.
+  setTimeout(() => {
+    addEventListener('pointerdown', shut, true);
+    addEventListener('keydown', shut, true);
+  });
+}
+
+/**
+ * 리본의 켜고 끔.
+ *
+ * **판정은 전부 원래 주인에게 묻는다.** 옮길 수 있는지는 `reorder` 가, 지울 수 있는지는
+ * `structure` 가, 묶을 수 있는지는 `group` 이 안다. 리본이 스스로 판단하기 시작하면
+ * 켜 놓은 버튼을 눌렀는데 서버가 422 를 내는 날이 온다.
+ */
+function syncRibbon() {
+  const n = selection.selected;
+  const total = currentOutline?.sections.length ?? 0;
+  const isFree = n ? free.isFree(n) : false;
+
+  ribbon.sync({
+    'slide-up': currentSlide > 0,
+    'slide-down': currentSlide < total - 1,
+    'slide-dup': total > 0,
+    'slide-del': total > 1,
+    'el-up': !!n && reorder.canMove(n, -1),
+    'el-down': !!n && reorder.canMove(n, +1),
+    'el-dup': !!n && group.canDuplicate(n),
+    'el-del': !!n && structure.canRemove(n),
+    'el-free': !!n && (isFree || free.canFree(n)),
+    'el-wrap': !!n && group.canWrap(n),
+    'el-unwrap': !!n && group.canUnwrap(n),
+  });
+
+  // 이미 자유 배치인 것은 되돌리는 버튼이다 — 같은 자리에서 뜻만 뒤집는다
+  // (선택 버튼바가 하는 것과 같다).
+  setIconText(document.getElementById('el-free'), isFree ? 'flow' : 'free',
+    isFree ? '흐름으로' : '자유 배치');
+  document.getElementById('el-free').title = isFree
+    ? '흐름 배치로 되돌리기 — 다시 위에서 아래로 쌓입니다'
+    : '자유 배치 — 아무 데나 끌어다 놓기';
+
+  // 삽입 탭은 고른 것 **아래에** 넣는다. 고른 것이 없으면 넣을 자리가 없다.
+  const canPut = !!n && structure.canInsert(n);
+  for (const b of document.querySelectorAll('#insert-leaf button, #insert-box button')) b.disabled = !canPut;
+  document.getElementById('pic-pick').classList.toggle('off', !canPut);
+  document.getElementById('pic-file').disabled = !canPut;
+  for (const g of document.querySelectorAll('.rb-group[data-needs="insert"]')) g.classList.toggle('dead', !canPut);
+}
+
+// 배선이 다 끝났다. 이제 처음 열린 탭이 자기 몫을 채울 수 있다 (`ribbon.js` 의 `start`).
+ribbon.start();
+
 paintIcons();
 
 /**
@@ -846,28 +1075,38 @@ paintIcons();
  * 바꾸면서 원래 글자는 `title` 로 옮겨 간다(`setIcon`).
  */
 function paintIcons() {
-  setIcon(undoButton, 'undo');
-  setIcon(redoButton, 'redo');
-  setIcon(document.getElementById('bg-light'), 'light');
-  setIcon(document.getElementById('bg-dark'), 'dark');
-  setIcon(document.getElementById('bg-all'), 'all');
-  setIcon(zoomIn, 'zoomIn');
-  setIcon(zoomOut, 'zoomOut');
-  setIcon(zoomFit, 'fit');
+  // 리본의 큰 버튼 — 아이콘 **위에** 글자. 파워포인트가 자주 쓰는 것을 크게 두는 방식이고,
+  // 이름이 같이 보여야 하는 것들이다(누른 뒤에야 무슨 일이 일어났는지 아는 종류).
+  setIconText(undoButton, 'undo', '되돌리기');
+  setIconText(redoButton, 'redo', '다시하기');
+  setIconText(document.getElementById('theme'), 'palette', '테마');
+  setIconText(document.getElementById('el-free'), 'free', '자유 배치');
 
-  // 이름이 같이 보여야 하는 것들. 아이콘만 두면 무엇을 여는 버튼인지 알 길이 없다 —
-  // 발표는 화면을 통째로 바꾸고, 로고는 파일 고르개를 연다. 둘 다 누른 뒤에야
-  // 무슨 일이 일어났는지 아는 종류라 이름값을 한다.
+  // 작은 버튼 — 아이콘만. 글자는 `title` 로 옮겨 간다(`setIcon`).
+  for (const [id, name] of [
+    ['bg-light', 'light'], ['bg-dark', 'dark'], ['bg-all', 'all'],
+    ['slide-up', 'railUp'], ['slide-down', 'railDown'],
+    ['slide-dup', 'duplicate'], ['slide-del', 'remove'],
+    ['el-up', 'up'], ['el-down', 'down'], ['el-dup', 'duplicate'], ['el-del', 'remove'],
+    ['el-wrap', 'group'], ['el-unwrap', 'ungroup'],
+    ['zoom-in', 'zoomIn'], ['zoom-out', 'zoomOut'], ['zoom-fit', 'fit'],
+  ]) {
+    setIcon(document.getElementById(id), name);
+  }
+
   setIconText(document.getElementById('present'), 'present', '발표');
   setIconText(document.getElementById('new-deck'), 'newDeck', '새 리포트');
   setIconText(document.querySelector('#topbar .back'), 'back', '목록');
+  setIconText(document.getElementById('pane-toggle'), 'format', '서식');
 
-  // 로고는 이름표(label) 안에 파일 고르개를 품고 있다. 안을 갈아 끼우면 그것까지
+  // 그림·로고는 이름표(label) 안에 파일 고르개를 품고 있다. 안을 갈아 끼우면 그것까지
   // 쓸려 나가고, 그러면 눌러도 파일 창이 안 열린다 — 빼 두었다가 도로 넣는다.
-  const logoPick = document.getElementById('logo-pick');
-  const logoInput = logoPick.querySelector('input');
-  setIconText(logoPick, 'logo', '로고');
-  logoPick.append(logoInput);
+  for (const [id, name, text] of [['pic-pick', 'image', '그림'], ['logo-pick', 'logo', '로고']]) {
+    const pick = document.getElementById(id);
+    const input = pick.querySelector('input');
+    setIconText(pick, name, text);
+    pick.append(input);
+  }
 }
 
 route();

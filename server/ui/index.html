@@ -77,13 +77,9 @@
 </section>
 
 <section id="view-editor" class="view" hidden>
-  <!-- 도구 모음. 성격이 다른 것 사이에 구분선을 넣는다 — 배경 셋과 되돌리기 둘이
-       같은 간격으로 붙어 있으면 무엇이 무엇의 짝인지 눈으로 잡히지 않는다.
-       파워포인트의 리본은 따라가지 않는다. 리본은 명령이 200 개일 때 자리값을 하고,
-       여기는 여섯 개다 — 탭을 만들면 빈 자리만 넓어진다.
-
-       글자는 그대로 두고 아이콘은 JS 가 갈아 끼운다(`icons.js`). 그래야 스크립트가
-       실패해도 버튼에 이름이 남는다. -->
+  <!-- 제목줄. 어느 리포트를 열고 있는지와, 화면을 통째로 바꾸는 것 둘만 산다.
+       리본과 나누는 이유 — 이 줄은 **바뀌지 않는다.** 탭을 옮겨도 리포트 이름과 발표는
+       제자리에 있어야 하고, 그 항상성이 곧 "여기가 어디인지" 를 말해 준다. -->
   <header id="topbar">
     <a class="back" href="#/" title="리포트 목록으로">목록</a>
 
@@ -92,42 +88,139 @@
       <span id="deck-sub"></span>
     </span>
 
-    <span class="tb-div"></span>
-
-    <!-- 되돌리기·다시하기 (M3 결정 5). 버튼이 있으면 되돌릴 것이 남았는지 눈으로 보인다 —
-         꺼진 버튼은 "여기가 끝" 이라는 뜻이고, 그 정보는 단축키만으로는 얻을 수 없다. -->
-    <span class="tb-group" id="history">
-      <button type="button" id="undo" title="되돌리기 (Ctrl+Z)" disabled>되돌리기</button>
-      <button type="button" id="redo" title="다시하기 (Ctrl+Shift+Z)" disabled>다시하기</button>
-    </span>
-
-    <span class="tb-div"></span>
-
-    <!-- 배경 (결정 4·9). 이 장만 바꾸는 것이 기본이고, 전체 적용이 탈출구다. -->
-    <span class="tb-group" id="bg-pick">
-      <button type="button" id="bg-light" aria-pressed="true" title="이 장을 밝은 바탕으로">밝게</button>
-      <button type="button" id="bg-dark" aria-pressed="false" title="이 장을 어두운 바탕으로">어둡게</button>
-      <button type="button" id="bg-all" title="지금 배경을 모든 장에 적용">모든 장에</button>
-      <button type="button" id="theme" title="이 리포트의 색·글자 크기 — 모든 장이 함께 바뀝니다" aria-pressed="false">테마</button>
-    </span>
-
-    <span class="tb-div"></span>
-
-    <!-- 로고 넣기. 파일을 고르면 모든 장의 머리 맨 앞에 끼어들고 기존 내용이 밀린다
-         (새 리포트 명세 결정 5). -->
-    <span class="tb-group">
-      <label id="logo-pick" title="모든 장의 머리에 로고를 넣습니다">
-        로고
-        <input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp" hidden>
-      </label>
-    </span>
-
     <span class="tb-fill"></span>
 
-    <!-- 발표 (결정 9). 덱에 이미 있는 발표 모드를 되살린다. 오른쪽 끝에 홀로 둔다 —
-         화면을 통째로 바꾸는 유일한 버튼이라 편집 도구와 섞이면 안 된다. -->
+    <span class="tb-group">
+      <button type="button" id="pane-toggle" title="서식 창 열고 닫기" aria-pressed="false" hidden>서식</button>
+    </span>
+
+    <!-- 발표 (결정 9). 오른쪽 끝에 홀로 둔다 — 화면을 통째로 바꾸는 유일한 버튼이라
+         편집 도구와 섞이면 안 된다. 탭을 옮겨도 여기 남는 이유도 그것이다. -->
     <button type="button" id="present" class="tb-primary" title="전체화면으로 발표 (Esc 로 나감)">발표</button>
   </header>
+
+  <!-- 리본 (파워포인트식). **예전에는 만들지 않기로 했던 것이다** — 그때 적어 둔 이유가
+       "명령이 여섯 개뿐이라 탭을 만들면 빈 자리만 넓어진다" 였고, 그 판단은 그때 맞았다.
+       지금 서버에 등록된 명령은 스물셋이고 화면이 부르는 것만 열댓이다. 한 줄에 늘어놓으면
+       창이 좁을 때 밀려 나가 사라지고, 무엇이 무엇의 짝인지도 안 보인다.
+
+       탭은 넷이다. 다섯째("보기") 를 만들지 않은 것은 넣을 것이 배율뿐인데 그것은 이미
+       상태줄 오른쪽에 있기 때문이다 — 자리를 채우려고 탭을 만들지 않는다. -->
+  <nav id="tabs" role="tablist" aria-label="리본 탭">
+    <button type="button" role="tab" data-tab="home" aria-selected="true">홈</button>
+    <button type="button" role="tab" data-tab="insert" aria-selected="false">삽입</button>
+    <button type="button" role="tab" data-tab="design" aria-selected="false">디자인</button>
+    <button type="button" role="tab" data-tab="arrange" aria-selected="false">배치</button>
+  </nav>
+
+  <!-- 리본 본체. 묶음마다 아래에 이름이 붙는다 — 파워포인트가 그렇게 하는 이유는
+       아이콘만으로는 "이 넷이 한 벌" 이라는 사실을 말할 수 없어서다. -->
+  <div id="ribbon">
+
+    <div class="rb-panel" data-tab="home" role="tabpanel">
+      <!-- 되돌리기·다시하기 (M3 결정 5). 꺼진 버튼이 "여기가 끝" 을 말한다. -->
+      <div class="rb-group">
+        <div class="rb-items">
+          <button type="button" class="rb-big" id="undo" title="되돌리기 (Ctrl+Z)" disabled>되돌리기</button>
+          <button type="button" class="rb-big" id="redo" title="다시하기 (Ctrl+Shift+Z)" disabled>다시하기</button>
+        </div>
+        <div class="rb-name">실행</div>
+      </div>
+
+      <!-- 장 조작. 레일에도 같은 넷이 있지만 거기서는 **마우스를 올린 그 장**에 걸리고
+           여기서는 **지금 보고 있는 장**에 걸린다. 둘은 다른 물음이라 둘 다 있어야 한다. -->
+      <div class="rb-group">
+        <div class="rb-items">
+          <button type="button" id="slide-up" title="이 장을 위로">위로</button>
+          <button type="button" id="slide-down" title="이 장을 아래로">아래로</button>
+          <button type="button" id="slide-dup" title="이 장을 복제">복제</button>
+          <button type="button" id="slide-del" title="이 장을 지우기 (되돌리기로 돌아옵니다)">지우기</button>
+        </div>
+        <div class="rb-name">슬라이드</div>
+      </div>
+
+      <!-- 고른 요소에 걸리는 것들. 아무것도 안 골랐으면 넷 다 꺼진다 —
+           회색 버튼이 "먼저 무언가를 고르라" 는 말을 대신한다. -->
+      <div class="rb-group" data-needs="element">
+        <div class="rb-items">
+          <button type="button" id="el-up" title="위로 옮기기">위로</button>
+          <button type="button" id="el-down" title="아래로 옮기기">아래로</button>
+          <button type="button" id="el-dup" title="복제 (Ctrl+D)">복제</button>
+          <button type="button" id="el-del" title="지우기 (되돌리기로 돌아옵니다)">지우기</button>
+        </div>
+        <div class="rb-name">고른 요소</div>
+      </div>
+    </div>
+
+    <div class="rb-panel" data-tab="insert" role="tabpanel" hidden>
+      <!-- 넣을 수 있는 종류는 **테마 매핑**이 정한다(`GET /vocabulary`). 화면이 목록을
+           들고 있으면 테마를 갈았을 때 목록에는 있는데 넣으면 422 인 항목이 생긴다.
+
+           내용과 상자를 나눠 담는 이유 — 스물일곱 개를 한 덩어리로 늘어놓으면 "글을
+           넣겠다" 와 "칸을 만들겠다" 가 섞여 눈이 목록을 두 번 훑어야 한다. 고르기
+           메뉴(`select.js`)도 같은 둘로 나눈다. -->
+      <div class="rb-group rb-fill rb-fill-wide" data-needs="insert">
+        <div class="rb-items rb-wrap" id="insert-leaf"></div>
+        <div class="rb-name">내용 넣기</div>
+      </div>
+
+      <div class="rb-group rb-fill" data-needs="insert">
+        <div class="rb-items rb-wrap" id="insert-box"></div>
+        <div class="rb-name">상자 넣기</div>
+      </div>
+
+      <div class="rb-group">
+        <div class="rb-items">
+          <label class="rb-big" id="pic-pick" title="그림 파일을 골라 넣습니다">
+            그림
+            <input type="file" id="pic-file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+          </label>
+          <label class="rb-big" id="logo-pick" title="모든 장의 머리에 로고를 넣습니다">
+            로고
+            <input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp" hidden>
+          </label>
+        </div>
+        <div class="rb-name">그림</div>
+      </div>
+    </div>
+
+    <div class="rb-panel" data-tab="design" role="tabpanel" hidden>
+      <!-- 배경 (결정 4·9). 이 장만 바꾸는 것이 기본이고, 전체 적용이 탈출구다. -->
+      <div class="rb-group" id="bg-pick">
+        <div class="rb-items">
+          <button type="button" id="bg-light" aria-pressed="true" title="이 장을 밝은 바탕으로">밝게</button>
+          <button type="button" id="bg-dark" aria-pressed="false" title="이 장을 어두운 바탕으로">어둡게</button>
+          <button type="button" id="bg-all" title="지금 배경을 모든 장에 적용">모든 장에</button>
+        </div>
+        <div class="rb-name">이 장의 배경</div>
+      </div>
+
+      <div class="rb-group">
+        <div class="rb-items">
+          <button type="button" class="rb-big" id="theme" title="색·글자 크기 — 모든 장이 함께 바뀝니다" aria-pressed="false">테마</button>
+        </div>
+        <div class="rb-name">리포트 전체</div>
+      </div>
+    </div>
+
+    <div class="rb-panel" data-tab="arrange" role="tabpanel" hidden>
+      <div class="rb-group" data-needs="element">
+        <div class="rb-items">
+          <button type="button" class="rb-big" id="el-free" title="자유 배치 — 아무 데나 끌어다 놓기">자유 배치</button>
+        </div>
+        <div class="rb-name">놓는 방식</div>
+      </div>
+
+      <div class="rb-group" data-needs="element">
+        <div class="rb-items">
+          <button type="button" id="el-wrap" title="상자 안에 넣기">묶기</button>
+          <button type="button" id="el-unwrap" title="상자를 벗기고 안의 것을 꺼내기">풀기</button>
+        </div>
+        <div class="rb-name">묶음</div>
+      </div>
+    </div>
+  </div>
+
   <div id="editor-body">
     <nav id="rail" aria-label="슬라이드 목록"></nav>
     <div id="canvas">
