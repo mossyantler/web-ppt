@@ -353,23 +353,66 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
   background: var(--ui-panel);
   overflow-y: auto; padding: 8px;
   display: flex; flex-direction: column; gap: 4px;
+  /* 그림이 들어오면서 레일이 길어졌다. 기본 스크롤바는 흰 막대로 튀어 슬라이드 그림
+     옆에서 특히 시끄럽다 — 리본 목록과 같은 얇은 것으로 바꾼다. */
+  scrollbar-width: thin; scrollbar-color: #ffffff20 transparent;
 }
+#rail::-webkit-scrollbar { width: 8px; }
+#rail::-webkit-scrollbar-track { background: transparent; }
+#rail::-webkit-scrollbar-thumb { background: #ffffff20; border-radius: 4px; }
+#rail::-webkit-scrollbar-thumb:hover { background: #ffffff33; }
+/* 파워포인트와 같은 배치다 — 번호는 왼쪽 바깥에, 장 그림이 본체, 이름은 그 아래.
+   격자로 짜는 이유: 번호가 그림의 **첫 줄에 맞춰** 서야 하고, 이름은 그림 밑으로
+   흘러야 하는데 이 둘은 한 줄짜리 flex 로는 동시에 안 된다. */
 .rail-item {
-  display: flex; align-items: baseline; gap: 8px;
-  padding: 8px 10px; border-radius: 5px;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.7em 1fr;
+  align-items: start; gap: 2px 7px;
+  padding: 6px 8px; border-radius: 6px;
   border: 1px solid transparent;
   background: none; color: var(--ui-text);
   font: inherit; text-align: left; cursor: pointer;
 }
 .rail-item:hover { background: #23262e; }
 .rail-item[aria-current="true"] { border-color: var(--ui-accent); background: #23262e; }
-.rail-item .n { color: var(--ui-dim); font-variant-numeric: tabular-nums;
-                font-size: 12px; min-width: 1.6em; text-align: right; flex: none; }
-.rail-item .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rail-item .n {
+  grid-column: 1; grid-row: 1;
+  color: var(--ui-dim); font-variant-numeric: tabular-nums;
+  font-size: 12px; text-align: right; padding-top: 2px;
+}
+.rail-item .t {
+  grid-column: 2; grid-row: 2;
+  font-size: 11px; color: var(--ui-dim);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rail-item[aria-current="true"] .t, .rail-item[aria-current="true"] .n { color: var(--ui-text); }
+
+/* 장 그림. 비율은 덱이 적어 둔 원래 크기에서 온다(`thumbs.js`) — 16:9 를 박아 두면
+   다른 크기의 덱에서 그림이 찌그러진다.
+   바탕을 흰색으로 두는 이유: 채워지기 전에도 **슬라이드가 놓일 자리**로 읽혀야 한다.
+   어두운 자리를 두면 다 뜰 때까지 레일이 빈 구멍처럼 보인다. */
+.thumb-frame {
+  grid-column: 2; grid-row: 1;
+  position: relative; overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--ui-line); border-radius: 3px;
+}
+.rail-item[aria-current="true"] .thumb-frame { border-color: var(--ui-accent); }
+.thumb-host { position: absolute; inset: 0; }
+/* 잠긴 장은 그림도 흐리다 — 목록에서 이미 아는 것과 열어 봐야 아는 것은 다르다. */
+.rail-item.locked .thumb-frame { opacity: .45; }
 
 /* 장 조작 — 마우스를 올렸을 때만 보인다. 늘 보이면 열세 줄이 버튼 쉰두 개가 되고
  * 정작 장 이름이 안 읽힌다. 키보드로 들어와도(`focus-within`) 보여야 한다. */
-.rail-ops { display: none; gap: 1px; margin-left: auto; flex: none; }
+/* 그림 위에 떠 있다. 격자의 한 칸으로 두면 마우스를 올릴 때마다 그림 칸이 좁아지고,
+   그러면 배율이 다시 잡히면서 **그림이 눈에 띄게 튄다.** 겹쳐 두면 아무것도 안 움직인다. */
+.rail-ops {
+  display: none; gap: 1px;
+  position: absolute; top: 8px; right: 10px;
+  padding: 2px; border-radius: 4px;
+  background: #12141ae6;
+}
 .rail-item:hover .rail-ops,
 .rail-item:focus-within .rail-ops { display: flex; }
 .rail-ops button {

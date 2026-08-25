@@ -36,6 +36,7 @@ import { createTheme } from './theme.js';
 import { createGroup } from './group.js';
 import { createRibbon } from './ribbon.js';
 import { createInspector } from './inspector.js';
+import { createThumbs } from './thumbs.js';
 import { setIcon, setIconText } from './icons.js';
 
 const views = {
@@ -302,6 +303,11 @@ const logo = createLogo({
   onResync: () => showEditor(open.deckId, currentSlide),
 });
 
+/**
+ * 레일의 슬라이드 그림. 명령을 부르지 않고 **그리기만** 하므로 커밋 계층과 무관하다.
+ */
+const thumbs = createThumbs({ stage });
+
 const drag = createDrag({
   stage,
   layer: overlay,
@@ -522,6 +528,9 @@ function mountStage(outline, startSlide = 0, selectId = null) {
   if (el) el.setAttribute('no-rail', '');
   hideDeckChrome(el);
 
+  // 그리기 재료를 한 번 읽어 둔다. 장마다 읽으면 그때마다 레이아웃이 강제된다.
+  thumbs.load(doc);
+
   const items = sections.map((section, i) => {
     const b = document.createElement('div');
     b.setAttribute('role', 'button');
@@ -543,7 +552,7 @@ function mountStage(outline, startSlide = 0, selectId = null) {
     // 잠긴 장은 레일에서 미리 보인다 — 열어 봐야 아는 것과, 목록에서 아는 것은 다르다.
     if (outline && !outline.sections[i]?.annotated) b.classList.add('locked');
 
-    b.append(n, t, railControls(i, sections.length));
+    b.append(n, thumbs.frameFor(section), t, railControls(i, sections.length));
     b.draggable = true;
     b.addEventListener('click', () => goTo(el, sections, i));
     // `<button>` 안에 `<button>` 을 넣을 수 없어 항목을 div 로 바꿨다. 키보드로 고르는
@@ -850,6 +859,8 @@ function reflow() {
   // 끌거나 손잡이로 크기를 바꾸면 판의 숫자도 따라와야 한다 — 안 따라오면 판이
   // 방금 내가 한 일을 모르는 것처럼 보인다.
   inspector.refresh();
+  // 레일 폭이 달라지면 그림의 배율도 달라진다. 이미 만든 것들만 다시 잰다.
+  thumbs.relayout(rail);
 }
 
 // 창 크기가 바뀌면 슬라이드 배율이 바뀌고 테두리가 어긋난다.
