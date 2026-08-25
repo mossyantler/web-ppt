@@ -274,19 +274,47 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
 .rb-wrap button { height: 26px; font-size: 11px; gap: 4px; padding: 0 7px; }
 .rb-wrap .ico { width: 13px; height: 13px; }
 
-/* 리본 버튼에 매달리는 작은 목록 (묶기의 상자 고르기). 겹침 층이 아니라 문서에
-   직접 붙는다 — 저기는 슬라이드 위에 그리는 자리다. */
-.rb-popup {
-  position: fixed;
-  min-width: 140px; gap: 2px; padding: 5px;
+/* 오른쪽 단추 메뉴. 레일에서도 슬라이드 위에서도 리본 버튼 아래에서도 이 하나를 쓴다.
+   겹침 층이 아니라 문서에 직접 붙는다 — 저기는 슬라이드 위에 그리는 자리이고 캔버스
+   안에서 잘린다. */
+.ctx-menu {
+  position: fixed; z-index: 10;
+  min-width: 176px;
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 5px;
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-line); border-radius: 7px;
+  box-shadow: 0 10px 30px #000a;
 }
-.rb-popup button {
-  text-align: left; padding: 6px 8px;
+.ctx-menu button {
+  display: flex; align-items: center; gap: 9px;
+  text-align: left; padding: 6px 9px;
   border: 0; border-radius: 4px;
   background: none; color: var(--ui-text);
   font: 12px/1.4 inherit; cursor: pointer;
 }
-.rb-popup button:hover { background: var(--ui-accent); color: #fff; }
+.ctx-menu button > span { flex: 1; }
+.ctx-menu button .ico { width: 14px; height: 14px; color: var(--ui-dim); }
+.ctx-menu button:hover:not(:disabled), .ctx-menu button:focus-visible {
+  background: var(--ui-accent); color: #fff; outline: none;
+}
+.ctx-menu button:hover:not(:disabled) .ico, .ctx-menu button:focus-visible .ico { color: #fff; }
+/* 할 수 없는 줄도 자리를 지킨다 — 사라지면 그 아래 줄들이 올라와서 같은 명령이 매번
+   다른 자리에 온다. 회색이 "지금은 안 된다" 를 자리를 지키면서 말한다. */
+.ctx-menu button:disabled { color: #4a505c; cursor: default; }
+.ctx-menu button:disabled .ico { color: #3a3f49; }
+/* 되돌릴 수 있어도 지우기는 지우기다. 다른 줄과 같은 색이면 손이 먼저 간다. */
+.ctx-menu button.danger:not(:disabled) { color: #f87171; }
+.ctx-menu button.danger:not(:disabled):hover { background: var(--ui-danger); color: #fff; }
+.ctx-menu button.danger:not(:disabled):hover .ico { color: #fff; }
+/* 글쇠 짝. 오른쪽 끝에 흐리게 — 읽으라고 두는 것이 아니라 **언젠가 눈에 띄라고** 둔다. */
+.ctx-menu kbd {
+  font: 10px/1 ui-monospace, monospace; color: var(--ui-dim);
+  padding: 2px 4px; border: 1px solid var(--ui-line); border-radius: 3px;
+}
+.ctx-menu button:hover:not(:disabled) kbd { color: #ffffffcc; border-color: #ffffff44; }
+.ctx-menu button:disabled kbd { opacity: .4; }
+.ctx-menu hr { margin: 3px 6px; border: 0; border-top: 1px solid var(--ui-line); }
 
 #editor-body { flex: 1; min-height: 0; display: flex; }
 
@@ -405,27 +433,24 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
 
 /* 장 조작 — 마우스를 올렸을 때만 보인다. 늘 보이면 열세 줄이 버튼 쉰두 개가 되고
  * 정작 장 이름이 안 읽힌다. 키보드로 들어와도(`focus-within`) 보여야 한다. */
-/* 그림 위에 떠 있다. 격자의 한 칸으로 두면 마우스를 올릴 때마다 그림 칸이 좁아지고,
-   그러면 배율이 다시 잡히면서 **그림이 눈에 띄게 튄다.** 겹쳐 두면 아무것도 안 움직인다. */
-.rail-ops {
-  display: none; gap: 1px;
+/* 점 세 개 하나. 예전에는 위·아래·복제·지우기 넷이 여기 떴는데, 그 자리가 이제
+   **슬라이드 그림**이라 버튼이 그림을 가린다. 나머지는 오른쪽 단추 메뉴로 갔다.
+   그림 위에 겹쳐 둔다 — 격자의 한 칸으로 두면 마우스를 올릴 때마다 그림 칸이 좁아지고,
+   그러면 배율이 다시 잡히면서 그림이 눈에 띄게 튄다. */
+.rail-more {
+  display: none;
   position: absolute; top: 8px; right: 10px;
-  padding: 2px; border-radius: 4px;
-  background: #12141ae6;
+  width: 22px; height: 22px;
+  align-items: center; justify-content: center;
+  border: 0; border-radius: 4px;
+  background: #12141ae6; color: var(--ui-dim);
+  cursor: pointer;
 }
-.rail-item:hover .rail-ops,
-.rail-item:focus-within .rail-ops { display: flex; }
-.rail-ops button {
-  display: flex; align-items: center; justify-content: center;
-  width: 22px; height: 20px;
-  border: 0; border-radius: 3px;
-  background: none; color: var(--ui-dim);
-  font-size: 11px; line-height: 1; cursor: pointer;
-}
+.rail-item:hover .rail-more,
+.rail-item:focus-within .rail-more { display: flex; }
+.rail-more:hover { background: var(--ui-accent); color: #fff; }
 /* 레일과 버튼바의 아이콘은 본문보다 작다 — 22px 상자 안에서 15px 은 꽉 차 보인다. */
-.rail-ops .ico, .sel-bar .ico { width: 13px; height: 13px; }
-.rail-ops button:hover:not(:disabled) { background: var(--ui-accent); color: #fff; }
-.rail-ops button:disabled { color: var(--ui-line); cursor: default; }
+.rail-more .ico, .sel-bar .ico { width: 13px; height: 13px; }
 
 /* 끌어서 놓을 자리 — 흐름 배치에서는 "몇 번째에 끼우는가" 가 결과의 전부다.
  * 선이 안 보이면 사용자는 놓기 전에 결과를 알 수 없다. */

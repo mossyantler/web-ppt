@@ -37,6 +37,7 @@ import { createGroup } from './group.js';
 import { createRibbon } from './ribbon.js';
 import { createInspector } from './inspector.js';
 import { createThumbs } from './thumbs.js';
+import { createMenu } from './menu.js';
 import { setIcon, setIconText } from './icons.js';
 
 const views = {
@@ -308,6 +309,12 @@ const logo = createLogo({
  */
 const thumbs = createThumbs({ stage });
 
+/**
+ * 오른쪽 단추 메뉴. 레일에서도 슬라이드 위에서도 이 하나를 쓴다 — 두 벌이면 같은 명령이
+ * 두 자리에서 다른 이름을 갖게 된다.
+ */
+const menu = createMenu();
+
 const drag = createDrag({
   stage,
   layer: overlay,
@@ -552,7 +559,7 @@ function mountStage(outline, startSlide = 0, selectId = null) {
     // 잠긴 장은 레일에서 미리 보인다 — 열어 봐야 아는 것과, 목록에서 아는 것은 다르다.
     if (outline && !outline.sections[i]?.annotated) b.classList.add('locked');
 
-    b.append(n, thumbs.frameFor(section), t, railControls(i, sections.length));
+    b.append(n, thumbs.frameFor(section), t, moreButton(i));
     b.draggable = true;
     b.addEventListener('click', () => goTo(el, sections, i));
     // `<button>` 안에 `<button>` 을 넣을 수 없어 항목을 div 로 바꿨다. 키보드로 고르는
@@ -589,6 +596,9 @@ function mountStage(outline, startSlide = 0, selectId = null) {
     // 슬라이드가 사진으로 바뀐다 — 되돌리기로도 못 고치는 종류의 사고다.
     picture.bind(doc);
     resize.watch(doc);
+    // 슬라이드 위의 오른쪽 단추. 문서가 새로 뜰 때마다 건다 — iframe 안은 매번 다른
+    // 문서다(레일과 반대다. 레일은 살아남으므로 한 번만 건다).
+    bindSlideMenu(doc);
     // 붙여넣기는 초점이 있는 문서만 받는다. 슬라이드를 누른 뒤의 Ctrl+V 가 여기로 온다.
     doc.addEventListener('paste', onPaste);
     // 초점이 슬라이드 안에 있을 때의 Ctrl+Z. 부모 창에만 달면 슬라이드를 한 번 누른
@@ -617,35 +627,114 @@ function mountStage(outline, startSlide = 0, selectId = null) {
 }
 
 /**
- * 레일 항목의 조작 버튼 — 위·아래·복제·지우기.
+ * 레일 항목의 "더 보기" 하나.
  *
- * 마우스를 올렸을 때만 보인다. 늘 보이면 열세 줄짜리 목록이 버튼 쉰두 개가 되고, 그러면
- * 정작 장 이름이 안 읽힌다. 클릭이 항목 전체로 번지지 않게 막는다 — 지우려다 그 장으로
- * 이동하는 것은 되돌리기로도 못 고치는 종류의 놀람이다.
+ * 예전에는 위·아래·복제·지우기 넷이 마우스를 올렸을 때 떴다. 넷이 서 있던 자리가 이제
+ * **슬라이드 그림**이라 버튼이 그림을 가린다. 하나로 줄이고 나머지는 메뉴로 보낸다.
+ *
+ * 오른쪽 단추만 남기지 않는 이유 — 오른쪽 단추는 눈에 보이지 않는 문이다. 점 세 개는
+ * "여기 더 있다" 를 자리를 거의 안 쓰고 말해 준다.
  */
-function railControls(index, total) {
-  const box = document.createElement('span');
-  box.className = 'rail-ops';
+function moreButton(index) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'rail-more';
+  setIcon(b, 'more', '이 장으로 할 수 있는 일');
+  b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const r = b.getBoundingClientRect();
+    openSlideMenu(index, r.left, r.bottom + 4);
+  });
+  return b;
+}
 
-  const ops = [
-    ['railUp', '위로', () => slides.move(index, -1), index > 0],
-    ['railDown', '아래로', () => slides.move(index, +1), index < total - 1],
-    ['duplicate', '복제', () => slides.duplicate(index), true],
-    ['remove', '지우기 (되돌리기로 돌아옵니다)', () => slides.remove(index), total > 1],
-  ];
+/**
+ * 이 장으로 할 수 있는 일.
+ *
+ * 할 수 없는 줄도 자리를 지킨다 — 첫 장에서 "위로" 가 사라지면 그 아래 줄들이 한 칸씩
+ * 올라오고, 그러면 "지우기" 가 매번 다른 자리에 온다 (`menu.js` 에 같은 이야기).
+ */
+function openSlideMenu(index, x, y) {
+  const total = currentOutline?.sections.length ?? 0;
+  menu.open(x, y, [
+    { label: '위로', name: 'railUp', hint: 'Alt+↑', on: index > 0, run: () => slides.move(index, -1) },
+    { label: '아래로', name: 'railDown', hint: 'Alt+↓', on: index < total - 1, run: () => slides.move(index, +1) },
+    null,
+    { label: '복제', name: 'duplicate', hint: 'Ctrl+D', run: () => slides.duplicate(index) },
+    { label: '지우기', name: 'remove', hint: 'Del', on: total > 1, danger: true, run: () => slides.remove(index) },
+  ]);
+}
 
-  for (const [name, title, run, on] of ops) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    setIcon(b, name, title);
-    b.disabled = !on;
-    b.addEventListener('click', (e) => {
-      e.stopPropagation();
-      run();
-    });
-    box.append(b);
-  }
-  return box;
+/**
+ * 레일의 오른쪽 단추와 글쇠. **한 번만 건다.**
+ *
+ * 레일 요소는 리포트를 다시 받아도 살아 있고 항목만 갈린다. 장을 지을 때마다 걸면
+ * 처리기가 쌓여서 세 번째 커밋 뒤에는 오른쪽 단추 한 번에 메뉴가 셋 열린다. 항목의
+ * 번호는 이벤트에서 그때그때 읽으므로 다시 걸 이유도 없다.
+ *
+ * 손이 셋이다 — 오른쪽 단추 · 길게 누르기 · 글쇠. 셋이 같은 메뉴, 같은 명령으로 간다.
+ * 글쇠에 `Alt` 를 붙이는 이유: 맨 ↑/↓ 는 목록에서 **고르는** 뜻으로 이미 예약되어
+ * 있고, 옮기는 것과 고르는 것을 같은 글쇠에 얹으면 실수로 순서가 바뀐다.
+ */
+function bindRailMenu() {
+  const indexOf = (target) => {
+    const item = target?.closest?.('.rail-item');
+    return item ? Number(item.dataset.index) : null;
+  };
+
+  rail.addEventListener('contextmenu', (e) => {
+    const i = indexOf(e.target);
+    if (i === null) return;
+    e.preventDefault();
+    openSlideMenu(i, e.clientX, e.clientY);
+  });
+
+  // 손가락·펜에는 오른쪽 단추가 없다. 길게 누르기가 그 자리를 대신한다.
+  menu.longPress(rail, (e) => {
+    const i = indexOf(e.target);
+    if (i === null) return null;
+    const total = currentOutline?.sections.length ?? 0;
+    return [
+      { label: '위로', name: 'railUp', on: i > 0, run: () => slides.move(i, -1) },
+      { label: '아래로', name: 'railDown', on: i < total - 1, run: () => slides.move(i, +1) },
+      null,
+      { label: '복제', name: 'duplicate', run: () => slides.duplicate(i) },
+      { label: '지우기', name: 'remove', on: total > 1, danger: true, run: () => slides.remove(i) },
+    ];
+  });
+
+  rail.addEventListener('keydown', (e) => {
+    const i = indexOf(e.target);
+    if (i === null) return;
+
+    // 메뉴 글쇠(⌨ Menu / Shift+F10) — 오른쪽 단추의 글쇠판 짝이다.
+    if (e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) {
+      e.preventDefault();
+      const r = e.target.getBoundingClientRect();
+      return openSlideMenu(i, r.left + 20, r.top + 20);
+    }
+    if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault();
+      return void slides.move(i, e.key === 'ArrowUp' ? -1 : +1);
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'd') {
+      e.preventDefault();
+      return void slides.duplicate(i);
+    }
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault();
+      return void slides.remove(i);
+    }
+    // 맨 ↑/↓ 는 고르기다. 목록에서 늘 그런 뜻이라 여기서도 그래야 한다.
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      const to = i + (e.key === 'ArrowUp' ? -1 : +1);
+      const next = rail.children[to];
+      if (!next?.dataset) return;
+      e.preventDefault();
+      next.focus();
+      next.click();
+    }
+  });
 }
 
 /**
@@ -1017,55 +1106,86 @@ const LABELS = {
  * 어휘는 테마가 정한다. 목록이 하나뿐이면 묻지 않고 바로 씌운다 — 고를 것이 없는 물음은
  * 물음이 아니다.
  */
-async function openWrapMenu(nodeId) {
+async function openWrapMenu(nodeId, x = null, y = null) {
   const boxes = await group.boxes();
   if (!boxes.length) {
     return showNotice({ kind: 'blocked', text: '이 테마에는 씌울 수 있는 상자가 없습니다' });
   }
   if (boxes.length === 1) return void group.wrap(nodeId, boxes[0].type, boxes[0].variants?.[0] ?? 'default');
 
-  const anchor = document.getElementById('el-wrap');
-  popup(anchor, boxes.map((t) => [
-    LABELS[t.type] ?? t.type,
-    () => group.wrap(nodeId, t.type, t.variants?.[0] ?? 'default'),
-  ]));
+  let at = { x, y };
+  if (x === null) {
+    const r = document.getElementById('el-wrap').getBoundingClientRect();
+    at = { x: r.left, y: r.bottom + 4 };
+  }
+  menu.open(at.x, at.y, boxes.map((t) => ({
+    label: LABELS[t.type] ?? t.type,
+    name: t.type,
+    run: () => group.wrap(nodeId, t.type, t.variants?.[0] ?? 'default'),
+  })));
 }
 
 /**
- * 버튼 아래에 붙는 작은 목록.
+ * 슬라이드 위에서 오른쪽 단추.
  *
- * 바깥을 누르거나 Esc 면 닫힌다. 리본 안에 살기 때문에 겹침 층(`overlay`)을 쓰지
- * 않는다 — 저기는 슬라이드 위에 그리는 자리이고, 이것은 버튼에 매달린 것이다.
+ * **먼저 고르고 나서 연다.** 파워포인트가 그렇게 하고, 그래야 메뉴의 각 줄이 무엇에
+ * 걸리는지가 화면의 테두리로 보인다 — 안 고르고 열면 사용자는 자기가 가리킨 것과 메뉴가
+ * 말하는 것이 같은지 확인할 방법이 없다.
+ *
+ * 판정은 전부 원래 주인에게 묻는다(`syncRibbon` 과 같은 규율). 여기서 스스로 판단하기
+ * 시작하면 메뉴가 켜 놓은 줄을 눌렀는데 서버가 422 를 내는 날이 온다.
  */
-function popup(anchor, rows) {
-  document.querySelector('.rb-popup')?.remove();
-  const el = document.createElement('div');
-  el.className = 'op-panel rb-popup';
-  for (const [text, run] of rows) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = text;
-    b.addEventListener('click', () => { el.remove(); run(); });
-    el.append(b);
+function bindSlideMenu(doc) {
+  doc.addEventListener('contextmenu', (e) => {
+    // 글자를 고치는 중에는 브라우저의 것을 그대로 둔다 — 거기서 오른쪽 단추는
+    // 맞춤법·붙여넣기이고, 그것을 뺏으면 편집이 오히려 불편해진다.
+    if (editor.active()?.contains(e.target)) return;
+
+    const nodeId = nodeUnder(e.target);
+    if (!nodeId) return;
+    e.preventDefault();
+
+    // 화면 좌표로 옮긴다 — iframe 안의 좌표는 그 창 기준이다.
+    const f = stage.getBoundingClientRect();
+    const x = f.left + e.clientX;
+    const y = f.top + e.clientY;
+
+    if (selection.selected !== nodeId) selection.pick(nodeId);
+    openElementMenu(nodeId, x, y);
+  }, true);
+}
+
+/** 이 자리에서 고를 수 있는 가장 안쪽 노드. 목차가 모르는 것은 건너뛴다. */
+function nodeUnder(target) {
+  for (let el = target; el; el = el.parentElement) {
+    const id = el.dataset?.nodeId;
+    if (id && selection.infoOf(id)) return id;
   }
-  document.body.append(el);
+  return null;
+}
 
-  const r = anchor.getBoundingClientRect();
-  el.style.left = `${r.left}px`;
-  el.style.top = `${r.bottom + 4}px`;
-
-  const shut = (e) => {
-    if (e.type === 'keydown' && e.key !== 'Escape') return;
-    if (e.type === 'pointerdown' && el.contains(e.target)) return;
-    el.remove();
-    removeEventListener('pointerdown', shut, true);
-    removeEventListener('keydown', shut, true);
-  };
-  // 이 클릭이 그대로 닫기로 이어지지 않게 한 박자 뒤에 건다.
-  setTimeout(() => {
-    addEventListener('pointerdown', shut, true);
-    addEventListener('keydown', shut, true);
-  });
+function openElementMenu(nodeId, x, y) {
+  const isFree = free.isFree(nodeId);
+  menu.open(x, y, [
+    { label: '위로', name: 'up', on: reorder.canMove(nodeId, -1), run: () => reorder.moveElement(nodeId, -1) },
+    { label: '아래로', name: 'down', on: reorder.canMove(nodeId, +1), run: () => reorder.moveElement(nodeId, +1) },
+    null,
+    { label: '복제', name: 'duplicate', on: group.canDuplicate(nodeId), run: () => group.duplicate(nodeId) },
+    {
+      label: isFree ? '흐름 배치로' : '자유 배치로',
+      name: isFree ? 'flow' : 'free',
+      on: isFree || free.canFree(nodeId),
+      run: () => (isFree ? free.toFlow(nodeId) : free.toFree(nodeId)),
+    },
+    { label: '묶기', name: 'group', on: group.canWrap(nodeId), run: () => openWrapMenu(nodeId, x, y) },
+    { label: '풀기', name: 'ungroup', on: group.canUnwrap(nodeId), run: () => group.unwrap(nodeId) },
+    null,
+    { label: '서식 창 열기', name: 'format', run: () => inspector.open('geom') },
+    {
+      label: '지우기', name: 'remove', danger: true,
+      on: structure.canRemove(nodeId), run: () => structure.remove(nodeId),
+    },
+  ]);
 }
 
 /**
@@ -1114,6 +1234,7 @@ function syncRibbon() {
 // (`ribbon.js`·`inspector.js` 의 `start`).
 ribbon.start();
 inspector.start();
+bindRailMenu();
 
 paintIcons();
 
