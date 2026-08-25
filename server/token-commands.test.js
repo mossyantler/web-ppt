@@ -32,7 +32,8 @@ ${head}
 `;
 
 const WITH_BLOCK = deck('<style id="deck-tokens"></style>');
-const WITHOUT_BLOCK = deck('<title>옛 덱</title>');
+// 테마 링크를 넣어 둔다. 없으면 "링크보다 뒤에 끼웠는가" 가 -1 과 비교되어 그냥 통과한다.
+const WITHOUT_BLOCK = deck('<title>옛 덱</title>\n<link rel="stylesheet" href="../../styles.css">');
 
 let sandbox;
 
@@ -125,11 +126,29 @@ test('모르는 항목은 조용히 버리지 않고 400 이다', async () => {
   );
 });
 
-test('토큰 자리가 없는 옛 덱은 422 이고 이유를 준다', async () => {
+test('토큰 자리가 없는 옛 덱에는 자리를 만든다 — `</head>` 바로 앞에', async () => {
   writeFileSync(file(), WITHOUT_BLOCK, 'utf8');
   const { applyCommit } = await api();
-  assert.throws(
-    () => run(applyCommit, { mainColor: '#0f766e' }),
-    (err) => err.status === 422 && err.code === 'commit.no-token-block',
-  );
+
+  // 실측: `_workspace` 의 리포트 다섯 개 전부 이 자리가 없다. 422 를 내면 테마 창이
+  // 열리는 족족 거부되고, 사용자에게 그것은 고장과 구별되지 않는다.
+  const r = run(applyCommit, { mainColor: '#0f766e' });
+  assert.equal(r.applied, true);
+
+  const html = onDisk();
+  assert.match(html, /<style id="deck-tokens">[\s\S]*--accent: #0f766e;[\s\S]*<\/style>/);
+  // **`</head>` 앞**이어야 한다. 테마의 <link> 보다 뒤에 와야 `:root` 싸움에서 이긴다.
+  assert.ok(html.indexOf('<style id="deck-tokens">') < html.indexOf('</head>'), '<head> 밖에 만들었다');
+  assert.ok(html.indexOf('<link') < html.indexOf('<style id="deck-tokens">'), '테마 링크보다 앞에 끼웠다 — 값이 안 먹는다');
+
+  // 두 번째부터는 그 자리를 다시 쓴다. 블록이 둘이 되면 안 된다.
+  run(applyCommit, { mainColor: '#b91c1c' });
+  assert.equal((onDisk().match(/<style id="deck-tokens">/g) ?? []).length, 1);
+  assert.match(onDisk(), /--accent: #b91c1c;/);
+});
+
+test('제목 크기도 토큰으로 바꾼다 — `.slide-title` 이 읽는 이름이다', async () => {
+  const { applyCommit } = await api();
+  run(applyCommit, { titleSize: '36px' });
+  assert.match(onDisk(), /--text-display: 36px;/);
 });

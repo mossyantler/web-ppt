@@ -19,6 +19,7 @@
  *   서브 색   `--accent-2` — 표지 밑줄과 머리말(kicker) 이 읽는다 (테마가 연결한다)
  *   글꼴      `--font-sans`
  *   본문 크기 `--text-body`
+ *   제목 크기 `--text-display` — `slides/slides.css` 의 `.slide-title` 이 읽는다
  *
  * 흐리게·눌렀을 때 색은 고르게 하지 않고 `color-mix` 로 만든다. 사람에게 색을 다섯 개
  * 고르게 하면 그중 하나는 반드시 어긋난다.
@@ -53,6 +54,7 @@ export function tokensBlock(setup = {}) {
   if (setup.subColor) rules.push(`  --accent-2: ${cssValue(setup.subColor)};`);
   if (setup.font) rules.push(`  --font-sans: ${cssValue(setup.font)};`);
   if (setup.bodySize) rules.push(`  --text-body: ${cssValue(setup.bodySize)};`);
+  if (setup.titleSize) rules.push(`  --text-display: ${cssValue(setup.titleSize)};`);
 
   return rules.length ? `\n:root {\n${rules.join('\n')}\n}\n` : '';
 }

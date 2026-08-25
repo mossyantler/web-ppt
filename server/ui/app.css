@@ -293,6 +293,28 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
 .sel-bar button:hover:not(:disabled) { background: var(--ui-accent); color: #fff; }
 .sel-bar button:disabled { color: var(--ui-line); cursor: default; }
 
+/* 테마 창 (2026-08-25) — 색·글꼴·글자 크기를 리포트 하나에 대해.
+ *
+ * 파워포인트의 서식 도구가 있어야 할 자리에 이것이 있다. 요소마다 예외를 만드는 대신
+ * 정의를 바꾸는 것이 이 시스템의 답이다 — 자세한 것은 `theme.js` 머리말. */
+.theme-panel { min-width: 232px; }
+.theme-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  color: var(--ui-text); font-size: 12px;
+}
+.theme-row input {
+  width: 84px; height: 24px;
+  border: 1px solid var(--ui-line); border-radius: 4px;
+  background: var(--ui-bg); color: var(--ui-text);
+  font: 12px/1 inherit;
+}
+.theme-row input[type="color"] { padding: 2px; cursor: pointer; }
+/* 이 리포트에서 안 먹는 항목. 끄기만 하고 감추지 않는다 — 없으면 왜 못 바꾸는지 물을
+ * 자리도 없다. 이유는 title 로 붙는다. */
+.theme-row.dead { color: var(--ui-dim); }
+.theme-row.dead::after { content: '이 리포트가 직접 정함'; font-size: 10px; color: var(--ui-dim); }
+.theme-row.dead input { opacity: .45; cursor: not-allowed; }
+
 /* 크기 조절 손잡이 — 자유 배치된 요소만 (로드맵 5단계 · §2.2).
  *
  * 흐름 배치에는 안 뜬다. 거기서는 크기를 컨테이너가 정하고, 손잡이를 그려 두면 끌 수

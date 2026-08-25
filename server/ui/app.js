@@ -32,6 +32,7 @@ import { createPicture } from './picture.js';
 import { createTable } from './table.js';
 import { createFree } from './free.js';
 import { createResize } from './resize.js';
+import { createTheme } from './theme.js';
 import { setIcon, setIconText } from './icons.js';
 
 const views = {
@@ -198,6 +199,21 @@ const table = createTable({
     await showEditor(open.deckId, currentSlide, nodeId);
     table.reopen(nodeId, info);
   },
+});
+
+/**
+ * 테마 창 — 서식을 요소마다 예외로 만드는 대신 **정의**를 바꾼다.
+ *
+ * 파워포인트의 굵게·크게·색 도구가 여기 없는 것은 일부러다(`props.js` 가 `style` 을 열지
+ * 않는다). 그 자리를 이것이 메운다: 제목이 크면 이 제목 하나가 아니라 `--text-display` 를
+ * 줄이고, 그러면 열세 장이 함께 줄면서 일관성은 그대로 남는다.
+ */
+const theme = createTheme({
+  stage,
+  layer: overlay,
+  commit: committer,
+  onNotice: showNotice,
+  button: document.getElementById('theme'),
 });
 
 const adopt = createAdopt({
@@ -785,6 +801,7 @@ function reflow() {
   opaque.reposition();
   table.place();
   resize.place();
+  theme.place();
 }
 
 // 창 크기가 바뀌면 슬라이드 배율이 바뀌고 테두리가 어긋난다.
