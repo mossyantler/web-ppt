@@ -91,7 +91,7 @@
     <span class="tb-fill"></span>
 
     <span class="tb-group">
-      <button type="button" id="pane-toggle" title="서식 창 열고 닫기" aria-pressed="false" hidden>서식</button>
+      <button type="button" id="pane-toggle" title="서식 창 열고 닫기" aria-pressed="false">서식</button>
     </span>
 
     <!-- 발표 (결정 9). 오른쪽 끝에 홀로 둔다 — 화면을 통째로 바꾸는 유일한 버튼이라
@@ -240,6 +240,11 @@
       <!-- 고치기 뒤에 남은, 자동으로 판단이 안 된 자리들. 실패가 아니라 할 일 목록이다. -->
       <div id="findings" hidden></div>
     </div>
+
+    <!-- 서식 칸 (파워포인트의 "도형 서식"). 리본이 **무엇을 할지**를 고르는 자리라면
+         여기는 **얼마나**를 정하는 자리다 — 색을 3 도 어둡게 하는 일은 버튼 하나로
+         표현할 수 없다. 슬라이드를 덮지 않고 옆에 서는 것이 이 자리의 값이다. -->
+    <aside id="inspector" class="pane" aria-label="서식" hidden></aside>
   </div>
 
   <!-- 상태줄. 저장 결과와 배율이 여기 산다.

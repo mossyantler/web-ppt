@@ -24,6 +24,13 @@
  * 자기 `<style>` 에 `font-size: 40px` 처럼 크기를 박아 두어 크기 토큰이 안 먹었다.
  * 앞은 목록에서 뺐고, 뒤는 창이 열릴 때 재서 끈다 — 리포트마다 다르기 때문이다.
  *
+ * ## 창이 아니라 서식 칸이다
+ *
+ * 처음에는 도구 모음 버튼에 매달린 뜨는 창이었다. 지금은 오른쪽 서식 칸의 한 구획으로
+ * 들어간다(`inspector.js`) — 색을 고르는 동안 슬라이드가 **가려지지 않아야** 하기
+ * 때문이다. 뜨는 창은 정의상 무언가를 덮고, 여기서 덮이는 것이 바로 그 색이 칠해지는
+ * 자리였다. 그리는 자리만 옮겼고 재는 법과 저장하는 법은 그대로다.
+ *
  * ## 고르는 동안에는 화면만 바뀐다
  *
  * 색은 **보면서** 골라야 한다. 그래서 끄는 동안 슬라이드의 `:root` 에 값을 얹어 미리
@@ -43,24 +50,18 @@ const FIELDS = [
   { key: 'titleSize', label: '제목 크기', type: 'number', token: '--text-display', unit: 'px', min: 20, max: 72, probe: ['fontSize'], test: '99px' },
 ];
 
-export function createTheme({ stage, layer, commit, onNotice, button }) {
+export function createTheme({ stage, host, commit, onNotice }) {
   const panel = document.createElement('div');
-  panel.className = 'op-panel theme-panel';
-  panel.hidden = true;
-  // **겹침 층이 아니라 문서에 붙는다.** 저 층은 슬라이드 위에 그리는 자리이고 캔버스
-  // 안쪽에서 잘린다 — 리본이 생기면서 버튼이 캔버스 위쪽으로 올라가자 창의 머리가
-  // 캔버스 경계에 잘려 나갔다(실측). 이것은 슬라이드에 매달린 것이 아니라 **버튼에**
-  // 매달린 것이므로 화면 좌표를 그대로 쓴다.
-  (layer ?? document.body).append(panel);
+  panel.className = 'theme-panel';
+  host.append(panel);
 
   const inputs = new Map();
   /** 지금까지 고른 값들. 명령은 **매번 전부** 보낸다 — 블록을 통째로 다시 쓰기 때문이다. */
   let chosen = {};
 
   build();
-  button?.addEventListener('click', () => (panel.hidden ? open() : close()));
 
-  /* --------------------------------------------------------------- 열고 닫기 */
+  /* ------------------------------------------------------------------- 읽기 */
 
   /**
    * 지금 값을 **슬라이드에서** 읽어 채운다.
@@ -72,7 +73,11 @@ export function createTheme({ stage, layer, commit, onNotice, button }) {
   function open() {
     const doc = stage.contentDocument;
     const root = doc?.documentElement;
-    if (!root) return;
+    // **덱이 아직 안 떴으면 재지 않는다.** 빈 문서에서 재면 아무것도 안 움직이므로 세 칸이
+    // 전부 "이 리포트가 직접 정함" 으로 죽는다(실측 — 판을 열어 둔 채 새로 고치면 그랬다).
+    // 잰 값이 없는 것과 재 봤더니 안 먹는 것은 다른 말이고, 섞이면 손잡이가 거짓말을 한다.
+    if (!root || !doc.querySelector('section')) return;
+    panel.hidden = false;
 
     const now = doc.defaultView.getComputedStyle(root);
     for (const f of FIELDS) {
@@ -92,38 +97,11 @@ export function createTheme({ stage, layer, commit, onNotice, button }) {
         : '이 리포트는 이 값을 자기 <style> 안에 직접 적어 두었습니다 — 테마로는 못 바꿉니다';
     }
     chosen = {};
-    panel.hidden = false;
-    button?.setAttribute('aria-pressed', 'true');
-    place();
-  }
-
-  function close() {
-    panel.hidden = true;
-    button?.setAttribute('aria-pressed', 'false');
-  }
-
-  /**
-   * 리본의 그 버튼 바로 아래에 붙는다. 화면 좌표 그대로다(`position: fixed`).
-   *
-   * 오른쪽으로 넘치면 안으로 당긴다 — 버튼이 리본 오른쪽 끝에 있을 때 창 밖으로 나가면
-   * 고른 값을 볼 수가 없다.
-   */
-  function place() {
-    if (panel.hidden || !button) return;
-    const b = button.getBoundingClientRect();
-    const w = panel.offsetWidth || 266;
-    panel.style.left = `${Math.max(8, Math.min(b.left, innerWidth - w - 8))}px`;
-    panel.style.top = `${b.bottom + 6}px`;
   }
 
   /* ----------------------------------------------------------------- 만들기 */
 
   function build() {
-    const head = document.createElement('div');
-    head.className = 'menu-head';
-    head.textContent = '이 리포트의 테마 — 열세 장이 함께 바뀝니다';
-    panel.append(head);
-
     for (const f of FIELDS) {
       const row = document.createElement('label');
       row.className = 'theme-row';
@@ -140,18 +118,12 @@ export function createTheme({ stage, layer, commit, onNotice, button }) {
       inputs.set(f.key, input);
     }
 
-    const foot = document.createElement('div');
-    foot.className = 'op-buttons';
     const reset = document.createElement('button');
     reset.type = 'button';
+    reset.className = 'pane-reset';
     reset.textContent = '테마 기본으로';
     reset.addEventListener('click', () => revert());
-    const done = document.createElement('button');
-    done.type = 'button';
-    done.textContent = '닫기';
-    done.addEventListener('click', close);
-    foot.append(reset, done);
-    panel.append(foot);
+    panel.append(reset);
   }
 
   /* ------------------------------------------------------------------ 재 보기 */
@@ -239,7 +211,9 @@ export function createTheme({ stage, layer, commit, onNotice, button }) {
     open();
   }
 
-  return { open, close, place, active: () => !panel.hidden };
+  // `open` 은 "지금 값을 다시 읽어 채운다" 는 뜻이다 — 서식 칸이 열릴 때와 리포트를
+  // 다시 받은 뒤에 불린다.
+  return { open, refresh: open };
 }
 
 /* ---------------------------------------------------------------------- 도구 */

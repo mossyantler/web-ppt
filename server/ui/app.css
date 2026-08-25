@@ -20,6 +20,7 @@
      바닥이 슬라이드에서 멀어야 하고, 도구 모음과도 구별되어야 한다. */
   --ui-canvas: #0b0d11;
   --rail-w: 232px;
+  --pane-w: 248px;
   --topbar-h: 48px;
   --statusbar-h: 30px;
   /* 슬라이드가 차지할 크기. `viewport.js` 가 배율을 곱해 매 순간 다시 쓴다. */
@@ -289,6 +290,61 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
 
 #editor-body { flex: 1; min-height: 0; display: flex; }
 
+/* ---------------------------------------------------------------- 서식 칸
+ *
+ * 오른쪽 세로 판 (파워포인트의 "도형 서식"). 리본이 **무엇을 할지**를 고르는 자리라면
+ * 여기는 **얼마나**를 정하는 자리다.
+ *
+ * 레일과 좌우 대칭이다 — 폭도 테두리도 바탕도 같다. 둘이 다르면 가운데 슬라이드가
+ * 한쪽으로 밀려 보인다. */
+
+.pane {
+  flex: none; width: var(--pane-w);
+  border-left: 1px solid var(--ui-line);
+  background: var(--ui-panel);
+  overflow-y: auto;
+}
+.pane[hidden] { display: none; }
+.pane-body { padding: 4px 0 16px; }
+
+.pane-sec { padding: 10px 12px 12px; border-bottom: 1px solid var(--ui-line); }
+.pane-sec[hidden] { display: none; }
+.pane-sec h2 {
+  margin: 0 0 8px; font-size: 11px; font-weight: 600;
+  color: var(--ui-dim); text-transform: none; letter-spacing: .02em;
+}
+/* 리본에서 "테마" 를 눌러 이 판이 열렸을 때, 어느 구획을 보라는 것인지 잠깐 짚어 준다.
+   판이 이미 열려 있었다면 아무 일도 안 일어난 것처럼 보이기 때문이다. */
+.pane-sec.flash { background: #3b82f61a; }
+
+/* `minmax(0, 1fr)` 이 필요하다. 격자 칸의 기본 최소폭은 `auto`(내용 폭)라, 안의
+   입력칸이 자기 기본 너비를 고집하면 칸이 판보다 넓어지고 가로 스크롤이 생긴다 —
+   실측으로 18px 삐져나갔다. */
+.pane-rows { display: grid; gap: 7px; grid-template-columns: minmax(0, 1fr); }
+.pane-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.pane-row > span:first-child { color: var(--ui-dim); flex: none; min-width: 58px; }
+.pane-row input {
+  flex: 1; min-width: 0;
+  padding: 4px 7px;
+  border: 1px solid var(--ui-line); border-radius: 4px;
+  background: #12141a; color: var(--ui-text); font: 12px/1.4 inherit;
+}
+.pane-row input:focus { outline: none; border-color: var(--ui-accent); }
+.pane-row input[type="color"] { padding: 2px; height: 26px; cursor: pointer; }
+.pane-row .unit { color: var(--ui-dim); font-size: 11px; flex: none; }
+.pane-row b { font-weight: 600; }
+
+.pane-note { margin: 0; color: var(--ui-dim); font-size: 11px; line-height: 1.5; }
+
+.pane-reset {
+  margin-top: 10px; width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--ui-line); border-radius: 5px;
+  background: none; color: var(--ui-dim);
+  font: 12px/1.4 inherit; cursor: pointer;
+}
+.pane-reset:hover { border-color: var(--ui-accent); color: var(--ui-accent); }
+
 /* 슬라이드 레일 — 클릭하면 가운데 화면이 그 장으로 간다 (결정 6).
  * 순서 바꾸기(끌기)는 M3-5 에서 이 자리에 붙는다. */
 #rail {
@@ -425,23 +481,32 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
  *
  * 파워포인트의 서식 도구가 있어야 할 자리에 이것이 있다. 요소마다 예외를 만드는 대신
  * 정의를 바꾸는 것이 이 시스템의 답이다 — 자세한 것은 `theme.js` 머리말. */
-/* 리본 버튼에 매달린다 — 슬라이드 위가 아니라 화면 위다. */
-.theme-panel { position: fixed; min-width: 232px; }
+/* 테마는 이제 서식 칸의 한 구획이다 (`inspector.js`). 뜨는 창이 아니므로 그림자도
+   테두리도 없다 — 판 자체가 이미 경계다. */
+.theme-panel { display: grid; gap: 7px; grid-template-columns: minmax(0, 1fr); }
+/* 판의 다른 행과 같은 모양이다 — 이름은 왼쪽에 흐리게, 값은 오른쪽에. 격자로 짜는
+   이유는 아래의 사유 한 줄이 **칸을 밀어내지 않고** 제 줄을 갖게 하기 위해서다.
+   가로로 붙였더니 "제목 크기" 가 두 줄로 접혔다(실측). */
 .theme-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  color: var(--ui-text); font-size: 12px;
+  display: grid; grid-template-columns: 58px 1fr; align-items: center; gap: 4px 8px;
+  color: var(--ui-dim); font-size: 12px;
 }
 .theme-row input {
-  width: 84px; height: 24px;
+  height: 26px; width: 100%;
+  padding: 4px 7px;
   border: 1px solid var(--ui-line); border-radius: 4px;
-  background: var(--ui-bg); color: var(--ui-text);
+  background: #12141a; color: var(--ui-text);
   font: 12px/1 inherit;
 }
+.theme-row input:focus { outline: none; border-color: var(--ui-accent); }
 .theme-row input[type="color"] { padding: 2px; cursor: pointer; }
 /* 이 리포트에서 안 먹는 항목. 끄기만 하고 감추지 않는다 — 없으면 왜 못 바꾸는지 물을
- * 자리도 없다. 이유는 title 로 붙는다. */
-.theme-row.dead { color: var(--ui-dim); }
-.theme-row.dead::after { content: '이 리포트가 직접 정함'; font-size: 10px; color: var(--ui-dim); }
+ * 자리도 없다. 자세한 이유는 title 로 붙는다. */
+.theme-row.dead::after {
+  content: '이 리포트가 직접 정함';
+  grid-column: 1 / -1;
+  font-size: 10px; color: var(--ui-dim);
+}
 .theme-row.dead input { opacity: .45; cursor: not-allowed; }
 
 /* 크기 조절 손잡이 — 자유 배치된 요소만 (로드맵 5단계 · §2.2).

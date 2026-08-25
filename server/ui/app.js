@@ -35,6 +35,7 @@ import { createResize } from './resize.js';
 import { createTheme } from './theme.js';
 import { createGroup } from './group.js';
 import { createRibbon } from './ribbon.js';
+import { createInspector } from './inspector.js';
 import { setIcon, setIconText } from './icons.js';
 
 const views = {
@@ -223,15 +224,32 @@ const table = createTable({
  * 않는다). 그 자리를 이것이 메운다: 제목이 크면 이 제목 하나가 아니라 `--text-display` 를
  * 줄이고, 그러면 열세 장이 함께 줄면서 일관성은 그대로 남는다.
  */
+/**
+ * 서식 칸 — 오른쪽 판. 지금 고른 것의 자리·크기와 리포트 테마가 여기 산다.
+ *
+ * 리본보다 먼저 만들어야 한다 — 테마가 이 판 안에 그려지고, 리본의 테마 버튼은 이 판을
+ * 여는 버튼이 된다.
+ */
+const inspector = createInspector({
+  pane: document.getElementById('inspector'),
+  button: document.getElementById('pane-toggle'),
+  stage,
+  free,
+  onNotice: showNotice,
+  // 판이 열리고 닫히면 캔버스 폭이 달라진다. 겹쳐 그린 테두리가 따라와야 한다.
+  // (맞춤 배율은 `viewport` 가 캔버스를 직접 지켜보며 스스로 다시 잰다.)
+  onLayout: () => reflow(),
+});
+
 const theme = createTheme({
   stage,
-  // 슬라이드가 아니라 **리본 버튼**에 매달린 창이다. 겹침 층에 넣으면 캔버스 경계에
-  // 잘린다 — 리본이 생기면서 실제로 머리가 잘려 나갔다.
-  layer: document.body,
+  host: inspector.themeHost,
   commit: committer,
   onNotice: showNotice,
-  button: document.getElementById('theme'),
 });
+
+// 판이 열릴 때마다 테마가 지금 값을 다시 읽는다 — 리포트를 옮겨 다니면 값이 달라진다.
+inspector.onOpen(() => theme.refresh());
 
 const adopt = createAdopt({
   lock,
@@ -342,6 +360,12 @@ function showSelectionState(state) {
   selState.classList.toggle('locked', state.kind === 'locked');
   selState.classList.toggle('editing', state.kind === 'editing');
   syncRibbon();
+  // 서식 칸은 **무엇이** 골라졌는지만 알면 된다. 이름은 선택 계층이 들고 있는 것을
+  // 그대로 쓴다 — 두 벌이 되면 같은 것이 두 이름으로 불리는 날이 온다.
+  inspector.show(
+    state.kind === 'selected' ? state.nodeId : null,
+    state.info ? (LABELS[state.info.value] ?? state.info.value) : '',
+  );
 }
 
 /**
@@ -563,6 +587,9 @@ function mountStage(outline, startSlide = 0, selectId = null) {
     doc.addEventListener('keydown', (e) => history.onKey(e, !!editor.active()), true);
     selection.setSlide(startSlide);
     blocked.setSlide(startSlide);
+    // 덱이 이제야 섰다. 테마 칸이 열려 있으면 **여기서** 값을 읽는다 — 화면이 뜨기 전에
+    // 읽으면 빈 문서를 재게 되고, 그러면 멀쩡한 손잡이가 죽은 것으로 나온다.
+    if (inspector.isOpen()) theme.refresh();
     // 방금 넣은 요소를 골라 둔다. 눈으로 찾게 하지 않는 것이 목적이다.
     if (selectId) selection.pick(selectId);
   } else {
@@ -820,7 +847,9 @@ function reflow() {
   opaque.reposition();
   table.place();
   resize.place();
-  theme.place();
+  // 끌거나 손잡이로 크기를 바꾸면 판의 숫자도 따라와야 한다 — 안 따라오면 판이
+  // 방금 내가 한 일을 모르는 것처럼 보인다.
+  inspector.refresh();
 }
 
 // 창 크기가 바뀌면 슬라이드 배율이 바뀌고 테두리가 어긋난다.
@@ -870,6 +899,14 @@ const ribbon = createRibbon({
   // 삽입 탭은 어휘를 받아야 채워진다. 열 때 채우면 첫 클릭이 빈 칸을 본다.
   onTab: (name) => { if (name === 'insert') fillInsertTypes(); },
 });
+
+/**
+ * 리본의 테마 버튼은 이제 **판을 여는 버튼**이다.
+ *
+ * 색을 고르는 동안 슬라이드가 가려지면 안 된다 — 뜨는 창은 정의상 무언가를 덮고,
+ * 여기서 덮이는 것이 하필 그 색이 칠해지는 자리였다.
+ */
+document.getElementById('theme').addEventListener('click', () => inspector.open('theme'));
 
 /** 지금 보는 장에 걸리는 넷. 레일의 같은 넷과 달리 **보고 있는 장**이 대상이다. */
 for (const [id, run] of [
@@ -1062,8 +1099,10 @@ function syncRibbon() {
   for (const g of document.querySelectorAll('.rb-group[data-needs="insert"]')) g.classList.toggle('dead', !canPut);
 }
 
-// 배선이 다 끝났다. 이제 처음 열린 탭이 자기 몫을 채울 수 있다 (`ribbon.js` 의 `start`).
+// 배선이 다 끝났다. 이제 처음 열린 탭과 판이 자기 몫을 채울 수 있다
+// (`ribbon.js`·`inspector.js` 의 `start`).
 ribbon.start();
+inspector.start();
 
 paintIcons();
 
