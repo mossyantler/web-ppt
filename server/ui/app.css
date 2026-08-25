@@ -293,6 +293,29 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
 .sel-bar button:hover:not(:disabled) { background: var(--ui-accent); color: #fff; }
 .sel-bar button:disabled { color: var(--ui-line); cursor: default; }
 
+/* 크기 조절 손잡이 — 자유 배치된 요소만 (로드맵 5단계 · §2.2).
+ *
+ * 흐름 배치에는 안 뜬다. 거기서는 크기를 컨테이너가 정하고, 손잡이를 그려 두면 끌 수
+ * 있다고 읽히는데 서버는 422 를 낸다. 할 수 없는 일에 손잡이를 그리지 않는다. */
+.resize-box { pointer-events: none; }
+.resize-grip {
+  position: absolute;
+  width: 9px; height: 9px;
+  margin: -5px 0 0 -5px;
+  background: var(--ui-panel);
+  border: 1.5px solid var(--ui-accent);
+  border-radius: 2px;
+  pointer-events: auto;
+}
+.grip-nw { top: 0;    left: 0;    cursor: nwse-resize; }
+.grip-n  { top: 0;    left: 50%;  cursor: ns-resize; }
+.grip-ne { top: 0;    left: 100%; cursor: nesw-resize; }
+.grip-e  { top: 50%;  left: 100%; cursor: ew-resize; }
+.grip-se { top: 100%; left: 100%; cursor: nwse-resize; }
+.grip-s  { top: 100%; left: 50%;  cursor: ns-resize; }
+.grip-sw { top: 100%; left: 0;    cursor: nesw-resize; }
+.grip-w  { top: 50%;  left: 0;    cursor: ew-resize; }
+
 /* 표 고치기 (로드맵 4단계 · §3.6 L6.1).
  *
  * 칸 테두리는 **점선이 아니라 실선**이다. 점선은 이 화면에서 "여기는 못 고친다" 를 뜻했고

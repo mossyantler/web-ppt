@@ -178,16 +178,16 @@ export function createFree({ stage, commit, index, onNotice, onResync }) {
    * 다시 받지 않는 이유 — 한 번 끌 때마다 슬라이드를 새로 읽으면 끌기가 끊긴다. 여기서
    * 맞추는 것은 방금 서버에 보낸 그 수 그대로이고, 테마의 마크업을 흉내내는 것이 아니다.
    */
-  async function place(nodeId, box) {
+  async function place(nodeId, box, label = '자리 옮기기') {
     const patch = round(box);
-    const { ok } = await commit.send([{ op: 'setPosition', target: nodeId, args: patch }], '자리 옮기기');
+    const { ok } = await commit.send([{ op: 'setPosition', target: nodeId, args: patch }], label);
     if (!ok) return false;
 
     const el = elementOf(nodeId);
     for (const [key, prop] of [['x', 'left'], ['y', 'top'], ['w', 'width'], ['h', 'height']]) {
       if (patch[key] !== undefined) el?.style.setProperty(prop, `${patch[key]}px`);
     }
-    onNotice?.({ kind: 'saved', text: '자리를 옮겼습니다' });
+    onNotice?.({ kind: 'saved', text: label === '크기 바꾸기' ? '크기를 바꿨습니다' : '자리를 옮겼습니다' });
     return true;
   }
 

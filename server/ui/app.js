@@ -31,6 +31,7 @@ import { createViewport } from './viewport.js';
 import { createPicture } from './picture.js';
 import { createTable } from './table.js';
 import { createFree } from './free.js';
+import { createResize } from './resize.js';
 import { setIcon, setIconText } from './icons.js';
 
 const views = {
@@ -178,6 +179,13 @@ const free = createFree({
   onResync: (nodeId) => showEditor(open.deckId, currentSlide, nodeId),
 });
 
+const resize = createResize({
+  stage,
+  layer: overlay,
+  free,
+  onDone: () => selection.place(),
+});
+
 const table = createTable({
   stage,
   layer: overlay,
@@ -290,6 +298,10 @@ const selection = createSelection({
 });
 
 function showSelectionState(state) {
+  // 무엇이 골라졌는지 바뀔 때마다 크기 손잡이를 붙이거나 걷는다. 자유 배치가 아니면
+  // 걷는 것이 맞다 — 흐름 배치의 크기는 컨테이너가 정한다(결정 3).
+  resize.sync(state.kind === 'editing' ? null : selection.selected);
+
   // 편집이 끝났다는 신호다. 무엇이 골라져 있는지는 선택 계층만 아므로 되묻는다.
   if (state.kind === 'idle') return void selection.refresh();
 
@@ -509,6 +521,7 @@ function mountStage(outline, startSlide = 0, selectId = null) {
     // 슬라이드 위로 파일을 끌어다 놓기. 안 걸면 브라우저가 그 창에서 파일을 열어
     // 슬라이드가 사진으로 바뀐다 — 되돌리기로도 못 고치는 종류의 사고다.
     picture.bind(doc);
+    resize.watch(doc);
     // 붙여넣기는 초점이 있는 문서만 받는다. 슬라이드를 누른 뒤의 Ctrl+V 가 여기로 온다.
     doc.addEventListener('paste', onPaste);
     // 초점이 슬라이드 안에 있을 때의 Ctrl+Z. 부모 창에만 달면 슬라이드를 한 번 누른
@@ -771,6 +784,7 @@ function reflow() {
   selection.place();
   opaque.reposition();
   table.place();
+  resize.place();
 }
 
 // 창 크기가 바뀌면 슬라이드 배율이 바뀌고 테두리가 어긋난다.
